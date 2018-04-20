@@ -184,7 +184,12 @@ int main()
   createAndInsert(dd);
 
   //6.新式的字符串字面常量(String Literal)
-  
+  std::cout << R"(\\n)" << std::endl;
+  std::cout << "\\\\n" << std::endl;
+  std::cout << R"nc(a\
+                     b\nc()"
+    )nc" << std::endl;
+  //7.
 
 
 
@@ -209,10 +214,5 @@ int main()
 
 
 
-
-
-
-
-
-  return 0;
+    return 0;
 }
