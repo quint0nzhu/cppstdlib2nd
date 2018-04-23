@@ -14,6 +14,7 @@
 #include <bitset>
 #include <complex>
 #include <limits>
+#include <functional>
 
 
 
@@ -127,13 +128,12 @@ void print(const T& firstArg, const Types&... args)
 template<typename T>
 using Vvec = std::vector<T>;
 
-
-
-
-
-
-
-
+std::function<int(int,int)> returnLambda()
+{
+  return [](int x, int y){
+    return x*y;
+  };
+}
 
 
 int main()
@@ -247,6 +247,63 @@ int main()
   Vvec<int> coll;
 
   //10.
+  []{
+    std::cout << "Hello lambda" << std::endl;
+  };
+
+  []{
+    std::cout << "hello lambda" << std::endl;
+  }();
+
+  auto l1 = []{
+    std::cout << "Hello Lambda" << std::endl;
+  };
+
+  l1();
+
+  auto l2=[](const std::string& s){
+    std::cout << s << std::endl;
+  };
+
+  l2("hello another lambda");
+
+  []{
+    return 42;
+  };
+
+  auto l4 = []()->double{
+    return 42.13;
+  };
+
+  std::cout << l4() << std::endl;
+
+  int xa=0;
+  int ya=42;
+  auto qqq = [xa, &ya]{
+    std::cout <<"xa: "<<xa<<std::endl;
+    std::cout <<"ya: "<<ya<<std::endl;
+    ++ya;
+  };
+  xa=ya=77;
+  qqq();
+  qqq();
+  std::cout<<"final ya: "<<ya<<std::endl;
+
+  int id=0;
+  auto ff1=[id]()mutable{
+    std::cout<<"id: " << id << std::endl;
+    ++id;
+  };
+  id = 42;
+  ff1();
+  ff1();
+  ff1();
+  std::cout << id << std::endl;
+
+  auto lf=returnLambda();
+  std::cout<<lf(60,70)<<std::endl;
+
+  //11.
   
 
 
@@ -257,5 +314,5 @@ int main()
 
 
 
-    return 0;
+  return 0;
 }
