@@ -10,8 +10,10 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include <array>
+#include <bitset>
 #include <complex>
-#include <set>
+#include <limits>
 
 
 
@@ -88,6 +90,46 @@ void createAndInsert(std::vector<D>& coll)
   D d;
   coll.push_back(std::move(d));
 }
+
+
+template<typename T>
+void swap(T& x ,T& y)noexcept(noexcept(x.swap(y)))
+{
+  x.swap(y);
+}
+
+class E
+{
+public:
+  E(){}
+  void swap(E&){}
+};
+
+constexpr int square(int x)
+{
+  return x * x;
+}
+
+void print()
+{
+  
+}
+
+template<typename T, typename... Types>
+void print(const T& firstArg, const Types&... args)
+{
+  std::cout << "the number of args" << sizeof...(args) << std::endl;
+  std::cout << firstArg << std::endl; //print first argument
+  print(args...);//call print() for remaining arguments
+}
+
+
+template<typename T>
+using Vvec = std::vector<T>;
+
+
+
+
 
 
 
@@ -186,25 +228,26 @@ int main()
   //6.新式的字符串字面常量(String Literal)
   std::cout << R"(\\n)" << std::endl;
   std::cout << "\\\\n" << std::endl;
-  std::cout << R"nc(a\
-                     b\nc()"
-    )nc" << std::endl;
+  std::cout << R"nc(a()\")nc" << std::endl;
+
   //7.
+  E e1;
+  E e2;
+  swap(e1,e2);
 
+  //8.
+  float a3[square(9)];
+  std::cout << sizeof(a3)/sizeof(a3[0]) << std::endl;
+  std::array<float,std::numeric_limits<short>::max()> a4;
+  std::cout << a4.size() << std::endl;
 
+  //9.
+  print(7.5, "hello", std::bitset<16>(377), 42);
 
+  Vvec<int> coll;
 
-
-
-
-
-
-
-
-
-
-
-
+  //10.
+  
 
 
 
