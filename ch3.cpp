@@ -200,8 +200,9 @@ public:
   //copy constructor with implicit type conversion
   //-does not suppress implicit copy constructor
   AClass(){}
+  AClass(const AClass& x){std::cout << "copy constructor is called"<<std::endl;}
   template<typename U>
-  AClass(const AClass<U>& x){}
+  AClass(const AClass<U>& x){std::cout <<"member template is called"<<std::endl;}
 };
 
 template<typename T>
