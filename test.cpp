@@ -107,6 +107,45 @@ int main()
   //pass the elements of the tuple to the constructor of Foo:
   std::pair<int,Foo> p5(std::piecewise_construct,std::make_tuple(42),t);
 
+  f(std::make_pair(42,"empty"));//pass two values as pair
+  g(std::make_pair(42,"chair"));//pass two values as pair with type conversions
+
+  f({42,"empty"});//pass two values as pair
+  g({42,"chair"});//pass two values as pair with type conversions
+
+  std::pair<int,float>(42,7.77);//pair<int,float>
+  std::make_pair(42,7.77);//pair<int,double>
+
+  std::string s("hello");
+  std::string t1("world");
+
+  auto pp = std::make_pair(std::move(s),std::move(t1));
+  //s and t1 are no longer used
+  //auto pp = std::make_pair(s,t1);
+
+  std::cout<<s<<std::endl<<t1<<std::endl;
+  std::cout<<pp<<std::endl;
+
+  int i = 0;
+  auto ppp=std::make_pair(std::ref(i),std::ref(i));//creates pair<int&, int&>
+
+  ++ppp.first;//increments i
+  ++ppp.second;//increments i again
+  std::cout << "i: " << i << std::endl;//print i:2
+
+  std::pair<char,char> pt=std::make_pair('x','y');//pair of two chars
+  char c;
+  std::tie(std::ignore,c)=pt;//extract second value into c(ignore first one)
+  std::cout << c <<std::endl;
+
+  //5.1.2 Tuple()
+
+
+
+
+
+
+
 
   return 0;
 }
