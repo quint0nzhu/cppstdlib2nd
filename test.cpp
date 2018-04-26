@@ -22,6 +22,12 @@
 #include <future> //for errors with async() and futures(since C++11),-lpthread
 #include <utility>
 
+
+
+
+
+
+
 //generic output operator for pairs(limited solution)
 template <typename T1, typename T2>
 std::ostream& operator<<(std::ostream& strm,
@@ -30,11 +36,49 @@ std::ostream& operator<<(std::ostream& strm,
   return strm<<"["<<p.first<<","<<p.second<<"]";
 }
 
+void f(std::pair<int, const char*>)
+{
+}
+
+void g(std::pair<const int, std::string>)
+{
+}
+
+class A
+{
+public:
+  A(){}
+  A(A&){}//copy constructor with nonconstant reference
+};
+
+class Foo {
+public:
+  Foo(std::tuple<int, float>){
+    std::cout<<"Foo::Foo(tuple)"<<std::endl;
+  }
+  template<typename... Args>
+  Foo(Args... args){
+    std::cout<<"Foo::Foo(args...)"<<std::endl;
+  }
+  Foo(int,float){
+    std::cout<<"Foo:Foo(int,float)"<<std::endl;
+  }
+};
+
+
+
+
+
+
+
+
+
+
 
 int main()
 {
-  //5
-  //5.1
+  //5通用工具
+  //5.1Pair和Tuple
   //5.1.1 Pair
   typedef std::pair<int, float> IntFloatPair;
   IntFloatPair p(42,3.14);
@@ -48,6 +92,20 @@ int main()
   std::pair<int, float> p1;
   std::cout<<p1<<std::endl;
 
+  std::pair<int, const char*> p2(42, "hello");
+  f(p2);//OK:calls implicitly generated copy constructor
+  g(p2);//OK:calls template constructor
+
+  //std::pair<A,int> p3;//Error since C++11
+
+  //create tuple t;
+  std::tuple<int,float> t(1,2.22);
+
+  //pass the tuple as a whole to the constructor of Foo:
+  std::pair<int,Foo> p4(42,t);
+
+  //pass the elements of the tuple to the constructor of Foo:
+  std::pair<int,Foo> p5(std::piecewise_construct,std::make_tuple(42),t);
 
 
   return 0;
