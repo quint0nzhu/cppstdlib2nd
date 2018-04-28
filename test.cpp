@@ -65,11 +65,26 @@ public:
   }
 };
 
+template<typename... Args>
+void foofoo(const std::tuple<Args...> t)
+{
+  std::cout<<"call foofoo" <<std::endl;
+}
 
+std::tuple<int,int,int> barbar(){
+  std::cout<<"call barbar"<<std::endl;
+  return {1,2,3};//error,but now OK
+}
 
+std::vector<int> foobar(){
+  std::cout<<"call foobar"<<std::endl;
+  return {1,2,3};//OK
+}
 
-
-
+std::tuple<int,int,int> barfoo(){
+  std::cout<<"call barfoo"<<std::endl;
+  return std::make_tuple(1,2,3);
+}
 
 
 
@@ -138,7 +153,117 @@ int main()
   std::tie(std::ignore,c)=pt;//extract second value into c(ignore first one)
   std::cout << c <<std::endl;
 
-  //5.1.2 Tuple()
+  //5.1.2 Tuple(不定数的值组)
+  //crate a four-element tuple
+  //- elements are initialized with default value(0 for fundamental types)
+  std::tuple<std::string, int, int, std::complex<double>> tt;
+
+  //create and initialize a tuple explicitly
+  std::tuple<int, float, std::string> tt1(41,6.3,"nico");
+
+  //"iterate" over elements:
+  std::cout<<std::get<0>(tt1)<<" ";
+  std::cout<<std::get<1>(tt1)<<" ";
+  std::cout<<std::get<2>(tt1)<<" ";
+  std::cout<<std::endl;
+
+  //crate tuple with make_tuple()
+  //- auto declares tt2 with type of right-hand side
+  //- thus, type of tt2 is tuple
+  auto tt2 = std::make_tuple(22,44,"nico");//tuple<int,int,const char*)
+
+  //assign second value in tt2 to tt1
+  std::get<1>(tt1)=std::get<1>(tt2);
+
+  //comparison and assignment
+  //- include type conversion from tuple<int, int, const char*>
+  // to tuple<int, float, string>
+  if(tt1>tt2){//compares value for value
+    tt1 = tt2;//OK, assigns value for value
+  }
+  std::string ss;
+  std::make_tuple(std::ref(s));//yields type tuple<string&>, where the element refers to ss
+  std::string s0("old value");
+  std::cout << s0 << std::endl;
+
+  auto x0=std::make_tuple(s0);//x0 is of type tuple<string>
+  std::get<0>(x0) = "my value";//modifies x0 but not s0
+  std::cout << s0 << std::endl;
+
+
+  auto y0=std::make_tuple(std::ref(s0));//y0 is of type tuple<string&>, thus y0 refers to s0
+  std::cout<<s0<<std::endl;
+  std::get<0>(y0) = "my value";//modifies y0
+  std::cout << s0 << std::endl;
+
+  std::tuple<int,float,std::string> ttt(77,1.1,"more light");
+  int iii;
+  float fff;
+  std::string sss;
+  //assign values of ttt to iii, fff, and sss;
+  auto z0=std::make_tuple(std::ref(iii),std::ref(fff),std::ref(sss))=ttt;
+  
+
+  iii = 11111;
+  fff = 7.7777;
+  sss = "less light";
+
+  std::cout<<std::get<0>(z0)<<std::endl;
+  std::cout<<std::get<1>(z0)<<std::endl;
+  std::cout<<std::get<2>(z0)<<std::endl;
+
+  auto w0=std::tie(iii,std::ignore,sss)=ttt;//assigns first and third value of ttt to iii and sss
+  iii = 222;
+  fff = 6.666;
+  sss = "Hello world!";
+
+  std::cout<<std::get<0>(w0)<<std::endl;
+  //std::cout<<std::get<1>(w0)<<std::endl;
+  std::cout<<std::get<2>(w0)<<std::endl;
+
+  std::cout<<std::get<0>(z0)<<std::endl;
+  std::cout<<std::get<1>(z0)<<std::endl;
+  std::cout<<std::get<2>(z0)<<std::endl;
+
+  //foofoo(42);//error: explicit conversion to tuple<> required
+  foofoo(std::make_tuple(42));//OK
+
+  std::tuple<int,double> xt1(42,3.14);//OK, old syntax
+  std::tuple<int,double> xt2{42,3.14};//OK, new syntax
+  std::tuple<int,double> xt3 = {42,3.14};//error,but now OK
+
+  std::vector<std::tuple<int,float>> v{{1,1.0},{2,2.0}};//error, but now OK
+
+  barbar();
+  std::vector<std::pair<int,float>> v1{{1,1.1},{2,2.1}};//OK
+  std::vector<std::vector<float>> v2{{1,1.1111},{2,2.2222}};//OK
+  foobar();
+
+  std::vector<std::tuple<int,float>> v3{std::make_tuple(1,1.13454),
+      std::make_tuple(2,2.34435)};//OK
+  barfoo();
+
+  typedef std::tuple<int,float,std::string> TupleType;
+  std::cout<<std::tuple_size<TupleType>::value<<std::endl;//yields 3
+  std::cout<<typeid(std::tuple_element<1,TupleType>::type).name()<<std::endl;//yields float
+
+  int nn=1000;
+  auto tq=std::tuple_cat(std::make_tuple(42,7.7,"hello"),std::tie(nn));
+  std::cout<<std::get<0>(tq)<<std::endl;
+  std::cout<<std::get<1>(tq)<<std::endl;
+  std::cout<<std::get<2>(tq)<<std::endl;
+  std::cout<<std::get<3>(tq)<<std::endl;
+  nn = 2000000;
+  std::cout<<std::get<3>(tq)<<std::endl;
+
+  //5.1.3 Tuple的输入/输出
+  
+
+
+
+
+
+
 
 
 
