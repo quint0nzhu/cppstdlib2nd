@@ -18,7 +18,7 @@
 #include <stdexcept> //for most logic and runtime error classes
 #include <system_error> //for system errors(since C++11)
 #include <new> //for out-of-memory exceptions
-#include <ios> //for I/O exceptions
+#include <ios> //for I/O in exceptions
 #include <future> //for errors with async() and futures(since C++11),-lpthread
 #include <utility>
 
@@ -73,7 +73,8 @@ void foofoo(const std::tuple<Args...> t)
 
 std::tuple<int,int,int> barbar(){
   std::cout<<"call barbar"<<std::endl;
-  return {1,2,3};//error,but now OK
+  return std::make_tuple(1,2,3);
+  //return {1,2,3};//error,but now OK
 }
 
 std::vector<int> foobar(){
@@ -84,6 +85,34 @@ std::vector<int> foobar(){
 std::tuple<int,int,int> barfoo(){
   std::cout<<"call barfoo"<<std::endl;
   return std::make_tuple(1,2,3);
+}
+
+//
+//helper: print element with index IDX of tuple with MAX elements
+template<int IDX, int MAX, typename... Args>
+struct PRINT_TUPLE{
+  static void print(std::ostream& strm,
+                    const std::tuple<Args...>& t){
+    strm << std::get<IDX>(t) << (IDX + 1 == MAX ? "" : ",");
+    PRINT_TUPLE<IDX + 1, MAX, Args...>::print(strm, t);
+  }
+};
+
+//partial specialization to end the recursion
+template<int MAX, typename... Args>
+struct PRINT_TUPLE<MAX, MAX, Args...>{
+  static void print(std::ostream& strm,
+                    const std::tuple<Args...>& t){
+  }
+};
+
+//output operator for tuples
+template <typename... Args>
+std::ostream& operator<<(std::ostream& strm,
+                         const std::tuple<Args...>& t){
+  strm << "[";
+  PRINT_TUPLE<0, sizeof...(Args), Args...>::print(strm, t);
+  return strm << "]";
 }
 
 
@@ -230,9 +259,9 @@ int main()
 
   std::tuple<int,double> xt1(42,3.14);//OK, old syntax
   std::tuple<int,double> xt2{42,3.14};//OK, new syntax
-  std::tuple<int,double> xt3 = {42,3.14};//error,but now OK
+  //std::tuple<int,double> xt3 = {42,3.14};//error,but now OK
 
-  std::vector<std::tuple<int,float>> v{{1,1.0},{2,2.0}};//error, but now OK
+  //std::vector<std::tuple<int,float>> v{{1,1.0},{2,2.0}};//error, but now OK
 
   barbar();
   std::vector<std::pair<int,float>> v1{{1,1.1},{2,2.1}};//OK
@@ -257,7 +286,8 @@ int main()
   std::cout<<std::get<3>(tq)<<std::endl;
 
   //5.1.3 Tuple的输入/输出
-  
+  std::tuple<int,float,std::string> tu(77,1.1,"Hello Template");
+  std::cout<<"io: "<<tu<<std::endl;
 
 
 
