@@ -21,6 +21,13 @@
 #include <ios> //for I/O in exceptions
 #include <future> //for errors with async() and futures(since C++11),-lpthread
 #include <utility>
+#include <memory> //for shared_ptr
+#include <fstream>
+#include <sys/mman.h> //for shared memory,-lrt
+#include <fcntl.h>
+#include <unistd.h>
+#include <cstring> //for strerror()
+#include <cerrno> //for errno
 
 
 
@@ -114,6 +121,110 @@ std::ostream& operator<<(std::ostream& strm,
   PRINT_TUPLE<0, sizeof...(Args), Args...>::print(strm, t);
   return strm << "]";
 }
+
+class FileDeleter
+{
+private:
+  std::string filename;
+public:
+  FileDeleter(const std::string& fn):filename(fn){}
+  void operator()(std::ofstream* fp){
+    fp->close();//close file
+    std::remove(filename.c_str());;//delete file
+  }
+};
+
+class SharedMemoryDetacher
+{
+public:
+  void operator()(int* p){
+    std::cout<<"unlink /tmp1234"<<std::endl;
+    if(shm_unlink("/tmp1234")!=0){
+      std::cerr<<"OOPS: shm_unlink() failed"<<std::endl;
+    }
+  }
+};
+
+std::shared_ptr<int> getSharedIntMemory(int num)
+{
+  void* mem;
+  int shmfd = shm_open("/tmp1234",O_CREAT|O_RDWR,S_IRWXU|S_IRWXG);
+  if(shmfd<0){
+    throw std::string(strerror(errno));
+  }
+
+  if(ftruncate(shmfd, num*sizeof(int))==-1){
+    throw std::string(strerror(errno));
+  }
+
+  mem = mmap(nullptr, num*sizeof(int),PROT_READ|PROT_WRITE,
+             MAP_SHARED, shmfd,0);
+  if(mem == MAP_FAILED){
+    throw std::string(strerror(errno));
+  }
+
+  return std::shared_ptr<int>(static_cast<int*>(mem),
+                              SharedMemoryDetacher());
+}
+
+class Person{
+public:
+  std::string name;
+  std::shared_ptr<Person> mother;
+  std::shared_ptr<Person> father;
+  std::vector<std::shared_ptr<Person>> kids;
+
+  Person(const std::string& n,
+         std::shared_ptr<Person> m = nullptr,
+         std::shared_ptr<Person> f = nullptr)
+    : name(n),mother(m),father(f){}
+
+  ~Person(){
+    std::cout<<"delete "<<name <<std::endl;
+  }
+};
+
+std::shared_ptr<Person> initFamily(const std::string& name)
+{
+  std::shared_ptr<Person> mom(new Person(name+"'s mom"));
+  std::shared_ptr<Person> dad(new Person(name+"'s dad"));
+  std::shared_ptr<Person> kid(new Person(name,mom,dad));
+  mom->kids.push_back(kid);
+  dad->kids.push_back(kid);
+
+  return kid;
+}
+
+class Person1{
+public:
+  std::string name;
+  std::shared_ptr<Person1> mother;
+  std::shared_ptr<Person1> father;
+  std::vector<std::weak_ptr<Person1>> kids;//weak pointer!!!
+  Person1(const std::string& n,
+         std::shared_ptr<Person1> m = nullptr,
+         std::shared_ptr<Person1> f = nullptr)
+    :name(n),mother(m),father(f){}
+  ~Person1(){
+    std::cout<<"Delete "<<name << std::endl;
+  }
+};
+
+
+std::shared_ptr<Person1> initFamily1(const std::string& name)
+{
+  std::shared_ptr<Person1> mom(new Person1(name+"'s mom"));
+  std::shared_ptr<Person1> dad(new Person1(name+"'s dad"));
+  std::shared_ptr<Person1> kid(new Person1(name,mom,dad));
+  mom->kids.push_back(kid);
+  dad->kids.push_back(kid);
+
+  return kid;
+}
+
+
+
+
 
 
 
@@ -289,14 +400,139 @@ int main()
   std::tuple<int,float,std::string> tu(77,1.1,"Hello Template");
   std::cout<<"io: "<<tu<<std::endl;
 
+  //5.1.4 tuple和pair转换
+  //5.2 Smart Pointer(智能指针)
+  //5.2.1 Class shared_ptr
+
+  //two shared pointers representing two persons by their name
+  std::shared_ptr<std::string> pNico(new std::string("nico"));
+  std::shared_ptr<std::string> pJutta(new std::string("jutta"));
+
+  //capitalize person names
+  (*pNico)[0] = 'N';
+  pJutta->replace(0,1,"J");
+
+  //put them multiple times in a container
+  std::vector<std::shared_ptr<std::string>> whoMadeCoffee;
+  whoMadeCoffee.push_back(pJutta);
+  whoMadeCoffee.push_back(pJutta);
+  whoMadeCoffee.push_back(pNico);
+  whoMadeCoffee.push_back(pJutta);
+  whoMadeCoffee.push_back(pNico);
+
+  //print all elements
+  for(auto ptr : whoMadeCoffee){
+    std::cout<<*ptr<<" ";
+  }
+  std::cout<<std::endl;
+
+  //overwrite a name again
+  *pNico = "Nicolai";
+
+  //print all elements again
+  for(auto ptr : whoMadeCoffee){
+    std::cout<<*ptr<<" ";
+  }
+  std::cout<<std::endl;
+
+  //print some internal data
+  std::cout<<"use_count: "<<whoMadeCoffee[0].use_count()<<std::endl;
+
+  //std::shared_ptr<std::string> pABC=new std::string("ABC");//Error
+  std::shared_ptr<std::string> pDEF{new std::string("DEF")};//OK
+
+  std::shared_ptr<std::string> pGHI=std::make_shared<std::string>("GHI");
+  std::shared_ptr<std::string> pJKL=std::make_shared<std::string>("JKL");
+
+  std::shared_ptr<std::string> pNico4;
+  //pNico4 = new std::string("nico");//Error: no assignment for ordinary pointers
+  pNico4.reset(new std::string("nico"));//OK
+
+  std::shared_ptr<std::string> pmmm(new std::string("mmmmmm"),
+                                    [](std::string* p){
+                                      std::cout<<"delete "<< *p <<std::endl;
+                                      delete p;
+                                    });
+  pmmm = nullptr;//pmmm does not refer to the string any longer
+  whoMadeCoffee.resize(2);//all copies of the string in pNico are destroyed
+
+  std::shared_ptr<int> py(new int[10]);//Error, but compiles
+  std::shared_ptr<int> pz(new int[10],
+                          [](int* p){
+                            std::cout<<"delete int[]"<<std::endl;
+                            delete[] p;
+                          });
+  std::shared_ptr<int> pw(new int[10],
+                          std::default_delete<int[]>());
+  std::unique_ptr<int[]> ppx(new int[10]);//OK
+  //std::shared_ptr<int[]> ppy(new int[10]);//Error: does not compile
+
+  std::shared_ptr<std::ofstream> fp(new std::ofstream("tmpfile.txt"),
+                                    FileDeleter("tmpfile.txt"));
+
+  //get and attach shared memory for 100 ints:
+  std::shared_ptr<int> smp(getSharedIntMemory(100));
+
+  //init the shared memory
+  for(int i = 0; i<100; ++i){
+    smp.get()[i]=i*42;
+  }
+
+  //deal with shared memory somewhere else:
+
+  for(int i=0;i<100;++i){
+    std::cout << smp.get()[i]<<" ";
+  }
+  std::cout<<std::endl;
+
+  std::cout<<"<return>"<<std::endl;
+  std::cin.get();
+
+  //release shared memory here:
+  smp.reset();
+
+  //5.2.2 Class weak_ptr
+
+  std::shared_ptr<Person> ppt=initFamily("nico");
+
+  std::cout<<"nico's family exists"<<std::endl;
+  std::cout<<"- nico is shared "<<ppt.use_count()<<" times"<<std::endl;
+  std::cout<<"- name of 1st kid of nico's mom: "
+           <<ppt->mother->kids[0]->name<<std::endl;
+
+  ppt=initFamily("jim");
+  std::cout<<"jim's family exists" << std::endl;
+
+  std::cout<<"-------------------------"<<std::endl;
 
 
+  std::shared_ptr<Person1> ppt1=initFamily1("nico");
 
+  std::cout<<"nico's family exists"<<std::endl;
+  std::cout<<"- nico is shared "<<ppt1.use_count()<<" times"<<std::endl;
+  std::cout<<"- name of 1st kid of nico's mom: "
+           <<ppt1->mother->kids[0].lock()->name<<std::endl;
+  ppt1=nullptr;
 
+  //ppt1=initFamily1("jim");
+  //std::cout<<"jim's family exists" << std::endl;
 
+  std::cout<<"-------------------------"<<std::endl;
 
+  try{
+    std::shared_ptr<std::string> sp(new std::string("hi"));//create shared pointer
+    std::weak_ptr<std::string> wp = sp;//create weak pointer out of it
+    sp.reset();//release object of shared pointer
+    std::cout<<wp.use_count()<<std::endl;//prints: 0
+    std::cout<<std::boolalpha<<wp.expired()<<std::endl;//prints: true
+    std::shared_ptr<std::string> pppp(wp);//throws std::bad_weak_ptr
+  }
+  catch(const std::exception& e){
+    std::cerr<<"exception: "<<e.what()<<std::endl;//prints: bad_weak_ptr
+  }
 
-
+  //5.2.3 误用Shared Pointer
+  
 
 
 
