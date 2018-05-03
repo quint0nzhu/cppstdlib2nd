@@ -222,7 +222,72 @@ std::shared_ptr<Person1> initFamily1(const std::string& name)
   return kid;
 }
 
+class Person2{
+public:
+  std::string name;
+  std::shared_ptr<Person2> mother;
+  std::shared_ptr<Person2> father;
+  std::vector<std::shared_ptr<Person2>> kids;
+  Person2(const std::string& n,
+          std::shared_ptr<Person2> m = nullptr,
+          std::shared_ptr<Person2> f = nullptr)
+    :name(n), mother(m), father(f){}
+  void setParentsAndTheirKids(std::shared_ptr<Person2> m = nullptr,
+                              std::shared_ptr<Person2> f = nullptr){
+    mother = m;
+    father = f;
+    if(m!=nullptr){
+      m->kids.push_back(std::shared_ptr<Person2>(this));//Error
+    }
+    if(f!=nullptr){
+      f->kids.push_back(std::shared_ptr<Person2>(this));//Error
+    }
+  }
+};
 
+class Person3 : public std::enable_shared_from_this<Person3>{
+public:
+  std::string name;
+  std::shared_ptr<Person3> mother;
+  std::shared_ptr<Person3> father;
+  std::vector<std::shared_ptr<Person3>> kids;
+  Person3(const std::string& n,
+          std::shared_ptr<Person3> m = nullptr,
+          std::shared_ptr<Person3> f = nullptr)
+    :name(n), mother(m),father(f){}
+  void setParentsAndTheirKids(std::shared_ptr<Person3> m = nullptr,
+                              std::shared_ptr<Person3> f = nullptr){
+    mother = m;
+    father = f;
+    if(m!=mother){
+      m->kids.push_back(shared_from_this());//OK
+    }
+    if(f!=nullptr){
+      f->kids.push_back(shared_from_this());//OK
+    }
+  }
+};
+
+class Person4 : public std::enable_shared_from_this<Person4>{
+public:
+  std::string name;
+  std::shared_ptr<Person4> mother;
+  std::shared_ptr<Person4> father;
+  std::vector<std::shared_ptr<Person4>> kids;
+  Person4(const std::string& n,
+          std::shared_ptr<Person4> m = nullptr,
+          std::shared_ptr<Person4> f = nullptr)
+    :name(n), mother(m),father(f){
+    mother = m;
+    father = f;
+    if(m!=mother){
+      m->kids.push_back(shared_from_this());//OK
+    }
+    if(f!=nullptr){
+      f->kids.push_back(shared_from_this());//OK
+    }
+  }
+};
 
 
 
@@ -532,7 +597,18 @@ int main()
   }
 
   //5.2.3 误用Shared Pointer
-  
+  int* tp=new int;
+  std::shared_ptr<int> sp1(tp);
+  //std::shared_ptr<int> sp2(tp);//Error: two shared pointers manage allocated int
+  std::shared_ptr<int> ssp1(new int);
+  std::shared_ptr<int> ssp2(ssp1);//OK
+
+  //5.2.4 细究Shared Pointer和Weak Pointer
+  auto del = [](int* p){
+    delete p;
+  };
+  std::shared_ptr<int> xp(new int, del);
+  decltype(del)* pd =std::get_deleter<decltype(del)>(xp);
 
 
 
