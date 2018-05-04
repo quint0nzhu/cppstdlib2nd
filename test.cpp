@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <cstring> //for strerror()
 #include <cerrno> //for errno
+#include <atomic>
 
 
 
@@ -289,9 +290,18 @@ public:
   }
 };
 
+struct X
+{
+  int a;
+};
 
+std::shared_ptr<X> global;//initially nullptr
 
-
+void foooo()
+{
+  std::shared_ptr<X> local{new X};
+  std::atomic_store(&global,local);
+}
 
 
 
@@ -609,6 +619,21 @@ int main()
   };
   std::shared_ptr<int> xp(new int, del);
   decltype(del)* pd =std::get_deleter<decltype(del)>(xp);
+
+  std::shared_ptr<X> pxp(new X);
+  std::shared_ptr<int> pip(pxp,&pxp->a);
+
+  std::shared_ptr<X> sspp1(new X);
+  //std::shared_ptr<X> sspp2(sspp1,new X);//Error: delete for this X will never be called
+
+  ssp1.reset();//deletes first X; make ssp1 empty
+  std::shared_ptr<X> sspp3(sspp1, new X);//use_count()==0, but get()!=nullptr
+  std::shared_ptr<void> xxsp(new int);//shared pointer holds a void* internally
+  //std::shared_ptr<int>(static_cast<int*>(xxsp.get()));//Error: undefined behavior
+  std::static_pointer_cast<int*>(xxsp);//OK
+
+  foooo();
+  //5.2.5 Class unique_ptr
 
 
 
