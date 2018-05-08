@@ -29,6 +29,7 @@
 #include <cstring> //for strerror()
 #include <cerrno> //for errno
 #include <atomic>
+#include <dirent.h> //for opendir(),...
 
 
 
@@ -293,6 +294,7 @@ public:
 struct X
 {
   int a;
+  ~X(){std::cout<<"X is deleted!"<<std::endl;}
 };
 
 std::shared_ptr<X> global;//initially nullptr
@@ -302,6 +304,148 @@ void foooo()
   std::shared_ptr<X> local{new X};
   std::atomic_store(&global,local);
 }
+
+void test1()
+{
+  X* ptr = new X;//create an object explicitly
+  //... perform some operations
+  delete ptr;//clean up(destroy the object explicitly)
+}
+
+void test2()
+{
+  X* ptr = new X;//create an object explicity
+  try{
+    //... perform some operations
+  }
+  catch(...){//for any exception
+    delete ptr;//- clean up
+    throw;//- rethrow the exception
+  }
+
+  delete ptr;//clean up on normal end
+
+}
+
+void test3()
+{
+  //create and initialize an unique_ptr
+  std::unique_ptr<X> ptr(new X);
+  //.. perform some operations
+}
+
+void sink(std::unique_ptr<X> up)//sink() gets ownership
+{
+
+}
+
+std::unique_ptr<X> source()
+{
+  std::unique_ptr<X> ptr(new X);//ptr owns the new object
+
+  return std::move(ptr);//transfer ownership to calling function
+  //c++11 can auto add std::move to ptr
+}
+
+class ClassA{
+public:
+  ClassA(){}
+  ClassA(int n):x(n){}
+private:
+  int x;
+};
+
+class ClassB{
+private:
+  ClassA* ptr1;//pointer members
+  ClassA* ptr2;
+public:
+  //constructor that initializes the pointers
+  //- will cause resource leak if second new throws
+  ClassB(int val1, int val2):ptr1(new ClassA(val1)),ptr2(new ClassA(val2)){}
+  //copy constructor
+  //- might cause resource leak if second new throws
+  ClassB(const ClassB& x):ptr1(new ClassA(*x.ptr1)),ptr2(new ClassA(*x.ptr2)){}
+  //assignment operator
+  const ClassB& operator=(const ClassB& x){
+    *ptr1=*x.ptr1;
+    *ptr2=*x.ptr2;
+    return *this;
+  }
+  ~ClassB(){
+    delete ptr1;
+    delete ptr2;
+  }
+};
+
+class ClassC{
+private:
+  std::unique_ptr<ClassA> ptr1;//unique_ptr members
+  std::unique_ptr<ClassA> ptr2;
+public:
+  //constructor that initializes the unique_ptrs
+  //-no resource leak possible
+  ClassC(int val1, int val2)
+    : ptr1(new ClassA(val1)), ptr2(new ClassA(val2)){}
+  //copy constructor
+  //-no resource leak possible
+  ClassC(const ClassC& x)
+    :ptr1(new ClassA(*x.ptr1)), ptr2(new ClassA(*x.ptr2)){}
+  //assignment operator
+  const ClassC& operator=(const ClassC& x){
+    *ptr1=*x.ptr1;
+    *ptr2=*x.ptr2;
+    return *this;
+  }
+
+  //no destructor necessary
+  //(default destructor lets ptr1 and ptr2 delete their objects)
+  //...
+};
+
+class ClassADeleter
+{
+public:
+  void operator()(ClassA* p){
+    std::cout<<"Call delete for ClassA object"<<std::endl;
+    delete p;
+  }
+};
+
+template<typename T>
+using uniquePtr=std::unique_ptr<T,void(*)(T*)>;//alias template
+
+class DirCloser
+{
+public:
+  void operator()(DIR* dp){
+    if(closedir(dp)!=0){
+      std::cerr<<"OOPS: closedir() failed"<<std::endl;
+      return;
+    }
+    std::cout<<"All files closed!"<<std::endl;
+    return;
+  }
+};
+
+extern "C" typedef int(*DIRDeleter)(DIR*);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -634,6 +778,133 @@ int main()
 
   foooo();
   //5.2.5 Class unique_ptr
+
+  //create and initialize (pointer to) string:
+  std::unique_ptr<std::string> up(new std::string("nico"));
+  (*up)[0]='N';//replace first character
+  up->append("lai");//append some characters
+  std::cout<<*up<<std::endl;//print whole string
+
+  //std::unique_ptr<int> up1=new int;//Error
+  std::unique_ptr<int> up2(new int);//OK
+
+  std::unique_ptr<std::string> up4;
+  up4=nullptr;
+  up4.reset();
+
+  std::unique_ptr<std::string> up5(new std::string("nico"));
+  std::string* sp=up5.release();//up5 loses ownership
+  if(up5){//if up5 is not empty
+    std::cout<<*up5<<std::endl;
+  }
+  if(up5==nullptr){
+    std::cout<<"is empty"<<std::endl;
+  }
+  if(up5.get()==nullptr){
+    std::cout<<"is empty"<<std::endl;
+  }
+
+  std::string* spp1=new std::string("hello");
+  std::unique_ptr<std::string> upp1(spp1);
+  //std::unique_ptr<std::string> upp2(spp1);//Error: upp1 and upp2 own same data
+
+  //initialize a unique_ptr with a new object
+  std::unique_ptr<X> uup1(new X);
+  //copy the unique_ptr
+  //std::unique_ptr<X> uup2(uup1);//Error: not possible
+  //transfer ownership of the unique_ptr
+  std::unique_ptr<X> uup3(std::move(uup1));//OK
+  if(!uup1){
+    std::cout<<"uup1 is emtpy"<<std::endl;
+  }
+
+  //initialize a unique_ptr with a new object
+  std::unique_ptr<X> uupp1(new X);
+  std::unique_ptr<X> uupp2;//create another unique_ptr
+  //uupp2=uupp1;//Error: not possible
+  uupp2 = std::move(uupp1);//assign the unique_ptr
+  //- transfers ownership from uupp1 to uupp2
+  if(!uupp1){
+    std::cout<<"uupp1 is empty"<<std::endl;
+  }
+  //initialize a unique_ptr with a new object
+  std::unique_ptr<X> xup1(new X);
+  //initialize another unique_ptr with a new object
+  std::unique_ptr<X> yup1(new X);
+
+  yup1=std::move(xup1);//move assign the unique_ptr
+  //- delete object owned by yup1
+  //- transfer ownership from xup1 to yup1
+
+  std::unique_ptr<X> axx;//create a unique_ptr
+  //axx = new X;//Error
+  axx = std::unique_ptr<X>(new X);//OK, delete old object and own new
+  axx = nullptr;//delete the associated object, if any
+
+  std::unique_ptr<X> fuc(new X);
+  sink(std::move(fuc));//fuc loses ownership
+
+  std::unique_ptr<X> tpp;
+
+  for(int i = 0; i < 10; ++i){
+    tpp = source();//p gets ownership of the returned object
+    //(previously returned object of f() gets deleted)
+  }//last-owned object of tpp gets deleted when main() is end!
+
+  //std::unique_ptr<std::string> uck(new std::string[10]);//runtime error!
+  std::unique_ptr<std::string[]> ck(new std::string[10]);//OK
+
+  //std::cout<<*ck<<std::endl;//Error: * not defined for arrays
+  std::cout<< ck[0]<<std::endl;//OK
+  std::cout<<"_____________"<<std::endl;
+
+  std::unique_ptr<ClassA,ClassADeleter> fook(new ClassA());
+
+  std::unique_ptr<int, void(*)(int*)> fuuk(new int[10],
+                                           [](int* p){
+                                             std::cout<<"call in lambda"<<std::endl;
+                                             delete[] p;
+                                           });
+  std::unique_ptr<int,std::function<void(int*)>> fcck(new int[10],
+                                                      [](int* p){
+                                                        std::cout<<"call lambda by function<>"<<std::endl;
+                                                        delete[] p;
+                                                      });
+  auto lll=[](int* p){
+    std::cout<<"using auto"<<std::endl;
+    delete[] p;
+  };
+  std::unique_ptr<int, decltype(lll)> fffk(new int[10],lll);
+
+
+  uniquePtr<int> uuuk(new int[10],[](int* p){
+      std::cout<<"Using alias template"<<std::endl;
+      delete[] p;
+    });
+
+  //open current directory:
+  std::unique_ptr<DIR,DirCloser> pDir(opendir("."));
+
+  //process each directory entry:
+  struct dirent *dp;
+  while((dp=readdir(pDir.get()))!=nullptr){
+    std::string filename(dp->d_name);
+    std::cout<<"process " <<filename<<std::endl;
+  }
+
+  std::unique_ptr<DIR, int(*)(DIR*)> ppDir(opendir("."),
+                                           closedir);//might not work
+
+  std::unique_ptr<DIR,DIRDeleter> pppDir(opendir("."),
+                                         closedir);//OK
+
+  //5.2.6细究Class unique_ptr
+
+
+
+
+
+
 
 
 
