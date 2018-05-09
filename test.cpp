@@ -430,9 +430,36 @@ public:
 
 extern "C" typedef int(*DIRDeleter)(DIR*);
 
+class ClassDDeleter{
+ public:
+  void operator()(int* p){
+    std::cout<<"ClassDDeleter is called"<<std::endl;
+  }
+};
 
+//this is a bad example
+template <typename T>
+void bad_print(std::auto_ptr<T> p)//p gets ownership of passed argument
+{
+  //does p own an object?
+  if(p.get()==NULL){
+    std::cout<<"NULL"<<std::endl;
+  }
+  else{
+    std::cout<<*p<<std::endl;
+  }
+}//Oops, exiting deletes the object to which p refers
 
-
+template <typename T>
+void good_print(std::unique_ptr<T> p)
+{
+  if(p.get()==nullptr){
+    std::cout<<"NULL"<<std::endl;
+  }
+  else{
+    std::cout<<*p<<std::endl;
+  }
+}
 
 
 
@@ -899,6 +926,60 @@ int main()
                                          closedir);//OK
 
   //5.2.6细究Class unique_ptr
+
+  ClassDDeleter cd;//instance of the deleter type
+  std::unique_ptr<int,ClassDDeleter> psp1(new int, ClassDDeleter());//ClassDDeleter must be MoveConstructible
+  std::unique_ptr<int,ClassDDeleter> psp2(new int, cd);//ClassDDeleter must be CopyConstructible
+  std::unique_ptr<int,ClassDDeleter&> psp3(new int,cd);//psp3 holds a reference to cd
+  //std::unique_ptr<int,const ClassDDeleter&> psp4(new int,ClassDDeleter());//Error: rvalue deleter object can't have reference deleter type
+
+  //5.2.7 Class auto_ptr
+  std::auto_ptr<int> pxxp(new int);
+  *pxxp=42;//change value to which pxxp refers
+  bad_print(pxxp);//Oops, deletes the memory to which p refers
+  //*pxxp=18;//RUNTIME ERROR
+
+
+  std::unique_ptr<int> pgp(new int);
+  *pgp=77842;
+  good_print(std::move(pgp));
+  //*pgp=18;//RUNTIME ERROR
+
+  //5.2.8 Smart Pointer结语
+  //1.shared_ptr用来共享拥有权
+  //2.unique_ptr用来独占拥有权
+  //3.auto_ptr已经不被推荐使用
+
+  //5.3数值的极值(Numeric Limit)
+
+  //use textual representation for bool
+  std::cout<<std::boolalpha;
+
+  //print maximum of integral types
+  std::cout<<"max(short): "<<std::numeric_limits<short>::max()<<std::endl;
+  std::cout<<"max(int): "<<std::numeric_limits<int>::max()<<std::endl;
+  std::cout<<"max(long): "<<std::numeric_limits<long>::max()<<std::endl;
+  std::cout<<std::endl;
+
+  //print maximum of floating-point types
+  std::cout<<"max(float): "
+           <<std::numeric_limits<float>::max()<<std::endl;
+  std::cout<<"max(double): "
+           <<std::numeric_limits<double>::max()<<std::endl;
+  std::cout<<"max(long double): "
+           <<std::numeric_limits<long double>::max()<<std::endl;
+
+  //print whether char is signed
+  std::cout<<"is_signed(char): "
+           <<std::numeric_limits<char>::is_signed<<std::endl;
+  std::cout<<std::endl;
+
+  //print whether numeric limits for type string exist
+  std::cout<<"is_specialized(string): "
+           <<std::numeric_limits<std::string>::is_specialized<<std::endl;
+
+
+
 
 
 
