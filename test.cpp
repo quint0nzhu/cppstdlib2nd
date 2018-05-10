@@ -461,7 +461,79 @@ void good_print(std::unique_ptr<T> p)
   }
 }
 
+template<typename T>
+void foo5(const T& val)
+{
+  if(std::is_pointer<T>::value){
+    std::cout<<"foo5() called for a pointer"<<std::endl;
+  }
+  else{
+    std::cout<<"foo5() called for a value"<<std::endl;
+  }
+}
 
+template <typename T>
+void foo6(const T& val)
+{
+  std::cout<<(std::is_pointer<T>::value ? *val : val)<<std::endl;
+}
+
+//foo() implementation for pointer types:
+template <typename T>
+void foo_impl(const T& val, std::true_type)
+{
+  std::cout<<"foo() called for pointer to  "<< *val<<std::endl;
+}
+
+//foo() implementation for non-pointer types:
+template<typename T>
+void foo_impl(const T& val, std::false_type)
+{
+  std::cout<<"foo() called for value to "<<val<<std::endl;
+}
+
+template<typename T>
+void foo7(const T& val)
+{
+  foo_impl(val, std::is_pointer<T>());
+}
+
+template<typename T>
+void foo8(const T& val)//general implementation
+{
+  std::cout<<"is value"<<val<<std::endl;
+}
+
+//template<typename T>
+//void foo8<T*>(const T& val)//partial specialization for pointers
+//{
+//  std::cout<<"is pointer"<<*val<<std::endl;
+//}
+
+void xoo(short){}//provide integral version
+void xoo(unsigned short){}
+void xoo(int){}
+void xoo(float){}//provide floating-point version
+void xoo(double){}
+void xoo(long double){}
+
+template<typename T>
+void xoo_impl(T val, std::true_type){}//provide integral version
+
+template<typename T>
+void xoo_impl(T val, std::false_type){}//provide floating-point version
+
+template<typename T>
+void xoo1(T val)
+{
+  xoo_impl(val, std::is_integral<T>());
+}
+
+template<typename T1, typename T2>
+typename std::common_type<T1, T2>::type minmin(const T1& x, const T2& y)
+{
+  return x <= y ? x : y;
+}
 
 
 
@@ -977,6 +1049,36 @@ int main()
   //print whether numeric limits for type string exist
   std::cout<<"is_specialized(string): "
            <<std::numeric_limits<std::string>::is_specialized<<std::endl;
+
+  //5.4 Type Trait和Type Utility
+  //5.4.1 Type Trait的目的
+
+  X* pX;
+  foo5(pX);
+
+  X x5;
+  foo5(x5);
+
+  foo5(1);
+
+  //foo6(100);*100 can't be compiled!
+
+  foo7(100);
+  int jb = 123;
+  int* pjb=&jb;
+  foo8(jb);
+  foo8(pjb);
+
+  xoo(jb);
+  xoo1(jb);
+
+
+  int jbc=123;
+  long long jbcc=13999;
+  std::cout<<minmin(jbcc,jbc)<<std::endl;
+  std::string astr("aHello");
+  char* bstr="babc";
+  std::cout<<minmin(astr,bstr)<<std::endl;
 
 
 
