@@ -1080,6 +1080,53 @@ int main()
   char* bstr="babc";
   std::cout<<minmin(astr,bstr)<<std::endl;
 
+  //5.4.2细究Type Trait
+  std::cout<<"_________________"<<std::endl;
+  std::cout<<std::is_const<int>::value<<std::endl;//false
+  std::cout<<std::is_const<const volatile int>::value<<std::endl;//true
+  std::cout<<std::is_const<int* const>::value<<std::endl;//true
+  std::cout<<std::is_const<const int*>::value<<std::endl;//false
+  std::cout<<std::is_const<const int&>::value<<std::endl;//false
+  std::cout<<std::is_const<int[3]>::value<<std::endl;//false
+  std::cout<<std::is_const<const int[3]>::value<<std::endl;//true
+  std::cout<<std::is_const<int[]>::value<<std::endl;//false
+  std::cout<<std::is_const<const int[]>::value<<std::endl;//true
+  //std::cout<<std::is_const<int[] const>::value<<std::endl;//Error!
+
+  std::cout<<"*********************"<<std::endl;
+
+  std::cout<<std::is_assignable<int,int>::value<<std::endl;//false
+  std::cout<<std::is_assignable<int&,int>::value<<std::endl;//true
+  std::cout<<std::is_assignable<int&&,int>::value<<std::endl;//false
+  std::cout<<std::is_assignable<long&,int>::value<<std::endl;//true
+  std::cout<<std::is_assignable<int&,void*>::value<<std::endl;//false
+  std::cout<<std::is_assignable<void*,int>::value<<std::endl;//false
+  std::cout<<std::is_assignable<const char*,std::string>::value<<std::endl;//false
+  std::cout<<std::is_assignable<std::string,const char*>::value<<std::endl;//true
+  std::cout<<"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"<<std::endl;
+  std::cout<<std::is_assignable<int*,int>::value<<std::endl;//false
+  std::cout<<std::is_assignable<int,int*>::value<<std::endl;//false
+  std::cout<<std::is_assignable<int,int&>::value<<std::endl;//false
+  std::cout<<std::is_assignable<int,int&&>::value<<std::endl;//false
+  std::cout<<std::is_assignable<int&,int*>::value<<std::endl;//false
+  std::cout<<std::is_assignable<int&&,int*>::value<<std::endl;//false
+  std::cout<<std::is_assignable<int&,int&&>::value<<std::endl;//false
+  std::cout<<std::is_assignable<int&&,int&>::value<<std::endl;//false
+
+  std::cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~"<<std::endl;
+  std::cout<<std::is_constructible<int>::value<<std::endl;//true
+  std::cout<<std::is_constructible<int,int>::value<<std::endl;//true
+  std::cout<<std::is_constructible<long,int>::value<<std::endl;//true
+  std::cout<<std::is_constructible<int,void*>::value<<std::endl;//false
+  std::cout<<std::is_constructible<void*,int>::value<<std::endl;//false
+  std::cout<<std::is_constructible<const char*,std::string>::value<<std::endl;//false
+  std::cout<<std::is_constructible<std::string,const char*>::value<<std::endl;//true
+  std::cout<<std::is_constructible<std::string,const char*,int,int>::value<<std::endl;//true
+
+
+
+
+
 
 
 
