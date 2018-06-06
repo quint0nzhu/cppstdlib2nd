@@ -535,6 +535,11 @@ typename std::common_type<T1, T2>::type minmin(const T1& x, const T2& y)
   return x <= y ? x : y;
 }
 
+template<typename T>
+void oof(T val)
+{
+  std::cout<<typeid(T).name()<<"  oof is called!"<<std::endl;
+}
 
 
 
@@ -1122,6 +1127,68 @@ int main()
   std::cout<<std::is_constructible<const char*,std::string>::value<<std::endl;//false
   std::cout<<std::is_constructible<std::string,const char*>::value<<std::endl;//true
   std::cout<<std::is_constructible<std::string,const char*,int,int>::value<<std::endl;//true
+
+  typedef int T;
+  std::cout<<typeid(std::add_const<T>::type).name()<<std::endl; //const int
+  std::cout<<typeid(std::add_lvalue_reference<T>::type).name()<<std::endl;//int&
+  std::cout<<typeid(std::add_rvalue_reference<T>::type).name()<<std::endl;//int&&
+  std::cout<<typeid(std::add_pointer<T>::type).name()<<std::endl; //int*
+  std::cout<<typeid(std::make_signed<T>::type).name()<<std::endl; //int
+  std::cout<<typeid(std::make_unsigned<T>::type).name()<<std::endl; //unsigned int
+  std::cout<<typeid(std::remove_const<T>::type).name()<<std::endl; //int
+  std::cout<<typeid(std::remove_reference<T>::type).name()<<std::endl; //int
+  std::cout<<typeid(std::remove_pointer<T>::type).name()<<std::endl; //int
+
+  typedef const int& TT;
+  std::cout<<typeid(std::add_const<TT>::type).name()<<std::endl; //const int&
+  std::cout<<typeid(std::add_lvalue_reference<TT>::type).name()<<std::endl; //const int&
+  std::cout<<typeid(std::add_rvalue_reference<TT>::type).name()<<std::endl; //const int& (yes, lvalue remains lvalue)
+  std::cout<<typeid(std::add_pointer<TT>::type).name()<<std::endl; //const int*
+  //std::cout<<typeid(std::make_signed<TT>::type).name()<<std::endl; //undefined behavior
+  //std::cout<<typeid(std::make_unsigned<TT>::type).name()<<std::endl; //undefined behavior
+  std::cout<<typeid(std::remove_const<TT>::type).name()<<std::endl; //const int&
+  std::cout<<typeid(std::remove_reference<TT>::type).name()<<std::endl; //const int
+  std::cout<<typeid(std::remove_pointer<TT>::type).name()<<std::endl; //const int&
+
+  std::cout<<std::rank<int>::value<<std::endl;
+  std::cout<<std::rank<int[]>::value<<std::endl;
+  std::cout<<std::rank<int[5]>::value<<std::endl;
+  std::cout<<std::rank<int[][7]>::value<<std::endl;
+  std::cout<<std::rank<int[5][7]>::value<<std::endl;
+
+  std::cout<<std::extent<int>::value<<std::endl;
+  std::cout<<std::extent<int[]>::value<<std::endl;
+  std::cout<<std::extent<int[5]>::value<<std::endl;
+
+  std::cout<<std::extent<int[][7]>::value<<std::endl;
+  std::cout<<std::extent<int[5][7]>::value<<std::endl;
+  std::cout<<std::extent<int[][7],1>::value<<std::endl;
+  std::cout<<std::extent<int[5][7],1>::value<<std::endl;
+  std::cout<<std::extent<int[5][7],2>::value<<std::endl;
+
+  std::cout<<typeid(std::remove_extent<int>::type).name()<<std::endl;//int
+  std::cout<<typeid(std::remove_extent<int[]>::type).name()<<std::endl;//int
+  std::cout<<typeid(std::remove_extent<int[5]>::type).name()<<std::endl;//int
+  std::cout<<typeid(std::remove_extent<int[][7]>::type).name()<<std::endl;//int[7]
+  std::cout<<typeid(std::remove_extent<int[5][7]>::type).name()<<std::endl;//int[7]
+
+  std::cout<<typeid(std::remove_all_extents<int>::type).name()<<std::endl;//int
+  std::cout<<typeid(std::remove_all_extents<int[]>::type).name()<<std::endl;//int
+  std::cout<<typeid(std::remove_all_extents<int[5]>::type).name()<<std::endl;//int
+  std::cout<<typeid(std::remove_all_extents<int[][7]>::type).name()<<std::endl;//int
+  std::cout<<typeid(std::remove_all_extents<int[5][7]>::type).name()<<std::endl;//int
+
+  //5.4.3 Reference Wrapper（外覆器）
+
+  int oooo=999;
+  oof(std::ref(oooo));//int&
+  oof(std::cref(oooo));//const int&
+
+  //std::vector<A&> ocll;//Error!
+  std::vector<std::reference_wrapper<A>> lloc;//OK
+
+
+
 
 
 
