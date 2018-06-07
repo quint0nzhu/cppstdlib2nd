@@ -541,9 +541,16 @@ void oof(T val)
   std::cout<<typeid(T).name()<<"  oof is called!"<<std::endl;
 }
 
+void cnuf(int x, int y)
+{
+  std::cout<<"call cnuf"<<std::endl;
+  std::cout<<x+y<<std::endl;
+}
 
-
-
+class dac{
+public:
+  void memfunc(int x, int y) const { std::cout<<"call member function"<<std::endl<<x + y<<std::endl;}
+};
 
 
 
@@ -1186,6 +1193,34 @@ int main()
 
   //std::vector<A&> ocll;//Error!
   std::vector<std::reference_wrapper<A>> lloc;//OK
+
+  //5.4.4 Function Type Wrapper
+  std::vector<std::function<void(int,int)>> tasks;
+  tasks.push_back(cnuf);
+  tasks.push_back([](int x, int y){
+      std::cout<<"call lambda"<<std::endl;
+      std::cout<<x-y<<std::endl;
+    });
+
+  for(std::function<void(int,int)> f : tasks){
+    f(33, 66);
+  }
+
+  std::function<void(const dac&, int, int)> mmf;
+  mmf = &dac::memfunc;
+  mmf(dac(),42,77);
+
+  std::function<void(int,int)> f4;
+  //f4(44,44);//throws std::bad_functon_call
+  f4=cnuf;
+  f4(44,44);
+
+  //5.5
+  
+
+
+
+
 
 
 
