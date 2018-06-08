@@ -553,9 +553,29 @@ public:
   void memfunc(int x, int y) const { std::cout<<"call member function"<<std::endl<<x + y<<std::endl;}
 };
 
+//function that compares two pointers by comparing the values to which they point
 bool int_ptr_less(int* a, int* b)
 {
   return *a < *b;
+}
+
+class MyContainer{
+private:
+  int* elems;//dynamic array of elements
+  int numElems;//number of elements
+public:
+  //implementation of swap()
+  void swap(MyContainer& x){
+    std::swap(elems,x.elems);
+    std::swap(numElems,x.numElems);
+  }
+};
+
+//overloaded global swap() for this type
+inline void swap(MyContainer& c1,MyContainer& c2)
+  noexcept(noexcept(c1.swap(c2)))
+{
+  c1.swap(c2);//calls implementation of swap()
 }
 
 
@@ -1239,12 +1259,30 @@ int main()
   std::cout<<*extremes.first<<std::endl;
   std::cout<<*extremes.second<<std::endl;
 
+  auto extremes1 = std::minmax({pzhux,pzhuy,pzhuz},[](int* a,int* b){
+      return *a<*b;
+    });
+  std::cout<<*extremes1.first<<std::endl<<*extremes1.second<<std::endl;
 
+  int i4i=1;
+  long l4l=2;
 
+  //std::max(i4i,l4l);//ERROR:argument types don't match
+  //std::max({i4i,l4l});//ERROR:argument types don't match
 
+  std::cout<<std::max<long>(i4i,l4l)<<std::endl;//OK
+  std::cout<<std::max<long>({i4i,l4l})<<std::endl;;//OK
 
+  //5.5.2
 
+  int i10=11;
+  long l10=111;
+  //std::swap(i10,l10);//ERROR:argument types don't match
+  int aa1[10];
+  int aa3[11];
+  //std::swap(aa1,aa3);//ERROR:arrays have different types(different sizes)
 
+  //5.5.3
 
 
 
