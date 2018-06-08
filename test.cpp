@@ -30,6 +30,7 @@
 #include <cerrno> //for errno
 #include <atomic>
 #include <dirent.h> //for opendir(),...
+#include <algorithm>
 
 
 
@@ -552,6 +553,10 @@ public:
   void memfunc(int x, int y) const { std::cout<<"call member function"<<std::endl<<x + y<<std::endl;}
 };
 
+bool int_ptr_less(int* a, int* b)
+{
+  return *a < *b;
+}
 
 
 
@@ -1215,8 +1220,25 @@ int main()
   f4=cnuf;
   f4(44,44);
 
-  //5.5
-  
+  //5.5辅助函数
+  //5.5.1挑选最小值和最大值
+
+  int zhux=17;
+  int zhuy=42;
+  int zhuz=33;
+  int* pzhux=&zhux;
+  int* pzhuy=&zhuy;
+  int* pzhuz=&zhuz;
+
+  //call max() with special comparison function
+  int* pmax=std::max(pzhux,pzhuy,int_ptr_less);
+  std::cout<<*pmax<<std::endl;
+
+  //call minmax() for initializer list with special comparison function
+  std::pair<int*,int*> extremes=std::minmax({pzhux,pzhuy,pzhuz},int_ptr_less);
+  std::cout<<*extremes.first<<std::endl;
+  std::cout<<*extremes.second<<std::endl;
+
 
 
 
