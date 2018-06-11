@@ -31,6 +31,7 @@
 #include <atomic>
 #include <dirent.h> //for opendir(),...
 #include <algorithm>
+#include <ratio>
 
 
 
@@ -578,6 +579,15 @@ inline void swap(MyContainer& c1,MyContainer& c2)
   c1.swap(c2);//calls implementation of swap()
 }
 
+class XX{
+public:
+  bool operator==(const XX& x)const{
+    return false;
+  }
+  bool operator<(const XX& x)const{
+    return false;
+  }
+};
 
 
 
@@ -1283,6 +1293,53 @@ int main()
   //std::swap(aa1,aa3);//ERROR:arrays have different types(different sizes)
 
   //5.5.3
+
+  using namespace std::rel_ops;//make !=,>,etc.,available
+  XX xx1,xx2;
+  if(xx1!=xx2){ //ok
+    std::cout<<"xx1!=xx2"<<std::endl;
+  }
+  if(xx1>xx2){//ok
+    std::cout<<"xx1>xx2"<<std::endl;
+  }
+
+  //5.6 Class ratio<>
+  typedef std::ratio<5,3> FiveThirds;
+  std::cout<<FiveThirds::num <<"/"<<FiveThirds::den<<std::endl;
+
+  typedef std::ratio<25,15> AlsoFiveThirds;
+  std::cout<<AlsoFiveThirds::num<<"/"<<AlsoFiveThirds::den<<std::endl;
+
+  std::ratio<42,42> one;
+  std::cout<<one.num<<"/"<<one.den<<std::endl;
+
+  std::ratio<0> zero;
+  std::cout<<zero.num<<"/"<<zero.den<<std::endl;
+
+  typedef std::ratio<7,-3> Neg;
+  std::cout<<Neg::num<<"/"<<Neg::den<<std::endl;
+
+  std::ratio_add<std::ratio<2,7>,std::ratio<2,6>>::type thht;
+  std::cout<<thht.num<<"/"<<thht.den<<std::endl;
+
+  std::cout<<std::ratio_equal<std::ratio<5,3>,std::ratio<25,15>>::value<<std::endl;//yields true
+
+  //typedef std::ratio_multiply<std::ratio<1,std::numeric_limits<long long>::max()>,
+  //                    std::ratio<1,2>>::type bigden;
+  //std::cout<<bigden.num<<"/"<<bigden.den<<std::endl;
+  typedef std::ratio<0> Zero;
+
+  //std::ratio_divide<FiveThirds,Zero>::type d0;
+  //std::cout<<d0.num<<"/"<<d0.den<<std::endl;
+
+  std::cout<<std::nano::num<<"/"<<std::nano::den<<std::endl;
+
+  //5.7 Clock
+
+  //5.7.1 Chrono
+
+
+
 
 
 
