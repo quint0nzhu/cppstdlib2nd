@@ -32,6 +32,7 @@
 #include <dirent.h> //for opendir(),...
 #include <algorithm>
 #include <ratio>
+#include <chrono>
 
 
 
@@ -1337,6 +1338,18 @@ int main()
   //5.7 Clock
 
   //5.7.1 Chrono
+
+  //5.7.2 Duration
+  std::chrono::duration<int> twentySeconds(20);
+  std::chrono::duration<double,std::ratio<60>> halfMinute(0.5);
+  std::chrono::duration<long,std::ratio<1,1000L>> oneMillisecond(1);
+
+  std::chrono::seconds atwentySeconds(20);
+  std::chrono::hours aDay(24);
+  std::chrono::milliseconds oneMillisecond(1);
+
+
+
 
 
 
