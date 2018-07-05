@@ -1387,8 +1387,14 @@ int main()
   std::chrono::milliseconds dada(42);
   std::cout<<dada<<std::endl;
 
-  std::chrono::seconds sec(55);
-  std::chrono::
+  std::chrono::seconds sec(59);
+  //std::chrono::minutes m1=sec;//ERROR
+  std::chrono::minutes m2=std::chrono::duration_cast<std::chrono::minutes>(sec);//OK
+  std::cout <<  m2 <<std::endl;
+  std::chrono::duration<double, std::ratio<60>> ybmin(0.5);
+  //std::chrono::seconds sss1=ybmin;//ERROR
+  std::chrono::seconds sss2=std::chrono::duration_cast<std::chrono::seconds>(ybmin);//OK
+  std::cout << sss2 << std::endl;
 
 
 
