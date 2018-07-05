@@ -590,6 +590,23 @@ public:
   }
 };
 
+template<typename V,typename R>
+std::ostream& operator<<(std::ostream& s,const std::chrono::duration<V,R>& d)
+{
+  s<<"["<<d.count()<<" of "<<R::num<<"/"<<R::den<<"]";
+  return s;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1346,7 +1363,36 @@ int main()
 
   std::chrono::seconds atwentySeconds(20);
   std::chrono::hours aDay(24);
-  std::chrono::milliseconds oneMillisecond(1);
+  std::chrono::milliseconds oneMillisecond1(1);
+
+  std::chrono::seconds dxd1(42);//42 seconds
+  std::chrono::milliseconds dxd2(10); //10 milliseconds
+  std::cout<<(dxd1-dxd2).count()<<std::endl;
+
+  std::chrono::duration<int,std::ratio<1,3>> tmd1(1);//1 tick of 1/3 second
+  std::chrono::duration<int,std::ratio<1,5>> tmd2(1);//1 tick of 1/5 second
+  std::cout<<(tmd1+tmd2).count()<<std::endl;//8 ticks of 1/15 second
+  std::cout<<(tmd1<tmd2)<<std::endl;//false
+
+  std::chrono::seconds tss(20);//20 seconds
+  std::chrono::hours adday(24);//24 hours
+
+  std::chrono::milliseconds msms;//0 milliseconds
+  msms=tss+adday;//86400000milliseconds
+  --msms;//86399999;milliseconds
+  msms*=2;///172839998milliseconds
+  std::cout<<msms.count()<<" ms"<<std::endl;
+  std::cout<<std::chrono::nanoseconds(msms).count()<<" ns"<<std::endl;
+
+  std::chrono::milliseconds dada(42);
+  std::cout<<dada<<std::endl;
+
+  std::chrono::seconds sec(55);
+  std::chrono::
+
+
+
+
 
 
 
