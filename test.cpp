@@ -1230,7 +1230,7 @@ int main()
   //std::vector<A&> ocll;//Error!
   std::vector<std::reference_wrapper<A>> lloc;//OK
 
-  //5.4.4 Function Type Wrapper
+  //5.4.4 Function Type Wrapper（外覆器）
   std::vector<std::function<void(int,int)>> tasks;
   tasks.push_back(cnuf);
   tasks.push_back([](int x, int y){
@@ -1284,7 +1284,7 @@ int main()
   std::cout<<std::max<long>(i4i,l4l)<<std::endl;//OK
   std::cout<<std::max<long>({i4i,l4l})<<std::endl;;//OK
 
-  //5.5.2
+  //5.5.2两值互换（Swapping）
 
   int i10=11;
   long l10=111;
@@ -1293,7 +1293,7 @@ int main()
   int aa3[11];
   //std::swap(aa1,aa3);//ERROR:arrays have different types(different sizes)
 
-  //5.5.3
+  //5.5.3增补的"比较操作符"（Comparison Operator）
 
   using namespace std::rel_ops;//make !=,>,etc.,available
   XX xx1,xx2;
@@ -1304,7 +1304,7 @@ int main()
     std::cout<<"xx1>xx2"<<std::endl;
   }
 
-  //5.6 Class ratio<>
+  //5.6 Class ratio<>的编译期分数运算
   typedef std::ratio<5,3> FiveThirds;
   std::cout<<FiveThirds::num <<"/"<<FiveThirds::den<<std::endl;
 
@@ -1335,11 +1335,11 @@ int main()
 
   std::cout<<std::nano::num<<"/"<<std::nano::den<<std::endl;
 
-  //5.7 Clock
+  //5.7 Clock和Timer
 
-  //5.7.1 Chrono
+  //5.7.1 Chrono程序库概观
 
-  //5.7.2 Duration
+  //5.7.2 Duration（时间段）
   std::chrono::duration<int> twentySeconds(20);
   std::chrono::duration<double,std::ratio<60>> halfMinute(0.5);
   std::chrono::duration<long,std::ratio<1,1000L>> oneMillisecond(1);
