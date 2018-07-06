@@ -33,11 +33,9 @@
 #include <algorithm>
 #include <ratio>
 #include <chrono>
-
-
-
-
-
+#include <iomanip> // for setfill() setw()
+#include <ctime>
+#include <thread> //for this_thread
 
 
 //generic output operator for pairs(limited solution)
@@ -597,19 +595,57 @@ std::ostream& operator<<(std::ostream& s,const std::chrono::duration<V,R>& d)
   return s;
 }
 
+template <typename C>
+void printClockData()
+{
+  std::cout<<"- precision: ";
+  //if time unit is less or equal one millisecond
+  typedef typename C::period P;//type of time unit
+  if(std::ratio_less_equal<P, std::milli>::value){
+    //convert to and print as milliseconds
+    typedef typename std::ratio_multiply<P,std::kilo>::type TT;
+    std::cout<< std::fixed << double(TT::num)/TT::den<<" milliseconds"<<std::endl;
+  }
+  else{
+    //print as seconds
+    std::cout<<std::fixed<<double(P::num)/P::den<<" seconds"<<std::endl;
+  }
+  std::cout<<"- is_steady: "<<std::boolalpha<<C::is_steady<<std::endl;
+}
 
+//convert timepoint of system clock to calendar time string
+inline
+std::string asString(const std::chrono::system_clock::time_point& tp)
+{
+  //convert to system time:
+  std::time_t t = std::chrono::system_clock::to_time_t(tp);//convert to system time
+  std::string ts = std::ctime(&t);//convert to calendar time
+  //std::string ts = std::asctime(std::gmtime(&t));//universal, UTC
+  ts.resize(ts.size()-1);//skip trailing newline
+  return ts;
+}
 
+//convert calendar time to timepoint of system clock
+inline
+std::chrono::system_clock::time_point
+makeTimePoint(int year, int mon, int day,
+              int hour, int min, int sec=0)
+{
+  struct std::tm t;
+  t.tm_sec = sec;//second of minute(0..59 and 60 for leap seconds)
+  t.tm_min = min;//minute of hour(0..59)
+  t.tm_hour=hour;//hour of day(0..23)
+  t.tm_mday=day;//day of month(0..31)
+  t.tm_mon=mon-1;//month of year(0..11)
+  t.tm_year=year-1900;//year since 1900
+  t.tm_isdst=-1;//determine whether daylight saving time
+  std::time_t tt=std::mktime(&t);
+  if(tt==-1){
+    throw "no valid system time";
+  }
+  return std::chrono::system_clock::from_time_t(tt);
 
-
-
-
-
-
-
-
-
-
-
+}
 
 
 
@@ -1396,33 +1432,107 @@ int main()
   std::chrono::seconds sss2=std::chrono::duration_cast<std::chrono::seconds>(ybmin);//OK
   std::cout << sss2 << std::endl;
 
+  std::chrono::milliseconds mmms(7255042);
 
+  //split into hours, minutes, seconds, and milliseconds
+  std::chrono::hours hh=std::chrono::duration_cast<std::chrono::hours>(mmms);
+  std::chrono::minutes mm=std::chrono::duration_cast<std::chrono::minutes>(mmms % std::chrono::hours(1));
+  std::chrono::seconds s4=std::chrono::duration_cast<std::chrono::seconds>(mmms % std::chrono::minutes(1));
+  std::chrono::milliseconds msec=std::chrono::duration_cast<std::chrono::milliseconds>(mmms % std::chrono::seconds(1));
 
+  //and print durations and values:
+  std::cout << "raw: " << hh << "::" << mm << "::" << s4 << "::" << msec << std::endl;
 
+  std::cout << "     " << std::setfill('0') << std::setw(2) << hh.count() << "::"
+            <<std::setw(2)<<mm.count()<<"::"
+            <<std::setw(2)<<s4.count()<<"::"
+            <<std::setw(3)<<msec.count()<<std::endl;
 
+  //5.7.3 Clock （时钟）和Timepoint（时间点）
 
+  std::cout<<"system_clock: "<<std::endl;
+  printClockData<std::chrono::system_clock>();
+  std::cout<<"\nhigh_resolution_clock: "<<std::endl;
+  printClockData<std::chrono::high_resolution_clock>();
+  std::cout<<"\nsteady_clock: "<<std::endl;
+  printClockData<std::chrono::steady_clock>();
 
+  auto system_start=std::chrono::system_clock::now();
+  //std::chrono::minutes onem(1);
+  //if(std::chrono::system_clock::now() > (system_start+onem)){
+  //  std::cout<<"time over 1 minutes!"<<std::endl;
+  // }
 
+  std::this_thread::sleep_for(std::chrono::seconds(15));
+  auto diff=std::chrono::system_clock::now()-system_start;
 
+  auto sec1=std::chrono::duration_cast<std::chrono::seconds>(diff);
+  std::cout<<"this program runs: "<<sec1.count()<<" seconds"<<std::endl;
 
+  //print the epoch of this system clock:
+  std::chrono::system_clock::time_point tp100;
+  std::cout <<"epoch: "<<asString(tp100)<<std::endl;
 
+  //print current time:
+  tp100=std::chrono::system_clock::now();
+  std::cout<<"now: "<<asString(tp100)<<std::endl;
 
+  //print minimum time of this system clock:
+  tp100=std::chrono::system_clock::time_point::min();
+  std::cout<<"min: "<<asString(tp100)<<std::endl;
 
+  //print maximum time of this system clock:
+  tp100=std::chrono::system_clock::time_point::max();
+  std::cout<<"max: "<<asString(tp100)<<std::endl;
 
+  //define type for durations that represent day(s):
+  typedef std::chrono::duration<int, std::ratio<3600*24>> Days;
 
+  //process the epoch of this system clock
+  std::chrono::time_point<std::chrono::system_clock> tp007;
+  std::cout<<"epoch: "<<asString(tp007)<<std::endl;
 
+  //add one day, 23 hours, and 55 minutes
+  tp007 += Days(1)+std::chrono::hours(23)+std::chrono::minutes(55);
+  std::cout<<"later: "<<asString(tp007)<<std::endl;
 
+  //process difference from epoch in minutes and days:
+  auto diff007=tp007-std::chrono::system_clock::time_point();
+  std::cout<<"diff:       "
+           <<std::chrono::duration_cast<std::chrono::minutes>(diff007).count()
+           <<" minute(s)"<<std::endl;
+  Days ddays=std::chrono::duration_cast<Days>(diff007);
+  std::cout<<"diff:       "
+           <<ddays.count()<<" day(s)"<<std::endl;
 
+  //subtract one year(hoping it is valid and not a leap year)
+  tp007-=std::chrono::hours(24*365);
+  std::cout<<"-1 year:  "<<asString(tp007)<<std::endl;
 
+  //subtract 50 years(hoping it is valid and ignoring leap years)
+  tp007-=std::chrono::duration<int, std::ratio<3600*24*365>>(50);
+  std::cout<<"-50 years: "<<asString(tp007)<<std::endl;
 
+  //subtract 50 years(hoping it is valid and ignoring leap years)
+  tp007-=std::chrono::duration<int,std::ratio<3600*24*365>>(50);
+  std::cout<<"-50 years: "<<asString(tp007)<<std::endl;
 
+  //5.7.4 C和POSIX提供的Date/Time函数
+  auto tp1=makeTimePoint(2010,01,01,00,00);
+  std::cout<<asString(tp1)<<std::endl;
 
+  auto tp2=makeTimePoint(2011,05,23,13,44);
+  std::cout<<asString(tp2)<<std::endl;
 
+  //5.7.5 以计时器停滞线程（Blocking with Timer）
+  std::this_thread::sleep_for(std::chrono::seconds(10));
+  std::cout<<"Alread wait 10 seconds!"<<std::endl;
+  std::this_thread::sleep_until(std::chrono::system_clock::now()+std::chrono::seconds(10));
 
-
-
-
-
+  //5.8头文件<cstddef>、<cstdlib>和<cstring>
+  //5.8.1<cstddef>内的各项定义
+  //5.8.2<cstdlib>内的各种定义
+  //5.8.3<cstring>中的定义式
 
   return 0;
 }
