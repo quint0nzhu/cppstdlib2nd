@@ -10,6 +10,10 @@
 #include <array>
 #include <list>
 #include <forward_list>
+#include <set>
+#include <string>
+#include <map>
+#include <unordered_set>
 
 
 
@@ -24,10 +28,10 @@ void printElements(const T& coll)
 
 int main()
 {
-  //6.
-  //6.1 STL
-  //6.2 Container
-  //6.2.1 Sequence Container
+  //6标准模板库
+  //6.1 STL组件(Component)
+  //6.2 容器(Container)
+  //6.2.1序列式容器(Sequence Container)
   std::vector<int> coll; //vector container for integer elements
 
   //append elements with values 1 to 6
@@ -105,6 +109,72 @@ int main()
     std::cout << elem << ' ';
   }
   std::cout << std::endl;
+
+  //6.2.2关联式容器(Associative Container)
+
+  std::multiset<std::string> cities{
+    "Braunschweig","Hanover","Frankfurt","New York",
+      "Chicago","Toronto","Paris","Frankfurt"
+      };
+  //print each element:
+  for(const auto& elem : cities){
+    std::cout << elem << " ";
+  }
+  std::cout << std::endl;
+
+  //insert additional values:
+  cities.insert({"London","Munich","Hanover","Braunschweig"});
+
+  //print each element:
+  for(const auto& elem : cities){
+    std::cout << elem << " ";
+  }
+  std::cout << std::endl;
+
+  std::multimap<int,std::string> coll6;//container for int/string values
+
+  //insert some elements in arbitrary order
+  //- a value with key 1 gets inserted twice
+
+  coll6 = {{5,"tagged"},
+           {2,"a"},
+           {1,"this"},
+           {4,"of"},
+           {6,"strings"},
+           {1,"is"},
+           {3,"multimap"}};
+
+  //print all element values
+  //- element member second is the value
+  for(auto elem : coll6){
+    std::cout << elem.second << ' ';
+  }
+  std::cout << std::endl;
+
+  //6.2.3无序容器(Unordered Container)
+
+  std::unordered_multiset<std::string> cities1{
+    "Braunschweig","Hanover","Frankfurt","New York",
+      "Chicago","Toronto","Paris","Frankfurt"
+      };
+
+  //print each element:
+  for(const auto& elem : cities1){
+    std::cout << elem << " ";
+  }
+  std::cout << std::endl;
+
+  //insert additional values:
+  cities1.insert({"London","Munich","Hanover","Braunschweig"});
+
+  //print each element:
+  for(const auto& elem : cities1){
+    std::cout << elem << " ";
+  }
+  std::cout << std::endl;
+
+
+
 
   return 0;
 }
