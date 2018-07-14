@@ -14,6 +14,7 @@
 #include <string>
 #include <map>
 #include <unordered_set>
+#include <unordered_map>
 
 
 
@@ -172,6 +173,48 @@ int main()
     std::cout << elem << " ";
   }
   std::cout << std::endl;
+
+  std::unordered_map<std::string,double> coll7{
+    {"time",9.9},
+      {"struppi",11.77}
+  };
+
+  //square the value of each element:
+  for(std::pair<const std::string,double>& elem : coll7){
+    elem.second *= elem.second;
+  }
+
+  //print each element (key and value):
+  for(const auto& elem : coll7){
+    std::cout << elem.first << ": " << elem.second << std::endl;
+  }
+
+  //6.2.4(Associative Array)
+
+  //type of the container:
+  //-unordered_map: elements are key/value pairs
+  //-string: keys have type string
+  //-float: values have type float
+
+  std::unordered_map<std::string,float> coll8;
+
+  //insert some elements into the collection
+  //-using the syntax of an associative array
+  coll8["VAT1"]=0.16;
+  coll8["VAT2"]=0.07;
+  coll8["Pi"]=3.1415;
+  coll8["an arbitrary number"]=4983.223;
+  coll8["Null"]=0;
+
+  //change value
+  coll8["VAT1"]+=0.03;
+
+  //print difference of VAT values
+  std::cout << "VAT difference: " << coll8["VAT1"] - coll8["VAT2"] << std::endl;
+
+  //6.2.5
+
+
 
 
 
