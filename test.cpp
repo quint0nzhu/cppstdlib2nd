@@ -15,6 +15,7 @@
 #include <map>
 #include <unordered_set>
 #include <unordered_map>
+#include <algorithm>
 
 
 
@@ -189,7 +190,7 @@ int main()
     std::cout << elem.first << ": " << elem.second << std::endl;
   }
 
-  //6.2.4(Associative Array)
+  //6.2.4关联式数组(Associative Array)
 
   //type of the container:
   //-unordered_map: elements are key/value pairs
@@ -212,8 +213,171 @@ int main()
   //print difference of VAT values
   std::cout << "VAT difference: " << coll8["VAT1"] - coll8["VAT2"] << std::endl;
 
-  //6.2.5
+  //6.2.5其他容器
+  //6.2.6容器适配器(Container Adapter)
+  //6.3迭代器(Iterator)
 
+  std::list<char> coll9;//list container for character elements
+
+  //append elements from 'a' to 'z'
+  for(char c = 'a'; c <= 'z'; ++c){
+    coll9.push_back(c);
+  }
+
+  //print all elements:
+  //-iterator over all elements
+  std::list<char>::const_iterator pos;
+  for(pos = coll9.begin(); pos != coll9.end(); ++pos){
+    std::cout << *pos << ' ';
+  }
+  std::cout << std::endl;
+
+  //6.3.1关联式(Associative)及无序(Unordered)容器的更多实例
+
+  //type of the collection
+  typedef std::set<int> IntSet;
+
+  IntSet coll10;//set container for int values
+
+  //insert elements from 1 to 6 in arbitrary order
+  //- note that there are two calls of insert() with value 1
+
+  /*coll10.insert(3);
+  coll10.insert(1);
+  coll10.insert(5);
+  coll10.insert(4);
+  coll10.insert(1);
+  coll10.insert(6);
+  coll10.insert(2);*/
+
+  coll10.insert({3,1,5,4,1,6,2,7});
+
+  //print all elements
+  //- iterate over all elements
+  IntSet::const_iterator pos1;
+  for(pos1 = coll10.begin(); pos1 != coll10.end(); ++pos1){
+    std::cout << *pos1 << ' ';
+  }
+  std::cout << std::endl;
+
+  //unordered multiset container for int values
+  std::unordered_set<int> coll11;
+
+  //insert some elements
+  coll11.insert({1,3,5,7,11,13,17,19,23,27,1});
+
+  //print all elements
+  for(auto elem : coll11){
+    std::cout << elem << ' ';
+  }
+  std::cout << std::endl;
+
+  //insert one more element
+  coll11.insert(25);
+
+  //print all elements again
+  for(auto elem : coll11){
+    std::cout << elem  << ' ';
+  }
+  std::cout << std::endl;
+
+  //6.3.2迭代器种类(Iterator Category)
+  //6.4算法(Algorithm)
+
+  //create vector with elements from 1 to 6 in arbitrary order
+  std::vector<int> coll12 = {2,5,4,1,6,3};
+
+  //find and print minimum and maximum elements
+  auto minpos = min_element(coll12.cbegin(),coll12.cend());
+  std::cout << "min: " << *minpos << std::endl;
+  auto maxpos = max_element(coll12.cbegin(),coll12.cend());
+  std::cout << "max: " << *maxpos << std::endl;
+
+  //sort all elements
+  sort(coll12.begin(),coll12.end());
+
+  //find the first element with value 3
+  //-no cbegin()/cend() because later we modify the elements pos3 refers to
+  auto pos3 = find(coll12.begin(),coll12.end(),//range
+                   3);//value
+
+  //reverse the order of the found element with value 3 and all following elements
+  reverse(pos3, coll12.end());
+
+  //print all elements
+  for(auto elem : coll12){
+    std::cout << elem << ' ';
+  }
+  std::cout << std::endl;
+
+  //create vector with elements from 1 to 6 in arbitrary order
+  std::vector<int> coll13;
+  coll13.push_back(2);
+  coll13.push_back(5);
+  coll13.push_back(4);
+  coll13.push_back(1);
+  coll13.push_back(6);
+  coll13.push_back(3);
+
+  //find and print minimum and maximum elements
+  std::vector<int>::const_iterator minpos1 = min_element(coll13.begin(),
+                                                         coll13.end());
+  std::cout << "min: " << *minpos1 << std::endl;
+  std::vector<int>::const_iterator maxpos1 = max_element(coll13.begin(),
+                                                         coll13.end());
+  std::cout << "max: " << *maxpos1 << std::endl;
+
+  //sort all elements
+  sort(coll13.begin(), coll13.end());
+
+  //find the first element with value 3
+  std::vector<int>::iterator pos31;
+  pos31 = find(coll13.begin(), coll13.end(),//range
+               3);//value
+
+  //reverse the order of the found element with value 3 and all following elements
+  reverse(pos31, coll13.end());
+
+  //print all elements
+  std::vector<int>::const_iterator pos2;
+  for(pos2 = coll13.begin(); pos2 != coll13.end(); ++pos2){
+    std::cout << *pos2 << ' ';
+  }
+  std::cout << std::endl;
+
+  //6.4.1区间(Range)
+
+  std::list<int> coll14;
+
+  //insert elements from 20 to 40
+  for(int i = 20; i <= 40; ++i){
+    coll14.push_back(i);
+  }
+
+  //find position of element with value3
+  //- there is none, so pos3 get coll.end()
+  auto pos32 = find(coll14.begin(),coll14.end(),//range
+                    3);//value
+
+  //reverse the order of elements between found element and the end
+  //- because pos3 is coll.end() it reverses an empty range
+  reverse(pos32, coll14.end());
+
+  //find positions of values 25 and 35
+  std::list<int>::iterator pos25,pos35;
+  pos25=find(coll14.begin(), coll14.end(),//range
+             25);//value
+  pos35=find(coll14.begin(), coll14.end(),//range
+             35);//value
+
+  //print the maximum of the corresponding range
+  //- note: including pos25 but excluding pos35
+  std::cout << "max: " << *max_element(pos25, pos35) << std::endl;
+
+  //process the elements including the last position
+  std::cout << "max: " << *max_element(pos25, ++pos35) << std::endl;
+
+  //6.4.2处理多重区间(Multiple Ranges)
 
 
 
