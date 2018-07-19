@@ -16,6 +16,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <algorithm>
+#include <iterator>
 
 
 
@@ -378,6 +379,102 @@ int main()
   std::cout << "max: " << *max_element(pos25, ++pos35) << std::endl;
 
   //6.4.2处理多重区间(Multiple Ranges)
+
+  std::list<int> coll15={1,2,3,4,5,6,7,8,9};
+  std::vector<int> coll16;
+  //RUNTIME ERROR:
+  //- overwrites nonexisting elements in the destination
+  //copy(coll15.cbegin(),coll15.cend(),//source
+  //     coll16.begin());//destination
+
+  //resize destination to have enough room for the overwriting algorithm
+  coll16.resize(coll15.size());
+
+  //copy elements from first into second collection
+  //- overwrites existing elements in destination
+  copy(coll15.cbegin(),coll15.cend(),//source
+       coll16.begin());//destination
+
+  for(auto& elem : coll16){
+    std::cout << elem << ' ';
+  }
+  std::cout << std::endl;
+
+  //create third collection with enough room
+  //- initial size is passed as parameter
+
+  std::deque<int> coll17(coll15.size());
+
+  //copy elements from first into third collection
+  copy(coll15.cbegin(),coll15.cend(),//source
+       coll17.begin());//destination
+
+  for(auto& elem : coll17){
+    std::cout << elem << ' ';
+  }
+  std::cout << std::endl;
+
+  //6.5迭代器之适配器(Iterator Adapter)
+  //6.5.1 Insert Iterator（安插型迭代器）
+
+  std::list<int> coll18={1,2,3,4,5,6,7,8,9};
+
+  //copy the elements of coll18 into coll19 by appending them
+  std::vector<int> coll19;
+  copy(coll18.cbegin(),coll18.cend(),//source
+       back_inserter(coll19));//destination
+
+  for(auto& elem : coll19){
+    std::cout << elem << ' ';
+  }
+  std::cout << std::endl;
+
+  //copy the element of coll118 into coll20 by inserting them at the front
+  //- reverses the order of the elements
+  std::deque<int> coll20;
+  copy(coll18.cbegin(),coll18.cend(),//source
+       front_inserter(coll20));//destination
+
+  for(auto& elem : coll20){
+    std::cout << elem << ' ';
+  }
+  std::cout << std::endl;
+
+  //copy elements of coll18 into coll21
+  //- only inserter that works for associative collections
+  std::set<int> coll21;
+  copy(coll18.cbegin(),coll18.cend(),//source
+       inserter(coll21,coll21.begin()));
+
+  for(auto& elem : coll21){
+    std::cout << elem << ' ';
+  }
+  std::cout << std::endl;
+
+  //6.5.2 Stream Iterator（串流迭代器）
+
+  std::vector<std::string> coll22;
+  //read all words from the standard input
+  //- source: all strings until end-of-file(or error)
+  //- destination: coll22(inserting)
+  copy(std::istream_iterator<std::string>(std::cin),//start of source
+       std::istream_iterator<std::string>(),//end of source
+       back_inserter(coll22));//destination
+
+  //sort elements
+  sort(coll22.begin(),coll22.end());
+
+  //print all elements without duplicates
+  //-source: coll22
+  //-destination: standard output(with newline between elements)
+  unique_copy(coll22.cbegin(),coll22.cend(),//source
+              std::ostream_iterator<std::string>(std::cout,"\n"));//destination
+
+  //6.5.3 Reverse Iterator（反向迭代器）
+  
+
+
+
 
 
 
