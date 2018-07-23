@@ -17,6 +17,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <iterator>
+#include <cstdlib> //for abs()
 
 
 
@@ -27,6 +28,86 @@ void printElements(const T& coll)
     std::cout << elem << std::endl;
   }
 }
+
+//PRINT_ELEMENTS()
+//-prints optional string optstr followed by
+//-all elements of the collection coll
+//-in one line, separated by spaces
+
+template<typename T>
+inline void PRINT_ELEMENTS(const T& coll,
+                           const std::string& optstr="")
+{
+  std::cout << optstr;
+  for(const auto& elem : coll){
+    std::cout << elem << ' ';
+  }
+  std::cout << std::endl;
+}
+
+//function that prints the passed argument
+void print(int elem)
+{
+  std::cout << elem << ' ';
+}
+
+int square(int value)
+{
+  return value*value;
+}
+
+//predicate, which returns whether an integer is a prime number
+bool isPrime(int number)
+{
+  //ignore negative sign
+  number = abs(number);
+
+  //0 and 1 are no prime numbers
+  if(number == 0 || number == 1){
+    return false;
+  }
+
+  //find divisor that divides without a remainder
+  int divisor;
+  for(divisor = number/2; number%divisor != 0; --divisor){
+    ;
+  }
+
+  //if no divisor greater than 1 is found, it is a prime number
+  return divisor == 1;
+}
+
+class Person{
+public:
+  Person():_firstname(""),_lastname(""){}
+  Person(std::string fn,std::string ln)
+  {
+    _firstname = fn;
+    _lastname = ln;
+  }
+
+public:
+  std::string firstname()const{return _firstname;}
+  std::string lastname()const{return _lastname;}
+
+private:
+  std::string _firstname;
+  std::string _lastname;
+};
+
+//binary function predicate:
+//-returns whether a person is less than another person
+bool personSortCriterion(const Person& p1, const Person& p2)
+{
+  //a person is less than another person
+  //-if the last name is less
+  //-if the last name is equal and the first name is less
+  return p1.lastname() < p2.lastname() ||
+                         (p1.lastname() == p2.lastname() &&
+                          p1.firstname() < p2.firstname());
+}
+
+
 
 
 int main()
@@ -452,7 +533,7 @@ int main()
   std::cout << std::endl;
 
   //6.5.2 Stream Iterator（串流迭代器）
-
+  /*
   std::vector<std::string> coll22;
   //read all words from the standard input
   //- source: all strings until end-of-file(or error)
@@ -469,9 +550,204 @@ int main()
   //-destination: standard output(with newline between elements)
   unique_copy(coll22.cbegin(),coll22.cend(),//source
               std::ostream_iterator<std::string>(std::cout,"\n"));//destination
-
+  */
   //6.5.3 Reverse Iterator（反向迭代器）
-  
+  std::vector<int> coll23;
+
+  //insert elements from 1 to 9
+  for(int i = 1; i <= 9; ++i){
+    coll23.push_back(i);
+  }
+
+  //print all element in reverse order
+  copy(coll23.crbegin(),coll23.crend(),//source
+       std::ostream_iterator<int>(std::cout, " "));//destination
+  std::cout << std::endl;
+
+  //6.5.4 Move Iterator（搬迁迭代器）
+  //6.6用户自定义的泛型函数(User-Defined Generic Function)
+
+  PRINT_ELEMENTS(coll23, "all elements: ");
+
+  //6.7更易型算法(Manipulating Algorithm)
+  //6.7.1移除(Removing)元素
+
+  std::list<int> coll24;
+
+  //insert elements from 6 to and 1 to 6
+  for(int i = 1; i <= 6; ++i){
+    coll24.push_front(i);
+    coll24.push_back(i);
+  }
+
+  //print all elements of the collection
+  std::cout << "pre: ";
+  copy(coll24.cbegin(),coll24.cend(),//source
+       std::ostream_iterator<int>(std::cout, " "));//destination
+
+  std::cout << std::endl;
+
+  //remove all elements with value 3
+  remove(coll24.begin(),coll24.end(),//range
+         3);//value
+
+  //print all elements of the collection
+  std::cout << "post: ";
+  copy(coll24.cbegin(),coll24.cend(),//source
+       std::ostream_iterator<int>(std::cout, " "));//destination
+  std::cout << std::endl;
+
+  std::list<int> coll25;
+
+  //insert elements from 6 to 1 and 1 to 6
+  for(int i = 1; i <= 6; ++i){
+    coll25.push_front(i);
+    coll25.push_back(i);
+  }
+
+  //print all elements of the collection
+  copy(coll25.cbegin(),coll25.cend(),
+       std::ostream_iterator<int>(std::cout, " "));
+  std::cout << std::endl;
+
+  //remove all elements with value 3
+  //-retain new end
+
+  std::list<int>::iterator end = remove(coll25.begin(),coll25.end(),
+                                        3);
+
+  //print resulting elements of the collection
+  copy(coll25.begin(),end,
+       std::ostream_iterator<int>(std::cout, " "));
+  std::cout << std::endl;
+
+  //print number of removed elements
+  std::cout << "number of removed elements: "
+            << distance(end, coll25.end()) << std::endl;
+
+  //remove "removed" elements
+  coll25.erase(end, coll25.end());
+
+  //print all elements of the modified collection
+  copy(coll25.cbegin(),coll25.cend(),
+       std::ostream_iterator<int>(std::cout, " "));
+  std::cout << std::endl;
+
+  //6.7.2更易Associative（关联式）和Unordered（无序）容器
+
+  //unordered set with elements from 1 to 9
+  std::set<int> coll26 = {1,2,3,4,5,6,7,8,9};
+
+  //print all elements of the collection
+  copy(coll26.cbegin(),coll26.cend(),
+       std::ostream_iterator<int>(std::cout, " "));
+  std::cout << std::endl;
+
+  //Remove all elements with value 3
+  //-algorithm remove() does not work
+  //-instead member function erase() works
+
+  int num = coll26.erase(3);
+
+  //print number of removed elements
+  std::cout << "number of removed elements: " << num << std::endl;
+
+  //print all elements of the modified collection
+  copy(coll26.cbegin(), coll26.cend(),
+       std::ostream_iterator<int>(std::cout, " "));
+  std::cout << std::endl;
+
+  //6.7.3算法vs.成员函数
+  std::list<int> coll27;
+
+  //insert elements from 6 to 1 and 1 to 6
+  for(int i = 1; i <= 6; ++i){
+    coll27.push_front(i);
+    coll27.push_back(i);
+  }
+
+  //remove all elements with value 3 (poor performance)
+  coll27.erase(remove(coll27.begin(),coll27.end(),
+                      3),
+               coll27.end());
+
+  //remove all elements with value 4 (good performance)
+  coll27.remove(4);
+
+  copy(coll27.cbegin(),coll27.cend(),
+       std::ostream_iterator<int>(std::cout, " "));
+  std::cout << std::endl;
+
+  //6.8以函数作为算法的实参
+  //6.8.1以函数作为算法实参的实例示范
+
+  std::vector<int> coll28;
+
+  //insert elements from 1 to 9
+  for(int i = 1; i <= 9; ++i){
+    coll28.push_back(i);
+  }
+
+  for_each(coll28.cbegin(),coll28.cend(),//range
+           print);//operation
+  std::cout << std::endl;
+
+  std::set<int> coll29;
+  std::vector<int> coll30;
+
+  //insert elements from 1 to 9 into coll29
+  for(int i = 1; i <= 9; ++i){
+    coll29.insert(i);
+  }
+
+  PRINT_ELEMENTS(coll29,"initialized: ");
+
+  //transform each element from coll29 to coll30
+  //-square transformed values
+
+  std::transform(coll29.cbegin(),coll29.cend(),//source
+                 std::back_inserter(coll30),//destination
+                 square);//operation
+  PRINT_ELEMENTS(coll30, "squared:  ");
+
+  //6.8.2判断式(Predicate)
+
+  std::list<int> coll31;
+
+  //insert elements from 24 to 30
+  for(int i = 24; i <= 30; ++i){
+    coll31.push_back(i);
+  }
+
+  //search for prime number
+  auto pos4 = find_if(coll31.cbegin(),coll31.cend(),//range
+                      isPrime);//predicate
+  if(pos4 != coll31.end()){
+    //found
+    std::cout << *pos4 << " is first prime number found" << std::endl;
+  }
+  else {
+    //not found
+    std::cout << "no prime number found" << std::endl;
+  }
+
+  std::deque<Person> coll32;
+  coll32.push_back(Person("hello","world"));
+  coll32.push_back(Person("kit","him"));
+  coll32.push_back(Person("standard", "template"));
+  coll32.push_back(Person("fuck","him"));
+
+  for(const auto& elem : coll32){
+    std::cout << elem.firstname() << " " << elem.lastname() << std::endl;
+  }
+
+  sort(coll32.begin(),coll32.end(),//range
+       personSortCriterion);//sort criterion
+
+  for(const auto& elem : coll32){
+    std::cout << elem.firstname() << " " << elem.lastname() << std::endl;
+  }
+
 
 
 
