@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <iterator>
 #include <cstdlib> //for abs()
+#include <functional>
 
 
 
@@ -106,6 +107,30 @@ bool personSortCriterion(const Person& p1, const Person& p2)
                          (p1.lastname() == p2.lastname() &&
                           p1.firstname() < p2.firstname());
 }
+
+class PrintInt{
+public:
+  void operator()(int elem)const {
+    std::cout << elem << ' ';
+  }
+};
+
+//function object that adds the value with which it is initialized
+class AddValue{
+private:
+  int theValue;//the value to add
+public:
+  //constructor initializes the value to add
+  AddValue(int v):theValue(v){}
+
+  //the "function call" for the element adds the value
+  void operator()(int& elem)const{
+    elem += theValue;
+  }
+};
+
+
+
 
 
 
@@ -734,7 +759,7 @@ int main()
   std::deque<Person> coll32;
   coll32.push_back(Person("hello","world"));
   coll32.push_back(Person("kit","him"));
-  coll32.push_back(Person("standard", "template"));
+  coll32.push_back(Person("fuck", "template"));
   coll32.push_back(Person("fuck","him"));
 
   for(const auto& elem : coll32){
@@ -747,6 +772,158 @@ int main()
   for(const auto& elem : coll32){
     std::cout << elem.firstname() << " " << elem.lastname() << std::endl;
   }
+
+  //6.9使用Lambda
+
+  std::deque<int> coll33 = {1,3,19,5,13,7,11,2,17};
+  int x = 4;
+  int y = 12;
+  auto pos5 = find_if(coll33.cbegin(),coll33.cend(),//range
+                      [x,y](int i )-> bool {//search criterion
+                        return i > x && i < y;
+                      });
+  std::cout << "first elem >4 and <12: " << *pos5 << std::endl;
+
+  //sort Persons according to lastname(and firstname):
+  sort(coll32.begin(),coll32.end(),//range
+       [](const Person& p1, const Person& p2){//sort criterion
+         return p1.firstname()<p2.firstname()||
+                              (p1.firstname()==p2.firstname() &&
+                               p1.lastname()<p2.lastname());
+       });
+
+  for(const auto& elem : coll32){
+    std::cout << elem.firstname() << " " << elem.lastname() << std::endl;
+  }
+
+  //6.10函数对象(Function Object)
+  //6.10.1定义一个函数对象
+
+  std::vector<int> coll34;
+
+  //insert elements from 1 to 9
+  for(int i = 1; i <= 9; ++i){
+    coll34.push_back(i);
+  }
+
+  //print all elements
+  for_each(coll34.cbegin(),coll34.cend(),//range
+           PrintInt());//operation
+  std::cout << std::endl;
+
+  std::list<int> coll35;
+
+  //insert elements from 1 to 9
+  for(int i = 1; i <= 9; ++i){
+    coll35.push_back(i);
+  }
+
+  PRINT_ELEMENTS(coll35,"initialized:          ");
+
+  //add value 10 to each element
+
+  for_each(coll35.begin(),coll35.end(),//range
+           AddValue(10));//operation
+
+  PRINT_ELEMENTS(coll35,"after adding 10:        ");
+
+  //add value of first element to each element
+  for_each(coll35.begin(),coll35.end(),//range
+           AddValue(*coll35.begin()));//operation
+
+  PRINT_ELEMENTS(coll35,"after adding first element:    ");
+
+  //6.10.2预定义的函数对象
+
+  std::deque<int> coll36 = {1,2,3,5,7,11,13,17,19};
+
+  PRINT_ELEMENTS(coll36,"initialized:  ");
+
+  //negate all value in coll36
+  transform(coll36.cbegin(),coll36.cend(),//source
+            coll36.begin(),//destination
+            std::negate<int>());//operation
+  PRINT_ELEMENTS(coll36,"negated:   ");
+
+  //square all value in coll36
+  transform(coll36.cbegin(),coll36.cend(),//first source
+            coll36.cbegin(),//second source
+            coll36.begin(),//destination
+            std::multiplies<int>());//operation
+  PRINT_ELEMENTS(coll36,"squared:   ");
+
+  //6.10.3 Binder
+
+  std::set<int,std::greater<int>> coll37={1,2,3,4,5,6,7,8,9};
+  std::deque<int> coll38;
+
+  //Note: due to the sorting criterion greater<>() elements have reverse order:
+  PRINT_ELEMENTS(coll37,"initialized: ");
+
+  //transform all elements into coll38 by multiplying them with 10
+  transform(coll37.cbegin(),coll37.cend(),//source
+            std::back_inserter(coll38),//destination
+            std::bind(std::multiplies<int>(),std::placeholders::_1,10));//operation
+  PRINT_ELEMENTS(coll38,"transformed:  ");
+
+  //replace value equal to 70 with 42
+  replace_if(coll38.begin(),coll38.end(),//range
+             std::bind(std::equal_to<int>(),std::placeholders::_1,70),//replace criterion
+             42);
+  PRINT_ELEMENTS(coll38,"replaced:    ");
+
+  //remove all elements with values between 50 and 80
+  coll38.erase(remove_if(coll38.begin(),coll38.end(),
+                         std::bind(std::logical_and<bool>(),
+                                   std::bind(std::greater_equal<int>(),std::placeholders::_1,50),
+                                   std::bind(std::less_equal<int>(),std::placeholders::_1,80))),
+               coll38.end());
+  PRINT_ELEMENTS(coll38,"removed:   ");
+
+  //6.10.4函数对象vs. Lambda
+  //6.11容器内的元素
+  //6.11.1容器元素的必要条件
+  //6.11.2 Value语义vs. Reference 语义
+  //6.12 STL内部的错误和异常
+  //6.12.1错误处理(Error Handling)
+  /*
+  std::vector<int> coll39;//empty collection
+  std::vector<int> coll40;//empty collection
+
+  //RUNTIME ERROR:
+  //-beginning is behind the end of the range
+  std::vector<int>::iterator pos6=coll39.begin();
+  reverse(++pos6,coll39.end());
+
+  //insert elements from 1 to 9 into coll39
+  for(int i = 1; i <= 9; ++i){
+    coll39.push_back(i);
+  }
+
+  //RUNTIME ERROR:
+  //-overwriting nonexisting elements
+  copy(coll39.cbegin(),coll39.cend(),//source
+       coll40.begin());//destination
+
+  //RUNTIME ERROR:
+  //-collections mistaken
+  //-cbegin() and cend() refer to different collections
+  copy(coll39.cbegin(),coll40.cend(),//source
+       coll39.end());//destination
+  */
+
+  //6.12.2异常处理(Exception Handling)
+  //6.13扩展STL
+  //6.13.1整合更多Type
+  //6.13.2派生自STL Type
+
+  //7 STL容器
+  //7.1容器的共通能力和共通操作
+  //7.1.1容器的共通能力
+  //7.1.2容器的共通操作
+
+
+
 
 
 
