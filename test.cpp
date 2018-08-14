@@ -11,6 +11,8 @@
 #include <deque>
 #include <set>
 #include <iterator>
+#include <array>
+#include <algorithm>
 
 
 int main()
@@ -120,6 +122,47 @@ int main()
   //pointer和const_pointer是C++11的新引入的
 
   //7.2 Array
+  //7.2.1 Array的能力
+  //Array 初始化基础类型时，初值可能不明确
+  std::array<int,4> x;//OOPS: elements of x have undefined value
+  std::array<int,4> x1={};//OK: all elements of x have value 0 (int())
+  std::array<int,5> coll={42,377,611,21,44};
+  std::array<int,10> c4={42};//one element with value 42 followed by 9 elements with value 0
+  //std::array<int,5> c5={1,2,3,4,5,6};//ERROR: too many values
+  std::array<int,5> a({1,2,3,4,5});//ERROR? but it's OK
+  std::vector<int> v5({1,2,3,4,5});//OK
+  std::array<std::string, 3> as1, as2;
+  std::string* pas1, *pas2;
+  as1[0]="hello";
+  as1[1]="world";
+  pas1=&as1[1];
+  as1[2]="!";
+  as2[0]="fuck";
+  as2[1]="you";
+  pas2=&as2[1];
+  as2[2]="!";
+  std::cout<<*pas1<<std::endl;
+  std::cout<<*pas2<<std::endl;
+  std::swap(as1,as2);//array的交换结果，使得原指针指向的值发生了变化，这一点和其它容器不同
+  std::cout<<*pas1<<std::endl;
+  std::cout<<*pas2<<std::endl;
+  for(auto & elem : as1)
+    std::cout << elem << ' ';
+  std::cout<<std::endl;
+  for(auto & elem : as2)
+    std::cout << elem << ' ';
+  std::cout <<std::endl;
+
+  std::array<int,0> coll1;//array with no elements
+  std::sort(coll1.begin(),coll1.end());//OK (but has no effect)
+  //coll1[5]=10;//RUNTIME ERROR => undefined behavior
+  //std::cout<<coll1.front(); //RUNTIME ERROR => undefined behavior
+
+  //7.2.2 Array的操作
+  std::array<int,5> a1({1,2,3,4,5});//ERROR? but it's OK
+  std::cout << a1.max_size() <<std::endl;
+
+
 
 
 
