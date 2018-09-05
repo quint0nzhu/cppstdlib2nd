@@ -13,6 +13,8 @@
 #include <iterator>
 #include <array>
 #include <algorithm>
+#include <cstring> //strcpy()
+#include <typeinfo> //typeid()
 
 
 int main()
@@ -161,6 +163,45 @@ int main()
   //7.2.2 Array的操作
   std::array<int,5> a1({1,2,3,4,5});//ERROR? but it's OK
   std::cout << a1.max_size() <<std::endl;
+  std::array<int,4> coll2{0}; //only four elements!
+
+  //coll2[5]=100;//RUNTIME ERROR => undefined behavior
+  std::cout << coll2.front()<<std::endl;//OK(coll2 has 4 element after construction)
+  std::array<int,0> coll3;//always empty
+  //std::cout << coll3.front();//RUNTIME ERROR => undefined behavior
+  if(coll2.size() > 5){
+    coll2[5]=12;//OK
+  }
+  try{
+    coll2.at(5)=12;//throws out_of_range exception
+  }
+  catch(const std::exception& e){
+    std::cout << e.what() << std::endl;
+  }
+  //7.2.3把array当成C-Style Array
+  std::array<char,41> a2;//create static array of 41 chars
+
+  strcpy(&a2[0],"hello, world");//copy a C-string into array
+  printf("%s\n",&a2[0]);
+  strcpy(a2.data(),"hello, fucking world");
+  printf("%s\n",a2.data());
+  //printf("%s\n",a2.begin());//ERROR(might work, but not protable)
+
+  //7.2.4异常处理(Exception Handling)
+  //swap()有可能抛出异常，因为它执行的是“元素逐次”的置换动作
+
+  //7.2.5 Tuple接口
+  typedef std::array<std::string, 5> FiveStrings;
+
+  FiveStrings a3={"hello","nico","how","are","you"};
+
+  std::cout<<std::tuple_size<FiveStrings>::value<<std::endl; //yields 5
+  std::cout<<typeid(std::tuple_element<1,FiveStrings>::type).name()<<std::endl;//yields std::string
+  std::cout<<std::get<1>(a3)<<std::endl;//yields std::string("nico")
+
+  //7.2.6 Array运用实例
+
+
 
 
 
