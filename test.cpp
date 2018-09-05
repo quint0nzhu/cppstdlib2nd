@@ -15,7 +15,24 @@
 #include <algorithm>
 #include <cstring> //strcpy()
 #include <typeinfo> //typeid()
+#include <functional>
+#include <numeric>
 
+
+template<typename T>
+void PRINT_ELEMENTS(const T& coll)
+{
+  for(const auto& elem : coll)
+    std::cout << elem << " ";
+  std::cout << std::endl;
+}
+
+template<typename T>
+void shrinkCapacity(std::vector<T>& v)
+{
+  std::vector<T> tmp(v);//copy elements into a new vector
+  v.swap(tmp);//swap internal vector data
+}
 
 int main()
 {
@@ -200,6 +217,62 @@ int main()
   std::cout<<std::get<1>(a3)<<std::endl;//yields std::string("nico")
 
   //7.2.6 Array运用实例
+
+  //create array with 10 ints
+  std::array<int,10> a4={11,22,33,44};
+
+  PRINT_ELEMENTS(a4);
+
+  //modify last two elements
+  a4.back()=9999999;
+  a4[a4.size()-2]=42;
+  PRINT_ELEMENTS(a4);
+
+  //process sum of all elements
+  std::cout<<"sum: "<< std::accumulate(a4.begin(),a4.end(),0)<<std::endl;
+
+  //negate all elements
+  std::transform(a4.begin(),a4.end(),//source
+            a4.begin(),//destination
+                 std::negate<int>());
+  PRINT_ELEMENTS(a4);
+
+  //7.3 Vector
+  //7.3.1 Vector的能力
+  //1.一旦vector重新分配内存，vector元素相关的所有reference,pointer,iterator都会失效
+  //2.内存重新分配很耗时间
+
+  std::vector<int> v6;//create an empty vector
+
+  v6.reserve(80);//reserve memory for 80 elements
+  v6.push_back(323);
+  std::cout<<v6.size()<<std::endl;
+  std::cout<<v6.capacity()<<std::endl;
+  std::cout<<v6.max_size()<<std::endl;
+  //std::vector<T> v7(5);//creates a vector and initializes it with five values
+  //(calls five times the default constructor of type T)
+  //如果想保留足够的内存，还是用reserve()
+
+  //reserve()不能缩减容量，调用了不会引发任何效果
+  //既然vector的容量不会缩减，所以删除元素不会使reference,pointer和iterator不会失效，继续指向动作发生前的位置
+  //插入元素有可能使reference,pointer和iterator失效，因为插入可能导致vector重新分配内存
+
+  v6.shrink_to_fit();//request to shrink memory(since C++11)
+  //但是调用shrink_to_fit()之后并不能保证v6.capacity==v6.size()获得true
+  //也会让指向元素的reference,point和iterator失效
+
+  //shrink capacity of vector v for type T
+  //std::vector<T>(v).swap(v);
+  //7.3.2 Vector的操作
+  
+
+
+
+
+
+
+
+
 
 
 
