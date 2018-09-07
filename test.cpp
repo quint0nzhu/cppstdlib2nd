@@ -264,7 +264,86 @@ int main()
   //shrink capacity of vector v for type T
   //std::vector<T>(v).swap(v);
   //7.3.2 Vector的操作
-  
+  std::list<int> l2;
+  std::vector<int> coll4;
+
+  l2={1,2,3,4,5};
+  //make coll4 be a copy of the contents of l1
+  coll4.assign(l2.begin(),l2.end());
+  PRINT_ELEMENTS(coll4);
+
+  std::vector<int> coll5;//empty!
+
+  //coll5[5]=23;//RUNTIME ERROR => undefined behavior
+  //std::cout << coll5.front(); //RUNTIME ERROR => undefined behavior
+
+  if(coll5.size()>5){
+    coll5[5]=11;//OK
+  }
+  if(!coll5.empty()){
+    std::cout<<coll5.front();//OK
+  }
+  /*try{
+    coll5.at(5)=23; //throws out_of_range exception 
+  }
+  catch(std::exception* e){
+    std::cout << e->what() << std::endl;
+  }*/
+  //vector迭代器持续有效，除非发生两种情况：
+  //1.在一个较小索引位置上安插或移动元素
+  //2.由于容量变化而引起内存重新分配
+
+  //Inserting and Removing时迭代器必须指向一个合法位置，且区间起始位置不能在结束位置之后
+
+  std::vector<int> coll6; //empty!
+
+  coll6.pop_back();//RUNTIME ERROR => undefined behavior
+  if(!coll6.empty()){
+    coll6.pop_back();//OK
+  }
+
+  coll6={2,4,6,4,10};
+
+  //remove all elements with value val
+  coll6.erase(std::remove(coll6.begin(),coll6.end(),4),coll6.end());
+
+  PRINT_ELEMENTS(coll6);
+
+  //remove first element with value val
+  std::vector<int>::iterator pos;
+  pos = std::find(coll6.begin(),coll6.end(),6);
+  if(pos!=coll6.end()){
+    coll6.erase(pos);
+  }
+  PRINT_ELEMENTS(coll6);
+
+  //7.3.3将Vector当作C-Style Array使用
+  std::cout << (&coll6[1] == &coll6[0] + 1) << std::endl;
+
+  std::vector<char> v7; //create vector as dynamic array of chars
+
+  v7.resize(41);//make room for 41 characters(including '\0')
+  strcpy(&v7[0],"hello, word");//copy a C-string into the vector
+  printf("%s\n",&v7[0]);//print contents of the vector as C-string
+  std::cout << v7.size() <<std::endl;
+
+
+  std::vector<char> v8(45);//create static array of 45 chars
+
+  strcpy(v8.data(),"hello, the fucking word");
+  printf("%s\n",v8.data());
+  std::cout << v8.size() <<std::endl;
+
+
+
+
+
+
+
+
+
+
+
 
 
 
