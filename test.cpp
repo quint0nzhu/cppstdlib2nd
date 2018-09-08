@@ -334,6 +334,10 @@ int main()
   printf("%s\n",v8.data());
   std::cout << v8.size() <<std::endl;
 
+  printf("%s\n",v8.begin());//ERROR (might work, but not portable)
+  printf("%s\n",v8.data());//OK(since C++11)
+  printf("%s\n",&v8[0]);//OK, but data() is better
+
 
 
 
