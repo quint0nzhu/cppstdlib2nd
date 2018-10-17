@@ -338,8 +338,8 @@ int main()
   printf("%s\n",v8.data());//OK(since C++11)
   printf("%s\n",&v8[0]);//OK, but data() is better
 
-  //7.3.4(Exception Handling)
-  //7.3.5 Vector
+  //7.3.4 异常处理(Exception Handling)
+  //7.3.5 Vector使用实例
 
   //create empty vector for strings
   std::vector<std::string> sentence;
@@ -391,6 +391,16 @@ int main()
   std::cout << " capacity(): " << sentence.capacity() << std::endl;
 
   //7.3.6 Class vector<bool>
+  std::vector<bool> c5={true,false,true,false,true,false,true,false,true,false};
+  PRINT_ELEMENTS(c5);
+  c5.front().flip();//negate first Boolean element
+  c5[5]=c5.back();//assign last element to element with index 5;
+  PRINT_ELEMENTS(c5);
+
+  //7.4 Deque
+  
+
+
 
 
 
