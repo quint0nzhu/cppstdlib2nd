@@ -34,6 +34,16 @@ void shrinkCapacity(std::vector<T>& v)
   v.swap(tmp);//swap internal vector data
 }
 
+void printLists(const std::list<int>& l1, const std::list<int>& l2)
+{
+  std::cout << "list1: ";
+  copy(l1.cbegin(),l1.cend(),std::ostream_iterator<int>(std::cout, " "));
+  std::cout << std::endl << "list2: ";
+  copy(l2.cbegin(),l2.cend(),std::ostream_iterator<int>(std::cout, " "));
+  std::cout << std::endl << std::endl;
+}
+
+
 int main()
 {
   //7 STL容器
@@ -433,8 +443,45 @@ int main()
        std::ostream_iterator<std::string>(std::cout,"\n"));
 
   //7.5 List
-  
+  //7.5.1 List的能力
+  //7.5.2 List的操作
 
+  std::list<int> coll8; //empty!
+  //std::cout << coll8.front(); //RUNTIME ERROR => undefined behavior
+
+  if(!coll8.empty()){
+    std::cout << coll8.back(); //OK
+  }
+
+  std::list<int> coll9={1,3,3,4};
+
+  //remove all elements with value val
+  coll9.remove(3);
+  copy(coll9.cbegin(),coll9.cend(),
+       std::ostream_iterator<int>(std::cout,"\n"));
+
+  //remove all even elements
+  coll9.remove_if([](int i){
+      return i % 2 == 0;
+    });
+  PRINT_ELEMENTS(coll9);
+
+  //7.5.3 异常处理(Exception Handling)
+  //7.5.4 List运用实例
+
+  //create two empty lists
+  std::list<int> list1, list2;
+
+  //fill both lists with elements
+  for(int i = 0; i < 6; ++i){
+    list1.push_back(i);
+    list2.push_front(i);
+  }
+  printLists(list1, list2);
+
+  //insert all elements of list1 before the first element with value 3 of list2
+  //- find() returns an iterator to the first element with value 3
+  
 
 
 
