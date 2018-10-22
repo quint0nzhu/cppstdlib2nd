@@ -398,7 +398,44 @@ int main()
   PRINT_ELEMENTS(c5);
 
   //7.4 Deque
+  //7.4.1 Deque的能力
+  //7.4.2 Deque的操作函数
+  //7.4.3 Exception Handling
+  //7.4.4 Deque运用实例
+
+  //create empty deque of strings
+  std::deque<std::string> coll7;
+
+  //insert serveral elements
+  coll7.assign(3,std::string("string"));
+  coll7.push_back("last string");
+  coll7.push_front("first string");
+
+  //print elements separated by newlines
+  copy(coll7.cbegin(),coll7.cend(),
+       std::ostream_iterator<std::string>(std::cout, "\n"));
+  std::cout << std::endl;
+
+  //remove first and last element
+  coll7.pop_front();
+  coll7.pop_back();
+
+  //insert "another" into every element but the first
+  for(unsigned i = 1; i < coll7.size(); ++i){
+    coll7[i] = "another" + coll7[i];
+  }
+
+  //change size to four elements
+  coll7.resize(4,"resized string");
+
+  //print elements separated by newlines
+  copy(coll7.cbegin(),coll7.cend(),
+       std::ostream_iterator<std::string>(std::cout,"\n"));
+
+  //7.5 List
   
+
+
 
 
 
