@@ -17,6 +17,7 @@
 #include <typeinfo> //typeid()
 #include <functional>
 #include <numeric>
+#include <forward_list>
 
 
 template<typename T>
@@ -42,6 +43,39 @@ void printLists(const std::list<int>& l1, const std::list<int>& l2)
   copy(l2.cbegin(),l2.cend(),std::ostream_iterator<int>(std::cout, " "));
   std::cout << std::endl << std::endl;
 }
+
+template<typename InputIterator, typename Tp>
+inline InputIterator
+find_before(InputIterator first, InputIterator last, const Tp& val)
+{
+  if(first == last){
+    return first;
+  }
+  InputIterator next(first);
+  ++next;
+  while(next!=last && !(*next == val)){
+    ++next;
+    ++first;
+  }
+  return first;
+}
+
+template<typename InputIterator, typename Pred>
+inline InputIterator
+find_before_if(InputIterator first, InputIterator last, Pred pred)
+{
+  if(first == last){
+    return first;
+  }
+  InputIterator next(first);
+  ++next;
+  while(next!=last && !pred(*next)){
+    ++next;
+    ++first;
+  }
+  return first;
+}
+
 
 
 int main()
@@ -481,9 +515,120 @@ int main()
 
   //insert all elements of list1 before the first element with value 3 of list2
   //- find() returns an iterator to the first element with value 3
+  list2.splice(find(list2.begin(),list2.end(),//destination position
+                    3),
+               list1);//source list
+  printLists(list1,list2);
+
+  //move first element of list2 to the end
+  list2.splice(list2.end(),//destination position
+               list2,//source list
+               list2.begin());//source position
+  printLists(list1,list2);
+
+  //sort second list, assign to list1 and remove duplicates
+  list2.sort();
+  list1=list2;
+  list2.unique();
+  printLists(list1,list2);
+
+  //merge both sorted lists into the first list
+  list1.merge(list2);
+  printLists(list1,list2);
+
+  //7.6 Forward List
+  //7.6.1 Forward List的能力
+  //7.6.2 Forward List的操作
+  std::forward_list<int> l3={1,2,3,4};
+
+  std::cout<<"l3.size(): " << std::distance(l3.begin(),l3.end()) << std::endl;
+  std::cout<<l3.max_size()<<std::endl;
+
+  std::forward_list<int> fwlist={1,2,3};
+
+  //insert 77, 88, and 99 at the beginning:
+  fwlist.insert_after(fwlist.before_begin(),//position
+                      {77,88,99});//values
+  copy(fwlist.cbegin(),fwlist.cend(),
+       std::ostream_iterator<int>(std::cout," "));
+  std::cout<<std::endl;
+  //RUNTIME ERROR: appending element after end is undefined behavior
+  //fwlist.insert_after(fwlist.end(),9999);
+
+  std::forward_list<int> list={1,2,3,4,5,97,98,99};
+
+  //find the position before the first even element
+  auto posBefore=list.before_begin();
+  for(auto pos=list.begin();pos!=list.end();++pos,++posBefore){
+    if(*pos % 2 == 0){
+      break;//element found
+    }
+  }
+
+  //and insert a new element in front of the first even element
+  list.insert_after(posBefore,41);
+  PRINT_ELEMENTS(list);
+
+  posBefore=list.before_begin();
+  for(;std::next(posBefore)!=list.end();++posBefore){
+    if(*std::next(posBefore) % 2 == 0){
+      break;//element found
+    }
+  }
+
+  list.insert_after(posBefore,43);
+  PRINT_ELEMENTS(list);
+
+  //find the position before the first even element
+  auto posBefore1 = find_before_if(list.before_begin(),list.end(),
+                                   [](int i){
+                                     return i%5 == 0;
+                                   });
+
+  //and insert a new element in front of it
+  list.insert_after(posBefore1,44);
+  PRINT_ELEMENTS(list);
+
+  std::forward_list<int> l4={1,2,3,4,5};
+  std::forward_list<int> l5={97,98,99};
+
+  //find 3 in l4
+  auto pos1=l4.before_begin();
+  for(auto pb1=l4.begin();pb1!=l4.end();++pb1,++pos1){
+    if(*pb1==3){
+      break;//found
+    }
+  }
+
+  //find 99 in l5
+  auto pos2=l5.before_begin();
+  for(auto pb2=l5.begin();pb2!=l5.end();++pb2,++pos2){
+    if(*pb2==99){
+      break;//found
+    }
+  }
+
+  //splice 3 from l4 to l5 before 99
+  l5.splice_after(pos2,l4,//destination
+                  pos1);//source
+
+  PRINT_ELEMENTS(l4);
+  PRINT_ELEMENTS(l5);
+
+  l5.splice_after(find_before(l5.before_begin(),l5.end(),99),l4,//destination
+                  find_before(l4.before_begin(),l4.end(),5));//source
+
+  PRINT_ELEMENTS(l4);
+  PRINT_ELEMENTS(l5);
+
+  //RUNTIME ERROR: move first element to the end is not possible that way
+  //fwlist.splice_after(fwlist.end(),//destination position
+  //                   fwlist,//source list
+  //                   fwlist.begin());//source position
+
+  //7.6.3 异常处理(Exception Handling)
+  //7.6.4 Forward List运用实例
   
-
-
 
 
 
