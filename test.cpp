@@ -44,6 +44,17 @@ void printLists(const std::list<int>& l1, const std::list<int>& l2)
   std::cout << std::endl << std::endl;
 }
 
+void printLists(const std::string& s, const std::forward_list<int>& l1,
+                const std::forward_list<int>& l2)
+{
+  std::cout<<s<<std::endl;
+  std::cout<<"list1: ";
+  copy(l1.cbegin(),l1.cend(),std::ostream_iterator<int>(std::cout," "));
+  std::cout<<std::endl<<"list2: ";
+  copy(l2.cbegin(),l2.cend(),std::ostream_iterator<int>(std::cout," "));
+  std::cout<<std::endl;
+}
+
 template<typename InputIterator, typename Tp>
 inline InputIterator
 find_before(InputIterator first, InputIterator last, const Tp& val)
@@ -628,7 +639,62 @@ int main()
 
   //7.6.3 异常处理(Exception Handling)
   //7.6.4 Forward List运用实例
-  
+
+  //create two forward lists
+  std::forward_list<int> list3={1,2,3,4};
+  std::forward_list<int> list4={77,88,99};
+  printLists("initial: ",list3,list4);
+
+  //insert six new element at the beginning of list4
+  list4.insert_after(list4.before_begin(),99);
+  list4.push_front(10);
+  list4.insert_after(list4.before_begin(),{10,11,12,13});
+  printLists("6 new elems: ",list3,list4);
+
+  //insert all elements of list4 at the beginning of list3
+  list3.insert_after(list3.before_begin(),list4.begin(),list4.end());
+  printLists("list4 into list3: ",list3,list4);
+
+  //delete second element and elements after element with value 99
+  list4.erase_after(list4.begin());
+  list4.erase_after(find(list4.begin(),list4.end(),99),list4.end());
+  printLists("delete 2nd and after 99: ",list3,list4);
+
+  //sort list3, assign it to list4, and remove duplicates
+  list3.sort();
+  list4=list3;
+  list4.unique();
+  printLists("sorted and unique: ",list3,list4);
+
+  //merge both sorted lists into list3
+  list3.merge(list4);
+  printLists("merged: ",list3,list4);
+
+  //7.7 Set和Multiset
+  //7.7.1 Set和Multiset的能力
+  //7.7.2 Set和Multiset的操作函数
+
+  std::set<int> c6;
+
+  c6.insert(1);
+  c6.insert(2);
+  c6.insert(4);
+  c6.insert(5);
+  c6.insert(6);
+
+  std::cout<<"lower_bound(3): "<<*c6.lower_bound(3)<<std::endl;
+  std::cout<<"upper_bound(3): "<<*c6.upper_bound(3)<<std::endl;
+  std::cout<<"equal_range(3): "<<*c6.equal_range(3).first<<" "
+           <<*c6.equal_range(3).second<<std::endl;
+  std::cout<<std::endl;
+  std::cout<<"lower_bound(5): "<<*c6.lower_bound(5)<<std::endl;
+  std::cout<<"upper_bound(5): "<<*c6.upper_bound(5)<<std::endl;
+  std::cout<<"equal_range(5): "<<*c6.equal_range(5).first<<" "
+           <<*c6.equal_range(5).second<<std::endl;
+
+
+
+
 
 
 
