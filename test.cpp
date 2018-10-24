@@ -855,6 +855,29 @@ int main()
   //create, fill, and print set with normal element order
   //-uses default sorting criterion
   IntSet coll16={4,7,5,1,6,2,5};
+  PRINT_ELEMENTS(coll16);
+
+  //create sorting criterion with reverse element order
+  RuntimeCmp reverse_order(RuntimeCmp::reverse);
+
+  //create, fill, and print set with reverse element order
+  IntSet coll17(reverse_order);
+  coll17={4,7,5,1,6,2,5};
+  PRINT_ELEMENTS(coll17);
+
+  //assign elements AND sorting criterion
+  coll16=coll17;
+  coll16.insert(3);
+  PRINT_ELEMENTS(coll16);
+
+  //just to make sure...
+  if(coll16.value_comp()==coll17.value_comp()){
+    std::cout<<"coll16 and coll17 have the same sorting criterion"<<std::endl;
+  }
+  else{
+    std::cout<<"coll16 and coll17 hava a different sorting criterion"<<std::endl;
+  }
+
 
 
 
