@@ -18,6 +18,7 @@
 #include <functional>
 #include <numeric>
 #include <forward_list>
+#include <map>
 
 
 template<typename T>
@@ -877,6 +878,53 @@ int main()
   else{
     std::cout<<"coll16 and coll17 hava a different sorting criterion"<<std::endl;
   }
+
+  //7.8 Map和Multimap
+  //7.8.1 Map和Multimap的能力
+  //7.8.2 Map和Multimap的操作函数
+  typedef std::map<std::string,float,std::greater<std::string>> StringFloatMap;
+  StringFloatMap coll18;
+
+  std::map<float,std::string> c8;//sorting criterion: less<>
+  std::map<float,std::string,std::greater<float>> c9;
+  //std::cout<<(c8==c9)<<std::endl;//ERROR: different types
+
+  std::multimap<std::string,float> coll19={{"abc",1.1},{"def",2.2},{"ghi",3.3},{"def",4.4}};
+  //do something with all elements having a certain value
+  std::multimap<std::string,float>::iterator pos4;
+  for(pos4=coll19.begin();pos4!=coll19.end();++pos4){
+    if(pos4->second <= 5.5){//float can not use ==
+      std::cout<<"key: "<<pos4->first<<"\t\t\t"
+               <<"value: "<<pos4->second<<std::endl;
+    }
+  }
+
+  for(auto& elem : coll19){
+    std::cout<<"key: "<<elem.first<<"\t"
+             <<"value: "<<elem.second<<std::endl;
+    elem.second+=5.5;//OK
+  }
+
+  //elem.first="hello";//ERROR at compile time
+  //pos4->first="hello";//ERROR at compile time
+  pos4=coll19.begin();
+  pos4->second=13.5;//OK
+
+  for(auto& elem : coll19){
+    std::cout<<"key: "<<elem.first<<"\t"
+             <<"value: "<<elem.second<<std::endl;
+  }
+
+  //add 10 to the value of each element:
+  std::for_each(coll19.begin(),coll19.end(),
+                [](std::pair<const std::string,float>& elem){
+                  elem.second+=10;
+                });
+  for(auto& elem :coll19){
+    std::cout<<"key: "<<elem.first<<"\t"
+             <<"value: "<<elem.second<<std::endl;
+  }
+
 
 
 
