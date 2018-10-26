@@ -913,7 +913,9 @@ int main()
   std::map<float,std::string,std::greater<float>> c9;
   //std::cout<<(c8==c9)<<std::endl;//ERROR: different types
 
-  std::multimap<std::string,float> coll19={{"abc",1.1},{"def",2.2},{"ghi",3.3},{"def",4.4}};
+  std::multimap<std::string,float> coll19={{"abc",1.1},{"def",4.4},{"ghi",3.3},{"def",2.2}};
+
+  std::map<std::string,float> coll20(coll19.cbegin(),coll19.cend());
   //do something with all elements having a certain value
   std::multimap<std::string,float>::iterator pos4;
   for(pos4=coll19.begin();pos4!=coll19.end();++pos4){
@@ -949,6 +951,18 @@ int main()
              <<"value: "<<elem.second<<std::endl;
   }
 
+  MyLib::replace_key(coll20,"def","fed");
+
+  //insert new element with value of old element
+  coll20["cba"]=coll20["abc"];
+  //remove old element
+  coll20.erase("abc");
+
+  for(auto& elem:coll20){
+    std::cout<<"key: "<<elem.first<<"\t"
+             <<"value: "<<elem.second<<std::endl;
+  }
+  
 
 
 
