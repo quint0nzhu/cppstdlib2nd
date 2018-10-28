@@ -19,6 +19,7 @@
 #include <numeric>
 #include <forward_list>
 #include <map>
+#include <complex>
 
 
 template<typename T>
@@ -962,7 +963,67 @@ int main()
     std::cout<<"key: "<<elem.first<<"\t"
              <<"value: "<<elem.second<<std::endl;
   }
-  
+
+  std::map<std::string,float> coll21;
+  coll21.insert({"otto",22.3});
+
+  coll21.insert(std::map<std::string,float>::value_type("otto1",22.3));
+  coll21.insert(decltype(coll21)::value_type("otto2",22.3));
+
+  //use implicit conversion:
+  coll21.insert(std::pair<std::string,float>("otto3",22.3));
+  //use no implicit conversion:
+  coll21.insert(std::pair<const std::string,float>("otto4",22.3));
+
+  coll21.insert(std::make_pair("otto5",22.3));
+
+  if(coll21.insert(std::make_pair("otto6",22.3)).second){
+    std::cout<<"Ok, could insert otto6/22.3"<<std::endl;
+  }
+  else{
+    std::cout<<"OOPS, could not insert otto6/22.3 "
+             <<"(key otto6 already exists)"<<std::endl;
+  }
+
+  for(const auto& elem : coll21){
+    std::cout<<"key: "<<elem.first<<"\t"
+             <<"value: "<<elem.second<<std::endl;
+  }
+
+  std::map<std::string,std::complex<float>> m;
+
+  m.emplace(std::piecewise_construct,//pass tuple elements as arguments
+            std::make_tuple("hello"),//elements for the key
+            std::make_tuple(3.4,7.8));//elements for the value
+
+  std::cout<<m["hello"]<<std::endl;
+
+  //remove all elements with the passed key
+  std::cout<<coll21.erase("otto4")<<std::endl;
+
+  std::multimap<std::string,float> coll22(coll21.cbegin(),coll21.cend());
+
+  coll22.insert({"otto3",12.3});
+  coll22.insert({"otto3",23.4});
+  for(const auto& elem:coll22){
+    std::cout<<"key: "<<elem.first<<"\t"
+             <<"vaule: "<<elem.second<<std::endl;
+  }
+
+  //remove first element with passed key
+  auto pos5 = coll22.find("otto3");
+  if(pos5!=coll22.end()){
+    coll22.erase(pos5);
+  }
+
+  for(const auto& elem:coll22){
+    std::cout<<"key: "<<elem.first<<"\t"
+             <<"value: "<<elem.second<<std::endl;
+  }
+
+
+
+
 
 
 
