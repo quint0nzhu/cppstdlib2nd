@@ -20,6 +20,7 @@
 #include <forward_list>
 #include <map>
 #include <complex>
+#include <iomanip> //cout()
 
 
 template<typename T>
@@ -965,7 +966,7 @@ int main()
   }
 
   std::map<std::string,float> coll21;
-  coll21.insert({"otto",22.3});
+  coll21.insert({"otto",2.3});
 
   coll21.insert(std::map<std::string,float>::value_type("otto1",22.3));
   coll21.insert(decltype(coll21)::value_type("otto2",22.3));
@@ -973,7 +974,7 @@ int main()
   //use implicit conversion:
   coll21.insert(std::pair<std::string,float>("otto3",22.3));
   //use no implicit conversion:
-  coll21.insert(std::pair<const std::string,float>("otto4",22.3));
+  coll21.insert(std::pair<const std::string,float>("otto4",12.3));
 
   coll21.insert(std::make_pair("otto5",22.3));
 
@@ -1020,6 +1021,119 @@ int main()
     std::cout<<"key: "<<elem.first<<"\t"
              <<"value: "<<elem.second<<std::endl;
   }
+
+  for(auto pos=coll21.begin();pos!=coll21.end();++pos){
+    if(pos->second<21.3){
+      coll21.erase(pos);//RUNTIME ERROR!!but works fine in C++11
+    }
+  }
+  std::cout<<std::endl;
+  for(const auto& elem:coll21){
+    std::cout<<"key: "<<elem.first<<"\t"
+             <<"value: "<<elem.second<<std::endl;
+  }
+
+  //7.8.3将Map视为关联式数组(Associative Array)
+
+  std::map<std::string,float> coll23;//empty collection
+
+  //insert "otto"/7.7 as key/value pair
+  //-first it inserts "otto"/float()
+  //-then it assigns 7.7
+  coll23["otto"]=7.7;
+  std::cout<<coll23["otto"]<<std::endl;
+
+
+  //7.8.4 异常处理(Exception Handling)
+  //7.8.5 Map和Multimap运用实例
+
+  std::map<std::string,double> coll24{{"tim",9.9},{"struppi",11.77}};
+
+  //square the value of each element:
+  for_each(coll24.begin(),coll24.end(),
+           [](std::pair<const std::string,double>& elem){
+             elem.second*=elem.second;
+           });
+
+  //print each element:
+  for_each(coll24.begin(),coll24.end(),
+           [](const std::map<std::string,double>::value_type& elem){
+             std::cout<<elem.first<<": "<<elem.second<<std::endl;
+           });
+
+  //create map/associative array
+  //-keys are strings
+  //-values are floats
+  typedef std::map<std::string,float> StringFloatMap1;
+
+  StringFloatMap1 stocks; //create empty container
+
+  //insert some elements
+  stocks["BASF"]=369.50;
+  stocks["VW"]=413.50;
+  stocks["Daimler"]=819.00;
+  stocks["BMW"]=834.00;
+  stocks["Siemens"]=842.20;
+
+  //print all elements
+  StringFloatMap1::iterator pos6;
+  std::cout<<std::left;//left-adjust values
+  for(pos6=stocks.begin();pos6!=stocks.end();++pos6){
+    std::cout<<"stock: "<<std::setw(12)<<pos6->first
+             <<"price: "<<pos6->second<<std::endl;
+  }
+  std::cout<<std::endl;
+
+  //boom(all prices doubled)
+  for(pos6=stocks.begin();pos6!=stocks.end();++pos6){
+    pos6->second*=2;
+  }
+
+  //print all elements
+  for(pos6=stocks.begin();pos6!=stocks.end();++pos6){
+    std::cout<<"stock: "<<std::setw(12)<<pos6->first
+             <<"price: "<<pos6->second<<std::endl;
+  }
+  std::cout<<std::endl;
+
+  //rename key from "VM" to "Volkswagen"
+  //-provided only by exchanging element
+  stocks["Volkswagen"]=stocks["VW"];
+  stocks.erase("VW");
+
+  //print all elements
+  for(pos6=stocks.begin();pos6!=stocks.end();++pos6){
+    std::cout<<"stock: "<<std::setw(12)<<pos6->first
+             <<"price: "<<pos6->second<<std::endl;
+  }
+
+
+  //create multimap as string/string dictionary
+  std::multimap<std::string,std::string> dict;
+
+  //insert some elements in random order
+  dict.insert({
+      {"day","Tag"},
+        {"strange","fremd"},
+          {"car","Auto"},
+            {"smart","elegant"},
+               {"trait","Merkmal"},
+                 {"strange","seltsam"},
+                   {"smart","raffiniert"},
+                     {"smart","klug"},
+                       {"clever","raffiniert"}});
+
+  //print all elements
+  std::cout.setf(std::ios::left,std::ios::adjustfield);
+  std::cout<<' '<<std::setw(10)<<"english "
+           <<"german "<<std::endl;
+  std::cout<<std::setfill('-')<<std::setw(20)<<" "
+           <<std::setfill(' ')<<std::endl;
+  for(const auto& elem :dict){
+    std::cout<<' '<<std::setw(10)<<elem.first
+             <<elem.second<<std::endl;
+  }
+  std::cout<<std::endl;
 
 
 
