@@ -21,6 +21,7 @@
 #include <map>
 #include <complex>
 #include <iomanip> //cout()
+#include <cctype>
 
 
 template<typename T>
@@ -140,6 +141,47 @@ namespace MyLib{
     }
   }
 }
+
+class RuntimeStringCmp{
+public:
+  //constants for the comparison criterion
+  enum cmp_mode {normal, nocase};
+private:
+  //actual comparison mode
+  const cmp_mode mode;
+
+  //auxiliary function to compare case insensitive
+  static bool nocase_compare(char c1, char c2){
+    return toupper(c1)<toupper(c2);
+  }
+
+public:
+  //constructor: initializes the comparison criterion
+  RuntimeStringCmp(cmp_mode m=normal):mode(m){}
+
+  //the comparison
+  bool operator()(const std::string& s1, const std::string& s2)const{
+    if(mode==normal){
+      return s1 < s2;
+    }
+    else{
+      return lexicographical_compare(s1.begin(),s1.end(),
+                                     s2.begin(),s2.end(),
+                                     nocase_compare);
+    }
+  }
+};
+
+//container type:
+//-map with
+//   -string keys
+//   -string values
+//   -the special comparison object type
+typedef std::map<std::string,std::string,RuntimeStringCmp> StringStringMap;
+
+//function that fills and prints such containers
+void fillAndPrint(StringStringMap& coll);
+
 
 
 int main()
@@ -1135,6 +1177,68 @@ int main()
   }
   std::cout<<std::endl;
 
+  //print all values for key "smart"
+  std::string word("smart");
+  std::cout<<word<<": "<<std::endl;
+  for(auto pos = dict.lower_bound(word);
+      pos!=dict.upper_bound(word);++pos){
+    std::cout<<"    "<<pos->second<<std::endl;
+  }
+
+  //print all keys for value "raffiniert"
+  word=("raffiniert");
+  std::cout<<word<<": "<<std::endl;
+  for(const auto& elem:dict){
+    if(elem.second==word){
+      std::cout<<"    "<<elem.first<<std::endl;
+    }
+  }
+
+  //map with floats as key and value
+  //-initializing keys and values are automatically converted to float
+  std::map<float,float> coll25={{1,7},{2,4},{3,2},{4,3},
+                                {5,6},{6,1},{7,3}};
+
+  //search an element with key 3.0(logarithmic complexity)
+  auto posKey = coll25.find(3.0);
+  if(posKey!=coll25.end()){
+    std::cout<<"key 3.0 found ("
+             <<posKey->first<<":"
+             <<posKey->second<<")"<<std::endl;
+  }
+
+  //search an element with value 3.0(linear complexity)
+  auto posVal=find_if(coll25.begin(),coll25.end(),
+                      [](const std::pair<float,float>& elem){
+                        return elem.second==3.0;
+                      });
+  if(posVal!=coll25.end()){
+    std::cout<<"value 3.0 found ("
+             <<posVal->first<<":"
+             <<posVal->second<<")"<<std::endl;
+  }
+
+  //7.8.6 综合实例：运用Map、String并于运行期指定排序准则
+
+  //function object to compare strings
+  //-allows you to set the comparison criterion at runtime
+  //-allows you to compare case insensitive
+
+  //create a container with the default comparison criterion
+  StringStringMap coll26;
+  fillAndPrint(coll26);
+
+  //create an object for case-insensitive comparisons
+  RuntimeStringCmp ignorecase(RuntimeStringCmp::nocase);
+
+  //create a container with the case-insensitive comparisons criterion
+  StringStringMap coll27(ignorecase);
+  fillAndPrint(coll27);
+
+  //7.9 无序容器(Unordered Container)
+  //7.9.1 Unordered容器的能力
+
+
 
 
 
@@ -1172,4 +1276,28 @@ int main()
 
 
   return 0;
+}
+
+
+void fillAndPrint(StringStringMap& coll)
+{
+  //insert elements in random order
+  coll["Deutschland"]="Germany";
+  coll["deutsch"]="German";
+  coll["Haken"]="snag";
+  coll["arbeiten"]="work";
+  coll["Hund"]="dog";
+  coll["gehen"]="go";
+  coll["Unternehmen"]="enterprise";
+  coll["unternehmen"]="undertake";
+  coll["gehen"]="walk";
+  coll["Bestatter"]="undertaker";
+
+  //print elements
+  std::cout.setf(std::ios::left,std::ios::adjustfield);
+  for(const auto& elem:coll){
+    std::cout<<std::setw(15)<<elem.first<<" "
+             <<elem.second<<std::endl;
+  }
+  std::cout<<std::endl;
 }
