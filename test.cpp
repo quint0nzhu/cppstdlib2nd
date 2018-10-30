@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_set>
+#include <unordered_map>
 #include <list>
 #include <deque>
 #include <set>
@@ -181,6 +182,90 @@ typedef std::map<std::string,std::string,RuntimeStringCmp> StringStringMap;
 
 //function that fills and prints such containers
 void fillAndPrint(StringStringMap& coll);
+
+class Customer{};
+
+class CustomerHash{
+public:
+  std::size_t operator()(const Customer& c)const{
+    return 1;
+  }
+};
+
+std::size_t customer_hash_func(const Customer& c)
+{
+  return 1;
+}
+
+class Customer1{
+public:
+  std::string fname;
+  std::string lname;
+  long no;
+};
+
+class CustomerHash1{
+public:
+  std::size_t operator()(const Customer1& c)const{
+    return std::hash<std::string>()(c.fname)+
+      std::hash<std::string>()(c.lname)+
+      std::hash<long>()(c.no);
+  }
+};
+
+template<typename T>
+inline
+void hash_combine(std::size_t& seed, const T& val)
+{
+  seed ^=std::hash<T>()(val)+0x9e3779b9+(seed<<6)+(seed>>2);
+}
+
+//auxiliary generic functions to create a hash value using a seed
+template<typename T>
+inline
+void hash_val(std::size_t& seed, const T& val)
+{
+  hash_combine(seed,val);
+}
+
+template<typename T, typename... Types>
+inline void hash_val(std::size_t& seed,
+                     const T& val,const Types&... args)
+{
+  hash_combine(seed,val);
+  hash_val(seed,args...);
+}
+
+//auxiliary generic function to create a hash value out of a heterogeneous list of arguments
+template<typename... Types>
+inline
+std::size_t hash_val(const Types&... args)
+{
+  std::size_t seed = 0;
+  hash_val(seed,args...);
+  return seed;
+}
+
+class CustomerHash2{
+public:
+  std::size_t operator()(const Customer1& c)const{
+    return hash_val(c.fname,c.lname,c.no);
+  }
+};
+
+bool operator==(const Customer& c1, const Customer& c2){
+  return true;
+}
+
+class CustomerEqual{
+public:
+  bool operator()(const Customer& c1, const Customer& c2)const{
+    return false;
+  }
+};
+
+
+
 
 
 
@@ -1237,6 +1322,131 @@ int main()
 
   //7.9 无序容器(Unordered Container)
   //7.9.1 Unordered容器的能力
+  //7.9.2 创建和控制Unordered容器
+
+  std::unordered_set<std::string> coll28;
+  coll28.max_load_factor(0.7);
+  coll28.rehash(100);//prepare for 100/max_load_factor() elements
+  coll28.reserve(100);//prepare for 100 elements(since C++11)
+
+  std::unordered_set<Customer,CustomerHash> custset;
+  std::unordered_set<Customer,std::size_t(*)(const Customer&)>
+    custset1(1,customer_hash_func);
+
+  std::unordered_multiset<Customer,CustomerHash> custmset;
+  std::unordered_map<Customer,std::string,CustomerHash> custmap;
+
+  std::unordered_set<Customer,CustomerHash,CustomerEqual> custset2;
+  std::unordered_multimap<Customer,std::string,CustomerHash,CustomerEqual> custmap1;
+
+  //7.9.3 Unordered容器的其他操作
+
+  std::unordered_map<std::string,float> coll29{{"hello",11.5}};
+
+  for(auto& elem :coll29){
+    std::cout<<"key: "<<elem.first<<"\t"
+             <<"value: "<<elem.second<<std::endl;
+  }
+
+  //elem.first="world";//ERROR at compile time
+  //pos->first="world";//ERROR at compile time
+
+  auto pos7=coll29.begin();
+  pos7->second=13.5;//OK
+  std::cout <<"key: "<<pos7->first<<"\t"
+            <<"value: "<<pos7->second<<std::endl;
+
+  auto& elem = *pos7;
+  elem.second=14.5;//OK
+
+  std::cout<<"key: "<<elem.first<<"\t"
+           <<"value: "<<elem.second<<std::endl;
+
+  std::unordered_map<std::string, int> coll30={{"fuck",10},{"the",20},{"world",30}};
+
+  //add 10 to the value of each element:
+  for_each(coll30.begin(),coll30.end(),
+           [](std::pair<const std::string,int>& elem){//do not use auto!
+             elem.second+=10;
+           });
+  for(const auto& elem : coll30){
+    std::cout<<"key: "<<elem.first<<"\t"
+             <<"value: "<<elem.second<<std::endl;
+  }
+
+  std::unordered_map<std::string,float> coll31;
+  coll31.insert({"otto",22.3});
+
+  coll31.insert(std::unordered_map<std::string,float>::value_type("otto1",22.3));
+  coll31.insert(decltype(coll31)::value_type("otto2",22.3));
+  coll31.insert(std::pair<std::string,float>("otto3",22.3));
+  coll31.insert(std::pair<const std::string,float>("otto4",22.3));
+  coll31.insert(std::make_pair("otto5",22.3));
+
+  for(const auto& elem : coll31){
+    std::cout<<"key: "<<elem.first<<"\t"
+             <<"value: "<<elem.second<<std::endl;
+  }
+
+  if(coll31.insert(std::make_pair("otto",26.3)).second){
+    std::cout<<"Ok, could insert otto/22.3"<<std::endl;
+  }
+  else{
+    std::cout<<"Oops, could not insert otto/26.3"<<std::endl;
+  }
+
+  std::unordered_map<std::string,std::complex<float>> um;
+  um.emplace(std::piecewise_construct,//pass tuple elements as arguments
+             std::make_tuple("hello"),//elements for the key
+             std::make_tuple(3.4,7.8));//elements for the value
+  std::cout<<um.begin()->first<<":"<<um.begin()->second<<std::endl;
+
+  //remove all elements with passed value
+  std::unordered_set<int> coll32{1,2,3,4,5};
+  std::cout<<coll32.erase(3)<<std::endl;
+  for(const auto& elem : coll32 ){
+    std::cout<<elem<<" ";
+  }
+  std::cout<<std::endl;
+
+  std::unordered_multimap<std::string, int> coll33{{"abc",12},{"bcd",13},{"cde",14},{"bcd",14},{"bcd",15}};
+
+  for(const auto& elem:coll33){
+    std::cout<<"key: "<<elem.first<<"\t"
+             <<"value: "<<elem.second<<std::endl;
+  }
+  std::cout<<std::endl;
+
+  //remove first element with passed value
+  auto pos8=coll33.find("bcd");
+  if(pos8!=coll33.end()){
+    coll33.erase(pos8);
+  }
+
+  for(const auto& elem:coll33){
+    std::cout<<"key: "<<elem.first<<"\t"
+             <<"value: "<<elem.second<<std::endl;
+  }
+  std::cout<<std::endl;
+
+  std::cout<<coll33.erase("bcd")<<std::endl;
+
+  for(const auto& elem:coll33){
+    std::cout<<"key: "<<elem.first<<"\t"
+             <<"value: "<<elem.second<<std::endl;
+  }
+  std::cout<<std::endl;
+
+  //7.9.4 Bucket接口
+  
+
+
+
+
+
+
+
+
 
 
 
