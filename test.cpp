@@ -23,6 +23,7 @@
 #include <complex>
 #include <iomanip> //cout()
 #include <cctype>
+#include <utility>
 
 
 template<typename T>
@@ -264,8 +265,96 @@ public:
   }
 };
 
+class CustomerX{
+private:
+  std::string fname;
+  std::string lname;
+  long no;
+public:
+  CustomerX(const std::string& fn,const std::string& ln,long n)
+    :fname(fn),lname(ln),no(n){}
+  friend std::ostream& operator<<(std::ostream& strm,const CustomerX& c){
+    return strm<<"["<<c.fname<<","<<c.lname<<","
+               <<c.no<<"]";
+  }
+  friend class CustomerHashX;
+  friend class CustomerEqualX;
+};
 
+class CustomerHashX{
+public:
+  std::size_t operator()(const CustomerX& c)const{
+    return hash_val(c.fname,c.lname,c.no);
+  }
+};
 
+class CustomerEqualX{
+public:
+  bool operator()(const CustomerX& c1, const CustomerX& c2)const{
+    return c1.no == c2.no;
+  }
+};
+
+class CustomerY{
+private:
+  std::string fname;
+  std::string lname;
+  long no;
+public:
+  CustomerY(const std::string& fn,const std::string& ln,long n)
+    :fname(fn),lname(ln),no(n){}
+  std::string firstname()const{
+    return fname;
+  }
+  std::string lastname()const{
+    return lname;
+  }
+  long number()const{
+    return no;
+  }
+  friend std::ostream& operator<<(std::ostream& strm,const CustomerY& c){
+    return strm<<"["<<c.fname<<","<<c.lname<<","
+               <<c.no<<"]";
+  }
+};
+
+//generic output for pairs(map elements)
+template<typename T1, typename T2>
+std::ostream& operator<<(std::ostream& strm,const std::pair<T1,T2>& p)
+{
+  return strm<<"["<<p.first<<","<<p.second<<"]";
+}
+
+template<typename T>
+void printHashTableState(const T& cont)
+{
+  //basic layout data:
+  std::cout<<"size:            "<<cont.size()<<"\n";
+  std::cout<<"buckets:         "<<cont.bucket_count()<<"\n";
+  std::cout<<"load factor:     "<<cont.load_factor()<<"\n";
+  std::cout<<"max load factor: "<<cont.max_load_factor()<<"\n";
+
+  //iterator category:
+  if(typeid(typename std::iterator_traits
+            <typename T::iterator>::iterator_category)
+     ==typeid(std::bidirectional_iterator_tag)){
+    std::cout<<"chaining style: doubly-linked"<<"\n";
+  }
+  else{
+    std::cout<<"chaining style: singly-linked"<<"\n";
+  }
+
+  //elements per bucket:
+  std::cout<<"data: "<<"\n";
+  for(auto idx = 0; idx!=cont.bucket_count();++idx){
+    std::cout<<" b["<<std::setw(2)<<idx<<"]: ";
+    for(auto pos=cont.begin(idx);pos!=cont.end(idx);++pos){
+      std::cout<<*pos<<" ";
+    }
+    std::cout<<"\n";
+  }
+  std::cout<<std::endl;
+}
 
 
 
@@ -1438,7 +1527,164 @@ int main()
   std::cout<<std::endl;
 
   //7.9.4 Bucket接口
-  
+  //7.9.5 使用Unordered Map作为Associative Array
+  //7.9.6 异常处理(Exception Handling)
+  //7.9.7 Unordered容器的运用实例
+
+  //create and initialize unordered set
+  std::unordered_set<int> coll34={1,2,3,5,7,11,13,17,19,77};
+
+  //print elements
+  //-elements are in arbitrary order
+
+  PRINT_ELEMENTS(coll34);
+
+  //insert some additional elements
+  //-might cause rehashing and create different order
+  coll34.insert({-7,17,33,-11,17,19,1,13});
+  PRINT_ELEMENTS(coll34);
+
+  //remove element with specific value
+  coll34.erase(33);
+
+  //insert sum of all existing values
+  coll34.insert(std::accumulate(coll34.begin(),coll34.end(),0));
+  PRINT_ELEMENTS(coll34);
+
+  //check if value 19 is in the set
+  if(coll34.find(19)!=coll34.end()){
+    std::cout<<"19 is available"<<std::endl;
+  }
+
+  //remove all negative values
+  std::unordered_set<int>::iterator pos9;
+  for(pos9=coll34.begin();pos9!=coll34.end();){
+    if(*pos9<0){
+      pos9=coll34.erase(pos9);
+    }
+    else{
+      ++pos9;
+    }
+  }
+  PRINT_ELEMENTS(coll34);
+
+
+  //create and initialize, expand, and print unordered multiset
+  std::unordered_multiset<int> coll35={1,2,3,5,7,11,13,17,19,77};
+  coll35.insert({-7,17,33,-11,17,19,1,13});
+  PRINT_ELEMENTS(coll35);
+
+  //remove all elements with specific value
+  coll35.erase(17);
+
+  //remove one of the elements with specific value
+  auto pos10=coll35.find(13);
+  if(pos10!=coll35.end()){
+    coll35.erase(pos10);
+  }
+  PRINT_ELEMENTS(coll35);
+
+  //unordered set with own hash function and equivalence criterion
+  std::unordered_set<CustomerX,CustomerHashX,CustomerEqualX> custsetx;
+
+  custsetx.insert(CustomerX("nico","josuttis",42));
+  PRINT_ELEMENTS(custsetx);
+  std::cout<<std::endl;
+  custsetx.insert(CustomerX("nico","josuttis",43));
+  custsetx.insert(CustomerX("abc","def",42));
+  PRINT_ELEMENTS(custsetx);
+
+  //lambda for user-defined hash function
+  auto hash=[](const CustomerY& c){
+    return hash_val(c.firstname(),c.lastname(),c.number());
+  };
+
+  //lambda for user-defined equality criterion
+  auto eq=[](const CustomerY& c1, const CustomerY& c2){
+    return c1.number()==c2.number();
+  };
+
+  //create unordered set with user-defined behavior
+  std::unordered_set<CustomerY,
+                     decltype(hash),decltype(eq)> custsety(10,hash,eq);
+
+  custsety.insert(CustomerY("nico","josuttis",45));
+  PRINT_ELEMENTS(custsety);
+
+  //create and initialize an unordered set
+  std::unordered_set<int> intset={1,2,3,5,7,11,13,17,19};
+  printHashTableState(intset);
+
+  //insert some additional values(might cause rehashing)
+  intset.insert({-7,17,33,4});
+  printHashTableState(intset);
+
+  //create and initialize an unordered multimap as dictionary
+  std::unordered_multimap<std::string,std::string> dict1={
+    {"day","Tag"},
+    {"strange","fremd"},
+    {"car","Auto"},
+    {"smart","elegant"},
+    {"trait","Merkmal"},
+    {"strange","seltsam"}
+  };
+  printHashTableState(dict1);
+
+  //insert some additional values (might cause rehashing)
+  dict1.insert({
+      {"smart","raffiniert"},
+        {"smart","klug"},
+          {"clever","raffiniert"}
+    });
+  printHashTableState(dict1);
+
+  //modify maximum load factor(might cause rehashing)
+  dict1.max_load_factor(0.7);
+  printHashTableState(dict1);
+
+  //7.10 其他STL容器
+  //7.10.1 String作为一种STL容器
+  //7.10.2 C-Style Array作为一种STL容器
+
+  int vals[]={33,67,-4,13,5,2};
+
+  //use begin() and end() for ordinary C arrays
+  std::vector<int> v9(std::begin(vals)//yields vals
+                      ,std::end(vals)//yields vals+NumOfElementsIn(vals)
+                      );
+
+  //use global begin() and end() for containers:
+  copy(std::begin(v9)//yields v9.begin()
+            ,std::end(v9)//yields v9.end()
+            ,std::ostream_iterator<int>(std::cout," "));
+  std::cout << std::endl;
+
+  //before C++11
+
+  int coll36[]={5,6,2,4,1,3};
+
+  //square all elements
+  transform(coll36,coll36+6,//first source
+            coll36,//second source
+            coll36,//destination
+            std::multiplies<int>());//operation
+
+  //sort beginning with the second element
+  std::sort(coll36+1,coll36+6);
+
+  //print all elements
+  copy(coll36,coll36+6,
+       std::ostream_iterator<int>(std::cout," "));
+  std::cout<<std::endl;
+
+  //7.11 实现Reference语义
+
+
+
+
+
+
+
 
 
 
