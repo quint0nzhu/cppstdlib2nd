@@ -242,9 +242,168 @@ int main()
   //调用之后，c仍然有效，但内容不明确（不保证）
   //始自C++11
 
+  //container& container::operator=(initializer-list)
+  //将initializer-list的所有元素赋值给现有容器，亦即以传入的元素的拷贝替换所有现有元素
+  //这个操作符会针对被覆写(overwritten)的元素调用其assignment操作符，针对被附加(appended)的元素调用其copy构造函数，针对被移除(removed)的元素调用其析构函数
+  //始自C++11
+
+  //void container::assign(initializer-list)
+  //将initializer-list的所有元素赋值给现有容器，亦即以传入的元素的拷贝替换所有现有元素
+  //始自C++11
+
+  //void array::fill(const T& value)
+  //将value赋值给所有元素，亦即以value的拷贝替换所有现有元素
+  //始自C++11
+
+  //void container::assign(size_type num,cont T& value)
+  //赋值num个value，亦即以num个value拷贝替换掉所有现有元素
+  //T必须是元素类型
+
+  //void container:assign(InputIterator beg,InputIterator end)
+  //赋值[beg,end)区间内的所有元素，亦即以[beg,end)内的元素拷贝替换掉所有现有元素
+  //此函数为一个member template。因此，只要源区间的元素类型可转换为容器的元素类型，此函数即可派上用场
+
+  //void container::swap(container& c)
+  //void swap(container& c1,container& c2)
+  //和c交换内容；或是交换c1和c2的内容
+  //上述两个操作都互换：
+  //-容器的元素
+  //-排序准则、相等性准则、hash函数对象——如果有的话
+  //所有指向元素的reference、pointer和iterator，都会交换其容器，因为它们此后仍然指向相同（被交换后的）元素
+  //Array内部不能够只是交换pointer。因此，swap()带有线性复杂度，而完成之后iterator和reference指向原本的容器，但是不同的元素
+  //对于associative容器，只要“比较准则”进行复制或赋值时不抛出异常，本函数就不抛出异常。对于unordered容器，只有当”相等判断式“或hash函数对象抛出异常，本函数才会抛出异常。对于其他所有容器，本函数一律不抛出异常
+  //复杂度：一般而言是常量。对array则是线性
+  //基于其复杂度，当你不再需要被赋值的对象(assigned object)，你应该宁可使用swap()不使用copy assignment操作
+
+  //8.5 元素直接访问(Direct Element Access)
+
+  //reference container::at(size_type idx)
+  //const_reference container::at(size_type idx)const
+  //返回索引idx所代表的元素（第一个元素的索引为0）
+  //如果传入一个无效索引（小于0或大于等于size()），会导致out_of_range异常
+  //后续的改动或内存重分配，可能会导致这里所返回的reference失效
+  //如果调用者保证idx合法有效，那么最好使用速度更快的operator[]
+
+  //T& map::operator at(const key_type& key)
+  //const T& map::operator at(const key_type& key)const
+  //返回map之中key所对应的value
+  //如果没有任何元素的key等key，会抛出out_of_range异常
+  //始自C++11
+
+  //reference container::operator[](size_type idx)
+  //const_reference container::operator[](size_type idx)const
+  //两者都返回索引idx所代表的元素（第一个元素的索引为0）
+  //如果传入一个无效索引（小于0或大于等于size()），会导致不确定的行为。所以调用者必须确保索引有效，否则应该使用at()
+  //后续的改动或内存重新分配，可能会导致这里所返回的reference失效
+
+  //T& map::operator[](const key_type& key)
+  //T& map::operator[](key_type&& key)
+  //关联式数组(associative array)的operator[]
+  //在map中，会返回key所对应的value
+  //如果不存在“key为key“的元素，本操作会自动创建一个新元素，其key由key而来（复制或搬移），其value则由value类型之default构造函数给予。不存在所谓的无效索引（只是会带来意外的行为）
+  //对于第二形式，key的状态此后变得不确定（这个形式针对”key尚未存在“提供了move语义）
+  //上述第一形式相当于：
+  //(*((insert(make_pair(key,T()))).first)).second
+  //上述第二形式始自C++11
+
+  //reference container::front()
+  //const_reference container::front()const
+  //两者都返回第一个元素（第一个元素的索引为0）
+  //调用者必须确保容器内拥有元素(size()>0)，否则会导致不明确的行为
+  //对string的支持始自C++11
+
+  //reference container::back()
+  //const_reference container::back()const
+  //两者都返回最后一个元素（其索引为size()-1）
+  //调用者必须确保容器内拥有元素（size()>0），否则会导致不明确的行为
+  //对string的支持始自C++11
+
+  //T* container::data()
+  //const T* container:;data()const
+  //两者都返回一个带着所有元素的C-style array（或者说一个pointer指向第一个元素）
+  //本函数用来将一个标准库array的所有元素传递给一个C-style array
+  //String只有第二形式
+  //对array和vector的支持始自C++1
+
+  //8.6 "产出迭代器"之各项操作
+
+  //iterator container::begin()
+  //const_iterator container::begin()const
+  //const_iterator container::cbegin()const
+  //返回一个iterator，指向容器起始处（第一个元素的位置）
+  //如果容器为空，此操作相当于container::end()或container::cend()
+  //Unordered容器也提供带有数值实参的begin()和cbegin()，用以提供bucket接口
+  //cbegin()始自C++11
+
+  //iterator container::end()
+  //const_iterator container::end()const
+  //const_iterator container::cend()const
+  //返回一个iterator，指向容器尾端（最后元素的下一个位置）
+  //如果容器为空，则此动作相当于container::begin()或container::cbegin()
+  //Unordered容器也提供带有数值实参的end()和cend()，用以提供bucket接口
+  //cend()始自C++11
+
+  //reverse_iterator container::rbegin()
+  //const_reverse_iterator container::rbegin()const
+  //const_reverse_iterator container::crbegin()const
+  //返回一个反向iterator，指向反向迭代的起点（此起点也就是正向之最末一个元素）
+  //如果容器为空，则此动作相当于container::rend()或container::crend()
+  //crbegin()始自C++11
+  
+  //reverse_iterator container::rend()
+  //const_reverse_iterator container::rend()const
+  //const_reverse_iterator container::crend()const
+  //返回一个反向iterator，指向反向迭代的终点（此终点也就是正向之第一元素之更前方）
+  //如果容器为空，则此动作相当于container::rbegin()或container::crbegin()
+  //crend()始自C++11
+
+  //8.7 安插和移除(Inserting and Removing)元素
+  //8.7.1 安插单一元素(Inserting Single Element)
+
+  //iterator container::insert(const T& value)
+  //iterator container::insert(T&& value)
+  //pair<iterator,bool> container::insert(const T& value)
+  //pair<iterator,bool> container::insert(T&& value)
+  //在associative或unordered容器中安插value
+  //第一和第三形式会复制value
+  //第二和第四形式会搬移value放进容器中，所以此后value的值将不再明确(unspecified)
+  //容器如果允许元素重复，亦即(unordered)multiset和multimap，采用第一和第二形式。它们返回新元素的位置。自C++11起，新安插的元素保证被放置于既有的等值元素的尾端
+  //容器中果不允许元素重复，亦即(unordered)set和map，采用第三和第四形式。如果安插不成功（因为已经存在一个元素有着相同的value或相同的key），它们返回既有元素的位置和false。如果安插成功，它们返回新元素的位置和一个ture
+  //T是容器的元素类型，对(unordered)map和multimap而言那是一个key/value pair
+  //对于map、multimap、unordered map和unordered multimap，带有move语义的上述形式是个member template。因此，value的类型只要能转换为容器的value类型(key/value pair)就可以。之所以引入这个性质是为了允许你传入两个string使得第一个可被转换为一个constant string（那是key type)
+  //函数如果不成功，不会带来任何影响——前提是unordered容器的hash函数不抛出异常
+  //对于所有容器，“指向既有元素”的所有reference都仍然有效。对于associative容器，所有“指向既有元素”的iterator都仍然有效。对于unordered容器，所有“指向既有元素”的iterator也都有效的前提是：没有发生rehashing（当最终元素量等于或大于bucket个数乘以最大负载系数，就会发生rehashing）
+  //第二和第四形式始自C++11
+
+  //iterator container::emplace(args)
+  //pair<iterator,bool> container::emplace(args)
+  //在associative或unordered容器中安插新元素，以args为初值
+  //容器如果允许元素重复，亦即ordered/unordered的multiset和multimap，采用第一形式。它们返回新元素的位置。新安插的元素保证被放置于既有的等值元素的尾端
+  //容器如果不允许元素重复，亦即ordered/unordered的set和map，采用第二形式。如果安插不成功（因为已经存在一个元素有着相同的value或相同的key），它们返回既有元素的位置和false。如果安插成功，它们返回新元素的位置和一个true
+  //函数如果不成功，不会带来任何影响——前提是unordered容器的hash函数不抛出异常
+  //对于所有容器，“指向既有元素”的所有reference都仍然有效。对于associative容器，所有“指向既有元素”的iterator都仍然有效。对于unordered容器，所有“指向既有元素”的iterator也都有效的前提是：没有发生rehashing（当最终元素量等于或大于bucket个数乘以最大负载系数，就会发生rehashing）
+  //注意，对于sequence容器，相同形式也是可能的，其中第一实参被视为新元素的安插位置
+  //注意，为了emplace（安放）新的key/value pair进入(unordered)map和multimap中，你必须使用逐块式构建(piecewise construction)
+  //始自C++11
+
+  //iterator container::insert(const_iterator pos,const T& value)
+  //iterator container::insert(const_iterator pos,T&& value)
+  //在iterator pos位置上安插value
+  //第一形式会复制value
+  //第二形式会搬移value放进容器中，所以此后value的值将不再明确(unspecified)
+  //返回新元素的位置
+  //容器如果不允许元素重复，例如set、map、unordered set和unordered map，而又已经存在一个元素有着和value相同的key，那么调用将无作用，返回的是即有元素的位置
+  //对于associative和unordered容器，pos只作为一个提示，指向“安插时必要的查找动作”的起始建议位置。如果value刚好可安插于pos位置上，则此函数且有“摊提之常量时间”复杂度，否则具有对数复杂度
+  //对于vector，这个操作可能导致指向其他元素的iterator和reference失效——如果“重分配”发生的话（当最终的元素数量超过原本容量的话就会发生重分配）
+  //对于deque，这个操作会导致指向其他元素的iterator和reference失效
+  //T是容器元素的类型，在(unordered)map和multimap中它是一个key/value pair
+  //对于map、multimap、unordered map和unordered multimap，带有move语义的第二形式是个member template。因此，value的类型只要能转换为容器的value类型(key/value pair)就可以。之所以引入这个性质是为了允许你传入两个string使得第一个可被转换为一个constant string（那是key type)
+  //对于string，value采用pass by value
+  //对于vector和deque，如果元素的copy/move操作（构造函数和赋值操作符）不抛出异常，则此函数万一失败也不会带来任何影响。对于unordered容器，如果hash函数不抛出异常，则此函数万一失败也不会带来任何影响。对于所有其他标准容器，此函数万一失败也不会带来任何影响
+  //第二形式始自C++11。在此之前用的是iterator类型而不是const_iterator
+
+  //iterator container::emplace(const_iterator pos,args)
   //
-
-
 
 
 
