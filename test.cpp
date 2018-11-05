@@ -403,7 +403,66 @@ int main()
   //第二形式始自C++11。在此之前用的是iterator类型而不是const_iterator
 
   //iterator container::emplace(const_iterator pos,args)
-  //
+  //在容器的iterator位置pos上安插新元素，以args为初值
+  //返回新元素的位置
+  //对于vector，这个操作可能导致指向其他元素的iterator和reference失效——如果“重分配“发生的话（当最终的元素量超过原本容量的话就会发生重分配）
+  //对于deque，这个操作会导致指向其他元素的iterator和reference失效
+  //T是容器元素的类型
+  //对于vector和deque，只要元素copy操作（构造函数和assignment操作符）不抛出异常，这个函数要么就成功，要么就全无影响。对于其他所有标准容器，这个函数要么就成功，要么就全无影响
+  //相同形式也可能存在于associative容器中，新元素将被安插于pos之前一位置
+  //这个函数要么就成功，要么就全无影响，前提是unordered容器的hash函数不抛出异常
+  //始自C++11
+
+  //iterator container::emplace_hint(const_iterator pos,args)
+  //在容器的iterator位置pos上安插新元素，以args为初值
+  //返回新元素的位置
+  //容器如果不允许元素重复，例如set、map、unordered set和unordered map，而又已经存在一个元素有着和value相同的key，那么调用将无作用，返回的是既有元素的位置
+  //位置pos只作为提示使用，指向”安插时必要的查找动作“的起始点。如果新元素刚好可安插于pos位置上，则此函数具有”摊提之常量时间“复杂度，否则具有对数复杂度
+  //T是容器元素的类型，在(unordered)map和multimap中它是一个key/value pair
+  //此函数万一失败也不会带来任何影响，前提是（对unordered容器而言）hash函数不抛出异常
+  //始自C++11
+
+  //void container::push_front(const T& value)
+  //void container::push_front(T&& value)
+  //安插value使成为第一个元素
+  //第一形式会复制value
+  //第二形式始自C++11,会搬移value放进容器中，此后value的值不再明确(unspecified)
+  //T是容器的元素类型，两个形式都相当于insert(begin(),value)
+  //对于deque，此操作会造成”指向其他元素“的iterator失效，而”指向其他元素“的reference仍保持有效
+  //此函数若失败不会带来任何影响
+
+  //void container::emplace_front(args)
+  //安插一个新的第一元素，由实参列(argument list)args初始化
+  //因此，容器的元素类型必须带有一个可被调用的(callable)构造函数接受args
+  //对于deque，此操作会造成”指向其他元素“的iterator失效，而“指向其他元素”的reference仍保持有效
+  //此函数若失败不会带来任何影响
+  //始自C++11
+
+  //void container::push_back(const T& value)
+  //void container::push_bakc(T&& value)
+  //追加value，使成为新的最末元素，第一形式会复制value
+  //第二形式始自C++11,会搬移value放进容器中，此后value的值不再明确(unspecified)
+  //T是容器的元素类型
+  //两个形式都相当于insert(end(),value)
+  //对于vector，这个操作可能导致“指向其他元素”的iterator和reference失效——如果“重分配”发生的话（当最终的元素数量超过原本容量的话就会发生重分配）
+  //对于deque，这个操作会导致”指向其他元素“的iterator失效，”指向其他元素“的reference则仍然有效
+  //对string，value采用pass by value
+  //对vector和deque，如果元素的copy/move构造函数不抛出异常，则此函数万一失败也不会带来任何影响。对于list，此函数万一失败也不会带来任何影响
+
+  //void container::emplace_back(args)
+  //追加一个新的最末元素，它由实参列(argument list)args初始化
+  //因此，容器的元素类型必须带有一个可被调用的(callable)构造函数接受args
+  //对于vector，这个操作可能导致”指向其他元素“的iterator和reference失效——如果”重分配”发生的话（当最终的元素量超过原本容量的话就会发生重分配）
+  //对于deque，这个操作会导致“指向其他元素”的iterator失效，“指向其他元素”的reference则仍然有效
+  //此函数要么就成功，要么就无任何影响，前提是，对于vector和deque，其copy/move构造函数不抛出异常
+  //始自C++11
+
+  //8.7.2 安插多重元素(Inserting Multiple Elements)
+
+  //void container::insert(initializer-list)
+  //将initializer-list内的元素的拷贝插入一个associative容器内
+  //对于所有容器，“指向既有元素”的所有reference都仍然有效。对于associative容器，所有“指向既有元素”的iterator都仍然有效。对于unordered容器，所有“指向既有元素”的iterator也都有效的前提是：没有发生rehashing（当最终元素量等于或大于bucket个数乘以最大负载系数，就会发生rehashing)
+  //始自C++11
 
 
 
