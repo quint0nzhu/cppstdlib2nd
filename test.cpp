@@ -514,7 +514,87 @@ int main()
   //将iterator pos所指位置上的元素移除，返回后继元素的位置（或返回end())，调用被移除元素的析构函数
   //注意，调用者必须确保iterator pos有效。例如：
   // coll.erase(coll.end());//ERROR=>undefined behavior
+  //对于vector和deque，此操作可能造成“指向其他元素”的iterator和reference无效。对于所有其他容器，“指向其他元素”的iterator和reference永远保持有效
+  //对于vector、deque和list，此函数不抛出异常。对于associative和unordered容器，如果hash函数或“比较测试”抛出异常，此函数有可能抛出异常
+  //在C++11之前，返回类型是void（对于associative容器）且使用iterator而非const_iterator
+  //对于以iterator为元素的set，自C++11起调用erase()有可能形成岐义(ambiguous)。因此C++11修正为：提供重载版本，分别是erase(iterator)和erase(const_iterator)
 
+  //iterator container::erase(const_iterator beg,const_iterator end)
+  //移除区间[beg,end)内的所有元素，返回最后一个被移除元素的位置（或返回end()）
+  //一如区间惯例，始于beg（含）而终于end（不含）的所有元素都被移除
+  //调用被移除元素的析构函数，调用者必须确保beg和end形成一个有效序列，并且该序列是容器的一部分
+  //对于vector和deque，此操作可能造成“指向其他元素”的iterator和reference无效。对于所有其他容器，“指向其他元素”的iterator和reference永远保持有效
+  //对于vector、deque和list，此函数不抛出异常。对于associative和unordered容器，如果hash函数或“比较测试”抛出异常，此函数有可能抛出异常
+  //在C++11之前，返回类型是void（对于associative容器）且使用iterator而非const_iterator
+
+  //void container::pop_front()
+  //移除容器的第一元素
+  //相当于：
+  // container.erase(container.begin())
+  //或者对forward list而言相当于：
+  // container.erase_after(container.before_begin())
+  //如果容器是空的，会导致不明确的行为。因此调用者必须确保容器至少有一个元素，也就是!empty()
+  //此函数不抛出异常，“指向其他元素”的iterator和reference都保持有效
+
+  //void container::pop_back()
+  //移除容器的最末元素，相当于：
+  // container.erase(prev(container.end())
+  //如果容器是空的，会导致不明确的行为。因此调用者必须确保容器至少有一个元素，也就是!empty()
+  //此函数不抛出异常，“指向其他元素”的iterator和reference都保持有效
+  //对string而言，始自C++11
+
+  //void container::clear()
+  //移除所有元素，将容器清空，调用被移除元素的析构函数，“指向容器内元素”的所有iterator和reference都失效
+  //对于vector、deque和string，它甚至会令任何past-the-end-iterator失效——那是由end()或cend()返回的东西
+  //此函数不抛出异常（在C++11之前，对于vector和deque，如果copy构造函数或assignment操作符抛出异常，此函数也会抛出异常）
+
+  //8.7.4 重设大小(Resizing)
+  
+  //void container::resize(size_type num)
+  //void container::resize(size_type num,const T& value)
+  //将容器大小改为num，如果size()原本就是num，则两者皆无效
+  //如果num大于size()，则在容器尾端附加额外元素。第一形式通过default构造函数来构建新元素，第二形式以value的拷贝作为新元素
+  //如果num小于size()，则移除尾端元素，获得新的大小。每个被移除元素的析构函数都会被调用
+  //对于vector和deque，这些函数可能造成“指向其他元素”的iterator和reference无效。对于所有其他容器，“指向其他元素”的iterator和reference永远保持有效
+  //对于vector和deque，这些函数要么成功，要么无效，前提是元素的构造函数和assignment操作符不抛出异常。对于list和forward list，如果失败不会带来任何影响
+  //在C++11之前，value是以by value方式传递
+  //对于string，value是以by value方式传递
+
+  //8.8 List和Forward List的特殊成员函数
+  //8.8.1 特殊成员函数（针对List和Forward List）
+
+  //void list::remove(const T& value)
+  //void list::remove_if(UnaryPredicate op)
+  //remove()移除所有带有value值的元素
+  //remove_if()移除所有”令单参判断式op(elem)产出true“的元素
+  //注意，op不应在函数调用过程中改变状态(state)
+  //两个形式都会调用被移除元素的析构函数，留下的元素保持原先次序（stable[稳定的]）
+  //这是<algorithm>中remove()算法的特殊版本，T是容器元素的类型
+  //只有当元素的比较动作抛出异常，这些函数才可能抛出异常
+
+  //void list::unique()
+  //void list::unique(BinaryPredicate op)
+  //移除(forward)list内相邻而重复的元素，使每一个元素都不同于下一个元素
+  //第一形式会将所有”和前一元素相等“的元素移除
+  //第二形式的意义是：任何一个元素elem，如果其前一元素是e，而elem和e造成双参判断式(binary predicate)op(elem,e）获得true，那么就移除elem。换言之，这个判断式并非拿元素和其目前的前一紧临元素比较，而是拿元素和其未被移除的前一元素比较
+  //注意，op不应在函数调用过程中改变状态(state)，两个形式都会调用被移除元素的析构函数
+  //这是<algorithm>的unique()算法的特别版本，如果”元素比较动作“中不抛出异常，这些函数亦不抛出异常
+
+  //void list::splice(const_iterator pos,list& source)
+  //void list::splice(const_iterator pos,list&& source)
+  //将source的所有元素搬移到*this，并将它们安插到iterator pos所指位置
+  //调用之后，source被清空
+  //如果source和*this相同，会导致不明确的行为。所以调用端必须确定source和*this是不同的list。欲移动同一个list内的元素，应该使用稍后提及的其他splice()形式
+  //调用者必须确定pos是*this的一个有效位置；否则会导致不明确的行为
+  //”指向source的元素“的所有pointer、iterator和reference仍然有效。此后它们属于this
+  //此函数不抛出异常
+  //第二形式始自C++11。在C++11之前，用的是iterator而非const_iterator
+
+  //void list::splice(const_iterator pos,list& source,const_iterator sourcePos)
+  //void list::splice(const_iterator pos,list&& source,const_iterator sourcePos)
+  //从source list中，将位于sourcePos位置上的元素搬移至*this，并安插于iterator pos所指位置
+  //source和*this可以相同。这种情况下，元素将在list内部被搬移
+  //
 
 
 
