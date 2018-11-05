@@ -439,7 +439,7 @@ int main()
   //始自C++11
 
   //void container::push_back(const T& value)
-  //void container::push_bakc(T&& value)
+  //void container::push_back(T&& value)
   //追加value，使成为新的最末元素，第一形式会复制value
   //第二形式始自C++11,会搬移value放进容器中，此后value的值不再明确(unspecified)
   //T是容器的元素类型
@@ -463,6 +463,57 @@ int main()
   //将initializer-list内的元素的拷贝插入一个associative容器内
   //对于所有容器，“指向既有元素”的所有reference都仍然有效。对于associative容器，所有“指向既有元素”的iterator都仍然有效。对于unordered容器，所有“指向既有元素”的iterator也都有效的前提是：没有发生rehashing（当最终元素量等于或大于bucket个数乘以最大负载系数，就会发生rehashing)
   //始自C++11
+
+  //iterator container::insert(const_iterator pos,initializer-list)
+  //在iterator pos位置上安插initializer-list中的元素的拷贝
+  //返回第一个被安插元素的位置，或返回pos——如果initializer-list为空
+  //对于vector，这个操作可能导致“指向其他元素”的iterator和reference失效——如果“重分配”发生的话（当最终的元素数量超过原本容量的话就会发生重分配）
+  //对于deque，这个操作会导致“指向其他元素”的iterator和reference失效
+  //对于list，此函数万一失败也不会带来任何影响
+  //始自C++11
+
+  //iterator container::insert(const_iterator pos,size_type num,const T& value)
+  //在iterator pos的位置上安插num个value拷贝
+  //返回第一个被安插元素的位置，或返回pos——如果num==0（在C++11之前，不返回任何东西）
+  //对于vector，这个操作可能导致“指向其他元素”的iterator和reference失效——如果“重分配”发生的话（当最终的元素数量超过原本容量的话就会发生重分配）
+  //对于deque，这个操作会导致“指向其他元素”的iterator和reference失效
+  //T是容器的元素类型。对于map和multimap而言它是key/value pair
+  //对于string，value采用pass by value
+  //对于vector和deque，如果元素的copy/move操作（构造函数和assignment操作符）不抛出异常，则此函数万一失败也不会带来任何影响。对于list，此函数万一失败也不会带来任何影响
+  //在C++11这前，用的是iterator类型而不是const_iterator，且返回类型为void
+
+  //void container::insert(InputIterator beg,InputIterator end)
+  //将区间[beg,end)内所有元素的拷贝安插到associative容器内
+  //此函数是个member template，因此，只要源区间的元素可转换为容器元素的类型，本函数就可派上用场
+  //对于所有容器，“指向既有元素”的reference仍然有效。对于associative容器，所有“指向既有元素”的iterator都仍然有效。对于unordered容器，所有“指向既有元素”的iterator也都有效的前提是：没有发生rehashing（当最终元素量等于或大于bucket个数乘以最大负载系数，就会发生rehashing）
+  //此函数要么就成功，要么就无任何影响，前提是，unordered容器的hash函数不抛出异常
+
+  //iterator container::insert(const_iterator pos,InputIterator beg,InputIterator end)
+  //将区间[beg,end)内所有元素的拷贝安插于迭代器pos所指的位置上
+  //返回第一个被安插元素的位置，或返回pos——如果beg==end（在C++11之前，不返回任何东西）
+  //此函数是个member template，因此，只要源区间的元素可转换为容器元素的类型，本函数就可派上用场
+  //对于vector，这个操作可能导致“指向其他元素”的iterator和reference失效——如果“重分配”发生的话（当最终的元素数量超过原本容量的话就会发生重分配）
+  //对于vector和deque，这个操作可能导致“指向其他元素”的iterator和reference失效
+  //对于list，此函数万一失败也不会带来任何影响
+  //在C++11之前，用的是iterator类型而不是const_iterator，且返回类型为void
+
+  //8.7.3 移除元素(Removing Element)
+
+  //size_type container::erase(const T& value)
+  //从associative容器中移除所有和value相等的元素
+  //返回被移除的元素个数
+  //调用被移除元素的析构函数
+  //T是被排序值(sorted value)的类型：
+  //-在(unordered)set和multiset中，T是元素类型
+  //-在(unordered)map和multimap中，T是key的类型
+  //此函数不会造成指向其他元素的iterator和reference失效
+  //此函数有可能抛出异常，如果比较测试或hash函数抛出异常的话
+  //(forward)list的remove()提供相同功能。其他容器可使用remove()算法
+
+  //iterator container::erase(const_iterator pos)
+  //将iterator pos所指位置上的元素移除，返回后继元素的位置（或返回end())，调用被移除元素的析构函数
+  //注意，调用者必须确保iterator pos有效。例如：
+  // coll.erase(coll.end());//ERROR=>undefined behavior
 
 
 
