@@ -594,7 +594,128 @@ int main()
   //void list::splice(const_iterator pos,list&& source,const_iterator sourcePos)
   //从source list中，将位于sourcePos位置上的元素搬移至*this，并安插于iterator pos所指位置
   //source和*this可以相同。这种情况下，元素将在list内部被搬移
+  //如果source和*this不是同一个list，在此操作之后，其元素个数少1
+  //调用者必须确保pos是*this的一个有效位置，且sourcePos是source的一个有效迭代器，而且sourcePos不是source.end()；否则会导致不明确的行为
+  //“指向source的元素”的所有pointer、iterator和reference仍然有效。此后它们属于this
+  //此函数不抛出异常，第二形式始自C++11。在C++11之前，用的是iterator而非const_iterator
+
+  //void list::splice(const_iterator pos,list& source,const_iterator sourceBeg,const_iterator sourceEnd)
+  //void list::splice(const_iterator pos,list&& source,const_iterator sourceBeg,const_iterator sourceEnd)
+  //从source list中，将[sourceBeg,sourceEnd)区间内的所有元素搬移到*this，并安插于iterator pos所指的位置
+  //source和*this可以相同。这种情况下，pos不得为被移动区间的一部分，而元素将在list内部移动
+  //如果source和*this不是同一个list，在此操作之后，其元素个数将减少
+  //调用者必须确保pos是*this的一个有效位置，且sourceBeg和sourceEnd形成一个有效区间，该区间是source的一部分；否则会导致不明确的行为
+  //“指向source的元素”的所有pointer、iterator和reference仍然有效。此后它们属于this
+  //此函数不抛出异常，第二形式始自C++11。在C++11之前，用的是iterator而非const_iterator
+
+  //void list::sort()
+  //void list::sort(CompFunc cmpPred)
+  //对list内的所有元素排序，第一形式以operator<对list的所有元素进行排序
+  //第二形式调用cmpPred比较两元素，以此对list中的所有元素排序：
+  // op(elem1,elem2)
+  //Value相同的元素，其顺序保持不变（除非有异常抛出）
+  //这是<algorithm>中sort()和stable_sort()算法的特殊版本
+
+  //void list::merge(list& source)
+  //void list::merge(list&& source)
+  //void list::merge(list& source,CompFunc cmpPred)
+  //void list::merge(list&& source,CompFunc cmpPred)
+  //将(forward)list source内的所有元素并入*this，调用后source变成空
+  //前两个形式采用operator<作为排序准则
+  //后两个形式采用cmpPred作为可选的排序准则，以此比较两元素的大小：
+  // cmpPred(elem,sourceElem)
+  //诸元素如果含有相等内容，它们的次序保持不变(stable)
+  //如果*this和source在排序准则operator<或cmpPred之下已排好序(sorted)，则新产生的(forward)list也将会是已排好序，而且*this内的相等元素会优先于source内的相等元素。严格地说，C++ standard要求两个(forward)list必须已排好序，但实际上对未排序的list进行merge动作也是可能的，不过使用前最好先确认一下
+  //这是<algorithm>中的merge()算法的特殊版本
+  //只要元素的比较动作不抛出异常，此函数万一失败也不会造成任何影响
+
+  //void list::reverse()
+  //将(forward)list内的元素次序颠倒
+  //这是<algorithm>中的reverse()算法的特殊版本
+  //此函数不抛出异常
+
+  //8.8.2 特殊成员函数（只针对Forward List)
+
+  //iterator forwardlist::before_begin()
+  //const_iterator forwardlist::before_begin()const
+  //const_iterator forwardlist::cbefore_begin()const
+  //返回一个iterator，指向第一个元素之前一个位置
+  //由于在forward list中你无法回向迭代(iterate backward)，这个成员函数允许你获得一个“可用来插入一个新的第一元素，或用来删除第一元素”的位置
+
+  //iterator forwardlist::insert_after(const_iterator pos,const T& value)
+  //iterator forwardlist::insert_after(const_iterator pos,T&& value)
+  //就在iterator pos所指位置上安插value
+  //第一形式会复制value，第二形式会搬移value放进容器内，此后value的状态不再明确
+  //返回新元素的位置，函数要么成功，要么无任何影响，
+  //传入容器的end()或cend()作为pos，会导致不明确的行为
+
+  //iterator forwardlist::emplace_after(const_iterator pos,args)
+  //在iterator pos所指位置上安插一个新元素，以args为初值
+  //返回新元素的位置，函数要么成功，要么无任何影响
+  //传入容器的end()或cend()作为pos，会导致不明确的行为
+
+  //iterator forwardlist::insert_after(const_iterator pos,size_type num,const T& value)
+  //在iterator pos所指位置上安插num个value的拷贝
+  //返回最后被安插的那个元素的位置。如果num==0就返回pos
+  //函数要么成功，要么无任何影响，传入容器的end()或cend()作为pos，会导致不明确的行为
+
+  //iterator forwardlist::insert_after(const_iterator pos,initializer-list)
+  //在iterator pos所指位置上安插initializer-list的元素拷贝
+  //返回最后被安插的那个元素的位置。如果initializer-list是空的，就返回pos
+  //函数要么成功，要么无任何影响，传入容器的end()或cend()作为pos，会导致不明确的行为
+
+  //iterator forwardlist::insert_after(const_iterator pos,InputIterator beg,InputIterator end)
+  //在iterator pos所指位置上安插[beg,end)的所有元素的拷贝
+  //返回最后被安插的那个元素的位置。如果beg==end，就返回pos
+  //这是一个member template。因此，源区间的元素可以是任何类型，只要能够转换为容器的元素类型就行
+  //函数要么成功，要么无任何影响，传入容器的end()或cend()作为pos，会导致不明确的行为
+
+  //iterator forwardlist::erase_after(const_iterator pos)
+  //移除iterator pos所指位置之后的所有元素，返回后继元素的位置（或返回end()）
+  //调用被移除元素的析构函数，“指向其他元素”的iterator和reference仍然保持有效
+  //调用者必须确保iterator pos有效，此函数不抛出异常
+  //传入容器的end()或cend()作为pos，会导致不明确的行为
+
+  //void forwardlist::erase_after(const_iterator beg,const_iterator end)
+  //移除(beg,end)区间内的元素，注意，这不是个半开区间，因为它排除了beg和end。例如：
+  // coll.erase(coll.before_begin(),coll.end());//OK: erases all elements
+  //返回end,调用被移除元素的析构函数，调用者必须确保beg和end定义出容器内的一个有效区间(valid range)
+  //此函数不抛出异常，指向其他元素的iterator和reference仍然保持有效
+
+  //void forwardlist::splice_after(const_iterator pos,forwardlist& source)
+  //void forwardlist::splice_after(const_iterator pos,forwardlist&& source)
+  //将source的所有元素搬移至*this,并在iterator pos位置上安插它们
+  //在此调用后，source成空。
+  //如果source和*this是同一个容器，则行为不明确。因此，调用者必须确保source是另一个list。如果想要在同一个list中搬移元素，必须使用稍后显示的splice_after()形式
+  //调用者必须确保pos是*this的一个有效位置；若否，行为将不明确
+  //“指向source的成员”的pointer、iterator和reference仍然有效。此后它们属于this
+  //此函数不抛出异常，传入容器的end()或cend()作为pos，会导致不明确的行为
+
+  //void forwardlist::splice_after(const_iterator pos,forwardlist& source,const_iterator sourcePos)
+  //void forwardlist::splice_after(const_iterator pos,forwardlist&& source,const_iterator sourcePos)
+  //将list source的sourcePos位置上的元素搬移到*this,将它安插到iterator pos所指位置
+  //source和*this可以是同一个容器。如果这样，元素就是在自家容器内搬移
+  //如果source是另一个list，它的元素将在此操作完成后少一个
+  //调用者必须确保pos是*this的一个有效位置，sourcePos是source的一个有效iterator，而且sourcePos不是source.end()；否则此操作的行为将不明确
+  //“指向source的成员”的pointer、iterator和reference仍然有效。此后它们属于this
+  //此函数不抛出异常，传入容器的end()或cend()作为pos，会导致不明确的行为
+
+  //void forwardlist::splice_after(const_iterator pos,forwardlist& source,const_iterator sourceBeg,const_iterator sourceEnd)
+  //void forwardlist::splice_after(const_iterator pos,forwardlist&& source,const_iterator sourceBeg,const_iterator sourceEnd)
+  //将list source的(sourceBeg,sourceEnd)区间内的元素搬移到*this，将它们安插在iterator pos位置上。注意，最后两个实参不是半开区间，因为它排除了beg也排除了end。以下调用会将coll2的所有元素搬移到coll的起点为：
+  // coll.splice_after(coll.before_begin(),coll2,coll2.before_begin(),coll2.end());
+  //source和*this可以是同一个容器。这样的话，pos不可以落在被搬移区间内，而元素就在同一个list内被搬移
+  //如果source是另一个list，此操作之后它将内含较少元素
+  //调用者必须确保pos是*this的一个有效位置，sourceBeg和sourceEnd定义出source内的一个有效区间；否则此操作的行为将不明确
+  //“指向source的成员”的pointer、iterator和reference仍然有效。此后它们属于this
+  //此函数不抛出异常，传入容器的end()和cend()作为pos，会导致不明确的行为
+
+  //8.9 容器的策略接口(Policy Interface)
+  //8.9.1 非更易型策略函数(Nonmodifying Policy Function)
+
+  //size_type container::capacity()const
   //
+
 
 
 
