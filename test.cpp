@@ -714,7 +714,65 @@ int main()
   //8.9.1 非更易型策略函数(Nonmodifying Policy Function)
 
   //size_type container::capacity()const
+  //返回重分配内存之前所能容纳的最多元素个数
+
+  //value_compare container::value_comp()const
+  //返回一个被用作“比较准则”(comparison criterion)的对象
+  //在set和multiset中相当于key_comp()
+  //在map和multimap中，它是一个辅助类，被用作“比较准则”(comparison criterion)，用来比较key/value pair中的key
+
+  //key_compare container::key_comp()const
+  //返回associative容器的“比较准则”
+
+  //key_equal container::key_eq()const
+  //返回unordered容器的“相等性比较准则”(equivalence criterion)
+
+  //hasher container::hash_function()const
+  //返回unordered容器的hash函数
+
+  //float container::load_factor()const
+  //返回unordered容器当前的每个bucket的平均元素个数
+
+  //float container::max_load_factor()const
+  //返回unordered容器的“最大负载系数”。容器会自动rehash（增加必要的bucket数量）以保持其负载系数低于或等于此值
+  //注意，默认值为1.0，通常应该改变之
+
+  //8.9.2 更易型策略函数(Modifying Policy Function)
+
+  //void container::reserve(size_type num)
+  //内部保留若干内存，至少够容纳num个元素
+  //对于vector，这个调用只能增加容量(capacity)。因此，如果num小于或等于当前的真实容量，它没有效用。若要缩减vector的容量，则用shrink_to_fit()
+  //对于unordered容器：
+  //- 这个调用等价于rehash(ceil(num/max_load_factor))（ceil()会获得“不小于其实参”之最小整数值）
+  //- 这个操作会令iterator失效，会改变元素之间的次序，会改变元素之间的次序，会改变元素被置于哪个bucket内。这个操作不会令“指向元素”的pointer或reference失效
+  //对于string，num可有可无（默认为0）。如果num小于实际容量，这个调用将会是个不被绑定(nonbinding)的缩减请求
+  //这个操作可能造成“指向元素”的iterator和（针对vector和string的）reference和pointer失效。然而它保证，一旦被调用，安插过程中将不会发生重分配(reallocation)，直到有个安插动作造成容器大小超越num。因此，reserve()可以增加速度并帮助保持reference、pointer和iterator的有效性
+  //如果num>max_size()就抛出length_error，如果内存分配失败就抛出一个相应的异常
+  //自C++11起，能够作用于unordered容器
+
+  //void container::shrink_to_fit()
+  //缩减内部内存，使刚好吻合实际的元素数量
+  //此调用是一个“非必被绑定”请求(nonbinding request)，意思是实现可忽略这个调用，以便有回旋空间允许“实现专属之优化”。因此，不保证此后capacity()==size()必为true
+  //这个操作有可能造成指向元素的reference、pointer和iterator失效
+  //始自C++11。C++11之前若欲缩减vector容量，要写代码
+
+  //void container::rehash(size_type bnum)
+  //改变unordered容器的bucket数量，令其至少为bnum
+  //此操作会令iterator失效，会改变元素之间的次序，会改变元素落于哪个bucket内。这个操作不会令（指向元素）的pointer或reference失效
+  //如果有异常被抛出，此操作将不带来任何影响（除非是容器的hash函数或比较函数抛出的）
+  //对于unordered multiset和multimap，rehashing会保存相等元素之间的相关次序
+
+  //void conainer::max_load_factor(float loadFactor)
+  //设定unordered容器的最大负载系数为loadFactor
+  //loadFactor只是个提示，如此一来实现便能自由地根据其内部的布局哲学调整该值
+  //此操作可能造成rehashing，那会造成iterator失效，改变元素之间的次序，改变元素落于哪个bucket内。这个操作不会令“指向元素”的pointer或reference失效
+
+  //8.9.3 Unordered容器的Bucket相关接口
+
+  //size_type container::bucket_count()const
   //
+
+
 
 
 
