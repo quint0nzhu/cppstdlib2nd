@@ -8,6 +8,9 @@
 #include <iostream>
 #include <algorithm>
 #include <list>
+#include <deque>
+#include <set>
+
 
 
 int main()
@@ -270,10 +273,153 @@ int main()
            });
   std::cout<<std::endl;
 
+  //create list with elements from 1 to 9
+  std::vector<int> coll3={1,2,3,4,5,6,7,8,9};
 
+  //find position of element with value 5
+  std::vector<int>::const_iterator pos6;
+  pos6=find(coll3.cbegin(),coll3.cend(),
+            5);
 
+  //print value to which iterator pos refers
+  std::cout<<"pos: "<<*pos6<<std::endl;
 
+  //convert iterator to reverse iterator rpos
+  std::vector<int>::const_reverse_iterator rpos(pos6);
 
+  //print value to which reverse iterator rpos refers
+  std::cout<<"rpos: "<<*rpos<<std::endl;
+
+  //create deque with elements from 1 to 9
+  std::deque<int> coll4={1,2,3,4,5,6,7,8,9};
+
+  //find position of element with value 2
+  std::deque<int>::const_iterator pos7;
+  pos7=find(coll4.cbegin(),coll4.cend(),//range
+            2);//value
+
+  //find position of element with value 7
+  std::deque<int>::const_iterator pos8;
+  pos8=find(coll4.cbegin(),coll4.cend(),//range
+            7);//value
+
+  //print all elements in range [pos7,pos8)
+  for_each(pos7,pos8,//range
+           [](const decltype(*coll4.cbegin())& elem){
+             std::cout<<elem<<' ';
+           });//operation
+  std::cout<<std::endl;
+
+  //convert iterators to reverse iterators
+  std::deque<int>::const_reverse_iterator rpos1(pos7);
+  std::deque<int>::const_reverse_iterator rpos2(pos8);
+
+  //print all elements in range[pos7,pos8] in reverse order
+  for_each(rpos2,rpos1,//range
+           [](const decltype(*coll4.crbegin())& elem){
+             std::cout<<elem<<' ';
+           });//operation
+  std::cout<<std::endl;
+
+  //create list with elements from 1 to 9
+  std::list<int> coll5={1,2,3,4,5,6,7,8,9};
+
+  //find position of element with value 5
+  std::list<int>::const_iterator pos9;
+  pos9=find(coll5.cbegin(),coll5.cend(),//range
+            5);//value
+
+  //print value of the element
+  std::cout<<"pos: "<<*pos9<<std::endl;
+
+  //convert iterator to reverse iterator
+  std::list<int>::const_reverse_iterator rpos3(pos9);
+
+  //print value of the element to which the reverse iterator refers
+  std::cout<<"rpos: "<<*rpos3<<std::endl;
+
+  //convert reverse iterator back to normal iterator
+  std::list<int>::const_iterator rrpos;
+  rrpos=rpos3.base();
+
+  //print value of the element to which the normal iterator refers
+  std::cout<<"rrpos: "<<*rrpos<<std::endl;
+
+  //9.4.2 Insert（安插型）迭代器
+
+  std::vector<int> coll6;
+
+  //create back inserter for coll6
+  //-inconvenient way
+  std::back_insert_iterator<std::vector<int>> iter(coll6);
+
+  //insert elements with the usual iterator interface
+  *iter=1;
+  iter++;
+  *iter=2;
+  iter++;
+  *iter=3;
+
+  for_each(coll6.cbegin(),coll6.cend(),[](const decltype(*coll6.cbegin())& elem){
+      std::cout<<elem<<' ';
+    });
+  std::cout<<std::endl;
+
+  //create back inserter and insert elements
+  //-convenient way
+  back_inserter(coll6)=44;
+  back_inserter(coll6)=55;
+  for_each(coll6.cbegin(),coll6.cend(),[](const decltype(*coll6.cbegin())& elem){
+      std::cout<<elem<<' ';
+    });
+  std::cout<<std::endl;
+
+  //use back inserter to append all elements again
+  //-reserve enough memory to avoid reallocation
+  coll6.reserve(2*coll6.size());
+  copy(coll6.cbegin(),coll6.cend(),//source
+       back_inserter(coll6));//destination
+  for_each(coll6.cbegin(),coll6.cend(),[](const decltype(*coll6.cbegin())& elem){
+      std::cout<<elem<<' ';
+    });
+  std::cout<<std::endl;
+
+  std::list<int> coll7;
+
+  //create front inserter for coll7
+  //-inconvenient way
+  std::front_insert_iterator<std::list<int>> iter1(coll7);
+
+  //insert elements with the usual iterator interface
+  *iter1=1;
+  iter1++;
+  *iter1=2;
+  iter1++;
+  *iter1=3;
+
+  for_each(coll7.cbegin(),coll7.cend(),[](const decltype(*coll7.cbegin())& elem){
+      std::cout<<elem<<' ';
+    });
+  std::cout<<std::endl;
+
+  //create front inserter and insert elements
+  //-convenient way
+  front_inserter(coll7)=44;
+  front_inserter(coll7)=55;
+
+  for_each(coll7.cbegin(),coll7.cend(),[](const decltype(*coll7.cbegin())& elem){
+      std::cout<<elem<<' ';
+    });
+  std::cout<<std::endl;
+
+  //use front inserter to insert all elements again
+  copy(coll7.begin(),coll7.end(),//source
+       front_inserter(coll7));//destination
+
+  for_each(coll7.cbegin(),coll7.cend(),[](const decltype(*coll7.cbegin())& elem){
+      std::cout<<elem<<' ';
+    });
+  std::cout<<std::endl;
 
 
 
