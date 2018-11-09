@@ -10,6 +10,73 @@
 #include <list>
 #include <deque>
 #include <set>
+#include <iterator> //for ostream_iterator<>
+
+
+
+template<typename ForwardIterator>
+void shift_left(ForwardIterator beg,ForwardIterator end)
+{
+  //temporary variable for first element
+  typedef typename std::iterator_traits<ForwardIterator>::value_type value_type;
+
+  if(beg!=end){
+    value_type tmp(*beg);
+    std::cout<<tmp<<std::endl;
+  }
+}
+
+//foo() for bidirectional iterators
+template<typename BiIterator>
+void foo(BiIterator beg,BiIterator end,std::bidirectional_iterator_tag)
+{
+  std::cout<<"biIterator: "<<*beg<<std::endl;
+}
+
+//foo() for random-access iterators
+template<typename RaIterator>
+void foo(RaIterator beg,RaIterator end,std::random_access_iterator_tag)
+{
+  std::cout<<"raIterator: "<<*beg<<std::endl;
+}
+
+template<typename Iterator>
+inline void foo(Iterator beg,Iterator end)
+{
+  foo(beg,end,typename std::iterator_traits<Iterator>::iterator_category());
+}
+
+namespace mydistance{
+
+//distance() for random-access iterators
+template<typename RaIterator>
+typename std::iterator_traits<RaIterator>::difference_type
+distance(RaIterator pos1,RaIterator pos2,std::random_access_iterator_tag)
+{
+  return pos2-pos1;
+}
+
+//distance() for input,forward,and bidirectional iterators
+template<typename InIterator>
+typename std::iterator_traits<InIterator>::difference_type
+distance(InIterator pos1,InIterator pos2,std::input_iterator_tag)
+{
+  typename std::iterator_traits<InIterator>::difference_type d;
+  for(d=0;pos1!=pos2;++pos1,++d){
+    ;
+  }
+  return d;
+}
+
+//general distance()
+template<typename Iterator>
+typename std::iterator_traits<Iterator>::difference_type
+distance(Iterator pos1,Iterator pos2)
+{
+  return distance(pos1,pos2,typename std::iterator_traits<Iterator>::iterator_category());
+}
+
+}
 
 
 
@@ -420,6 +487,135 @@ int main()
       std::cout<<elem<<' ';
     });
   std::cout<<std::endl;
+
+  std::set<int> coll8;
+  //create insert iterator for coll8
+  //-inconvenient way
+  std::insert_iterator<std::set<int>> iter2(coll8,coll8.begin());
+
+  //insert elements with the usual iterator interface
+  *iter2=1;
+  iter2++;
+  *iter2=2;
+  iter2++;
+  *iter2=3;
+
+  for_each(coll8.cbegin(),coll8.cend(),[](const decltype(*coll8.cbegin())& elem){
+      std::cout<<elem<<' ';
+    });
+  std::cout<<std::endl;
+
+  //create inserter and insert elements
+  //-convenient way
+  inserter(coll8,coll8.end())=44;
+  inserter(coll8,coll8.end())=55;
+
+  for_each(coll8.cbegin(),coll8.cend(),[](const decltype(*coll8.cbegin())& elem){
+      std::cout<<elem<<' ';
+    });
+  std::cout<<std::endl;
+
+  //use inserter to insert all elements into a list
+  std::list<int> coll9;
+  copy(coll8.cbegin(),coll8.cend(),//source
+       inserter(coll9,coll9.begin()));//destination
+
+  for_each(coll9.cbegin(),coll9.cend(),[](const decltype(*coll9.cbegin())& elem){
+      std::cout<<elem<<' ';
+    });
+  std::cout<<std::endl;
+
+  //use inserter to reinsert all elements into the list before the second element
+  copy(coll8.cbegin(),coll8.cend(),//source
+       inserter(coll9,++coll9.begin()));//destination
+
+  for_each(coll9.cbegin(),coll9.cend(),[](const decltype(*coll9.cbegin())& elem){
+      std::cout<<elem<<' ';
+    });
+  std::cout<<std::endl;
+
+  //9.4.3 Stream（串流）迭代器
+
+  //create ostream iterator for stream cout
+  //-vlaues are separated by a newline character
+  std::ostream_iterator<int> intWriter(std::cout,"\n");
+
+  //write elements with the usual iterator interface
+  *intWriter=42;
+  intWriter++;
+  *intWriter=77;
+  intWriter++;
+  *intWriter=-5;
+
+  //create collection with elements from 1 to 9
+  std::vector<int> coll10={1,2,3,4,5,6,7,8,9};
+
+  //write all elements without any delimiter
+  copy(coll10.cbegin(),coll10.cend(),std::ostream_iterator<int>(std::cout));
+  std::cout<<std::endl;
+
+  //write all elements with " < " as delimiter
+  std::string delim=" < ";
+  copy(coll10.cbegin(),coll10.cend(),std::ostream_iterator<int>(std::cout,delim.c_str()));
+  std::cout<<std::endl;
+
+  //create istream iterator that reads integers from cin
+  std::istream_iterator<int> intReader(std::cin);
+
+  //create end-of-stream iterator
+  std::istream_iterator<int> intReaderEOF;
+
+  //while able to read tokens with istream iterator
+  //-write them twice
+  while(intReader!=intReaderEOF){
+    std::cout<<"once:        "<<*intReader<<std::endl;
+    std::cout<<"once again: "<<*intReader<<std::endl;
+    ++intReader;
+  }
+
+  std::istream_iterator<std::string> cinPos(std::cin);
+  std::ostream_iterator<std::string> coutPos(std::cout," ");
+
+  //while input is not at the end of the file
+  //-write every third string
+  while(cinPos!=std::istream_iterator<std::string>()){
+    //ignore the following two strings
+    advance(cinPos,2);
+
+    //read and write the third string
+    if(cinPos!=std::istream_iterator<std::string>()){
+      *coutPos++=*cinPos++;
+    }
+    std::cout<<std::endl;
+  }
+
+  //9.4.4 Move（搬移）迭代器
+
+  std::list<std::string> s{"a","b","c"};
+  std::vector<std::string> v1(s.begin(),s.end());//copy strings into v1
+  std::vector<std::string> v2(make_move_iterator(v1.begin()),//move strings into v2
+                              make_move_iterator(v1.end()));
+  for_each(v2.cbegin(),v2.cend(),[](const decltype(*v2.cbegin())& elem){
+      std::cout<<elem<<' ';
+    });
+  std::cout<<std::endl;
+
+  //9.5 Iterator Trait（迭代器特性）
+  //9.5.1 为迭代器编写泛型函数(Generic Function)
+
+  shift_left(v2.begin(),v2.end());
+
+  foo(s.begin(),s.end());
+
+  foo(++v2.begin(),v2.end());
+
+  std::cout<<mydistance::distance(s.begin(),s.end())<<std::endl;
+
+  std::cout<<mydistance::distance(++v2.begin(),v2.end())<<std::endl;
+
+  //9.6 用户自定义(User-Defined)迭代器
+  
+
 
 
 
