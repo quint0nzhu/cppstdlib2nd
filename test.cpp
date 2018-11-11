@@ -11,6 +11,7 @@
 #include <list>
 #include <functional> //Predefined Function Object and Binder
 #include <locale>
+#include <memory> //for shared_ptr<>
 
 
 class Person{
@@ -103,6 +104,9 @@ public:
   }
   void print2(const std::string& prefix)const{
     std::cout<<prefix<<name<<std::endl;
+  }
+  void setName(const std::string& n){
+    name=n;
   }
 };
 
@@ -294,6 +298,23 @@ int main()
 
   //call print2() for temporary Person
   std::bind(&Person1::print2,std::placeholders::_1,"This is: ")(Person1("nico"));
+  std::vector<Person1*> cp={new Person1("abc"),new Person1("def"),new Person1("ghi")};
+  for_each(cp.begin(),cp.end(),
+           std::bind(&Person1::print,
+                     std::placeholders::_1));
+
+  std::vector<std::shared_ptr<Person1>> sp={std::shared_ptr<Person1>(new Person1("jkl")),std::shared_ptr<Person1>(new Person1("mno")),std::shared_ptr<Person1>(new Person1("pqr"))};
+  for_each(sp.begin(),sp.end(),
+           std::bind(&Person1::print,
+                     std::placeholders::_1));
+
+  for_each(coll5.begin(),coll5.end(),//give all Person1s same name
+           std::bind(&Person1::setName,
+                     std::placeholders::_1,
+                     "Paul"));
+  for_each(coll5.begin(),coll5.end(),
+           std::bind(&Person1::print,
+                     std::placeholders::_1));
 
 
 
