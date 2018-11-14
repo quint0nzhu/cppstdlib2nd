@@ -119,8 +119,27 @@ bool checkEven(int elem,bool even)
   }
 }
 
+//return whether the second object has double the value of the first
+bool doubled(int elem1,int elem2)
+{
+  return elem1*2==elem2;
+}
 
+bool bothEvenOrOdd(int elem1,int elem2)
+{
+  return elem1%2==elem2%2;
+}
 
+void printCollection(const std::list<int>& l)
+{
+  PRINT_ELEMENTS(l);
+}
+
+bool lessForCollection(const std::list<int>& l1,const std::list<int>& l2)
+{
+  return lexicographical_compare(l1.cbegin(),l1.cend(),//first range
+                                 l2.cbegin(),l2.cend());//second range
+}
 
 
 int main()
@@ -594,6 +613,319 @@ int main()
   //find_end(ForwardIterator1 beg,ForwardIterator1 end,ForwardIterator2 searchBeg,ForwardIterator2 searchEnd)
   //ForwardIterator1
   //find_end(ForwardIterator1 beg,ForwardIterator1 end,ForwardIterator2 searchBeg,ForwardIterator2 searchEnd,BinaryPredicate op)
+  //两种形式都返回[beg,end)区间之中“和区间[searchBeg,searchEnd)完全吻合”的最后一个子区间内的第一个元素位置
+  //第一形式中，子区间的元素必须完全等于[searchBeg,searchEnd)的元素
+  //第二形式中，子区间的元素和[searchBeg,searchEnd)的对应元素必须造成以下binary predicate的结果为true：
+  // op(elem,searchElem)
+  //如果没有找到匹配元素，两种形式都返回end
+  //注意，op不应在函数调用过程中改变状态(state)
+  //op不应改动传入的实参
+  //如果你想查找某个子区间但是“只知道其第一元素和最末元素”，请参考前面的例子
+  //这些算法并不是早期STL的一部分。很不幸它们被命名为find_end()而不是search_end()，后者较具一致性，因为用来查找第一个子区间的算法名为search()
+  //复杂度：线性。至多比较（或调用op()）共numElems*numSearchElems次
+
+  coll1.clear();
+  coll2.clear();
+
+  INSERT_ELEMENTS(coll1,1,7);
+  INSERT_ELEMENTS(coll1,1,7);
+  INSERT_ELEMENTS(coll2,3,6);
+
+  PRINT_ELEMENTS(coll1,"coll: ");
+  PRINT_ELEMENTS(coll2,"subcoll: ");
+
+  //search last occurrence of subcoll in coll
+  pos3=find_end(coll1.begin(),coll1.end(),//range
+                coll2.begin(),coll2.end());//subrange
+
+  //loop while subcoll found as subrange of coll
+  std::deque<int>::iterator end(coll1.end());
+  while(pos3!=end){
+    //print position of first element
+    std::cout<<"subcoll found starting with element "
+             <<distance(coll1.begin(),pos3)+1
+             <<std::endl;
+
+    //search next occurrence of subcoll
+    end=pos3;
+    pos3=find_end(coll1.begin(),end,//range
+                  coll2.begin(),coll2.end());//subrange
+  }
+
+  //InputIterator
+  //find_first_of(InputIterator beg,InputIterator end,ForwardIterator searchBeg,ForwardIterator searchEnd)
+  //InputIterator
+  //find_first_of(InputIterator beg,InputIterator end,ForwardIterator searchBeg,ForwardIterator searchEnd,BinaryPredicate op)
+  //第一形式返回第一个“既出现于[beg,end)区间也出现于[searchBeg,searchEnd)区间”的元素的位置
+  //第二形式返回[beg,end)区间内第一个满足以下条件的元素：它和区间[searchBeg,searchEnd)内每一个元素进行以下动作的结果都是true
+  // op(elem,searchElem)
+  //如果没有找到匹配元素，两种形式都返回end
+  //注意，op不应在函数调用过程中改变状态(state)
+  //op不应改动传入的实参
+  //你可以使用reverse iterator查找最后一个符合条件的元素
+  //这几个算法并不在早期STL规范中
+  //在C++11之前，这些算法面对[beg,end)区间所需要的是forward iterator而不是input iterator
+  //复杂度：线性。至多比较（或调用op()）共numElems*numSearchElems次
+
+  coll.clear();
+  coll2.clear();
+
+  INSERT_ELEMENTS(coll,1,11);
+  INSERT_ELEMENTS(coll2,3,5);
+
+  PRINT_ELEMENTS(coll,"coll: ");
+  PRINT_ELEMENTS(coll2,"searchcoll: ");
+
+  //search first occurrence of an element of searchcoll in coll
+  pos=find_first_of(coll.begin(),coll.end(),//range
+                    coll2.begin(),//beginning of search set
+                    coll2.end());//end of search set
+  std::cout<<"first element of searchcoll in coll is element "
+           <<distance(coll.begin(),pos)+1
+           <<std::endl;
+
+  //search last occurrence of an element of searchcoll in coll
+  std::vector<int>::reverse_iterator rpos;
+  rpos=find_first_of(coll.rbegin(),coll.rend(),//range
+                     coll2.begin(),//beginning of search set
+                     coll2.end());//end of search set
+  std::cout<<"last element of searchcoll in coll is element "
+           <<distance(coll.begin(),rpos.base())
+           <<std::endl;
+
+  //ForwardIterator
+  //adjacent_find(ForwardIterator beg,ForwardIterator end)
+  //ForwardIterator
+  //adjacent_find(ForwardIterator beg,ForwardIterator end,BinaryPredicate op)
+  //第一形式返回[beg,end)区间内第一对“连续两个相等元素”中的第一元素位置
+  //第二形式返回[beg,end)区间内第一对“连续两个元素均造成以下binary predicate结果为true”的其中第一元素位置：
+  // op(elem,nextElem)
+  //如果没有找到匹配元素，两种形式都返回end
+  //注意，op不应在函数调用过程中改变状态(state)
+  //op不应改动传入的实参
+  //复杂度：线性。至多比较（或调用op()）共numElems次
+
+  coll.clear();
+  coll.insert(coll.begin(),{1,3,2,4,5,5,0});
+
+  PRINT_ELEMENTS(coll,"coll: ");
+
+  //search first two elements with equal value
+  pos=adjacent_find(coll.begin(),coll.end());
+
+  if(pos!=coll.end()){
+    std::cout<<"first two elements with equal value have position "
+             <<distance(coll.begin(),pos)+1
+             <<std::endl;
+  }
+
+  //search first two elements for which the second has double the value of the first
+  pos=adjacent_find(coll.begin(),coll.end(),//range
+                    doubled);//criterion
+
+  if(pos!=coll.end()){
+    std::cout<<"first two elements with second value twice the "
+             <<"first have pos. "
+             <<distance(coll.begin(),pos)+1
+             <<std::endl;
+  }
+
+  //11.5.4 区间的比较
+
+  //bool
+  //equal(InputIterator1 beg,InputIterator1 end,InputIterator2 cmpBeg)
+  //bool
+  //equal(InputIterator1 beg,InputIterator1 end,InputIterator2 cmpBeg,BinaryPredicate op)
+  //第一形式判断[beg,end)区间内的元素是否都和"以cmpBeg开头的区间"内的元素相等
+  //第二形式判断[beg,end)区间内的元素和”以cmpBeg开头的区间“内的对应元素是否都能够造成以下binary predicate产出true：
+  // op(elem,cmpElem)
+  //注意，op不应在函数调用过程中改变状态(state)，op不应改动传入的实参
+  //调用者必须确保”以cmpBeg开头“的区间内含足够元素
+  //当序列不相等时，如果想要了解其间的不同，应使用mismatch()算法
+  //自C++11起提供了is_permutation()算法，用来判断是否两个序列内含的元素数值相同但次序不同
+  //复杂度：线性。至多比较（或调用op()）共numElems次
+
+  coll.clear();
+  coll2.clear();
+
+  INSERT_ELEMENTS(coll,1,7);
+  INSERT_ELEMENTS(coll2,3,9);
+
+  PRINT_ELEMENTS(coll,"coll: ");
+  PRINT_ELEMENTS(coll2,"coll2: ");
+
+  //check whether both collections are equal
+  if(equal(coll.begin(),coll.end(),//first range
+           coll2.begin())){//second range
+    std::cout<<"coll==coll2"<<std::endl;
+  }
+  else{
+    std::cout<<"coll!=coll2"<<std::endl;
+  }
+
+  //check for corresponding even and odd elements
+  if(equal(coll.begin(),coll.end(),//first range
+           coll2.begin(),//second range
+           bothEvenOrOdd)){//comparison criterion
+    std::cout<<"even and odd elements correspond"<<std::endl;
+  }
+  else{
+    std::cout<<"even and odd elements do not correspond"<<std::endl;
+  }
+
+  //bool
+  //is_permutation(ForwardIterator1 beg1,ForwardIterator1 end1,ForwardIterator2 beg2)
+  //bool
+  //is_permutation(ForwardIterator1 beg1,ForwardIterator1 end1,ForwardIterator2 beg2,CompFunc op)
+  //两个形式都检测[beg1,end1)区间内的元素是否为beg2起始之区间元素的一个排列组合(a permutation)；也就是说，”顺序无所谓“的情况下两区间的元素是否相等
+  //第一形式以operator==比较元素
+  //第二形式使用binary predicate op(elem1,elem2)比较元素，它应该在”elem1等于elem2“时返回true
+  //注意，op不应在函数调用过程中改变状态(state)，op不应改动传入的实参
+  //所有iterator必须有相同的value type（即所指向的元素的类型）
+  //这些算法都始自C++11
+  //复杂度：最糟情况下是二次（quadratic；共numElems1次比较或调用op()，前提是所有对应元素相等且有相同次序）
+
+  coll.clear();
+  coll1.clear();
+  coll2.clear();
+
+  coll={1,1,2,3,4,5,6,7,8,9};
+  coll2={1,9,8,7,6,5,4,3,2,1};
+  coll1={11,12,13,19,18,17,16,15,14,11};
+
+  PRINT_ELEMENTS(coll,"coll: ");
+  PRINT_ELEMENTS(coll2,"coll2: ");
+  PRINT_ELEMENTS(coll1,"coll1: ");
+
+  //check whether both collections have equal elements in any order
+  if(is_permutation(coll.cbegin(),coll.cend(),//first range
+                    coll2.cbegin())){//second range
+    std::cout<<"coll and coll2 have equal elements"<<std::endl;
+  }
+  else{
+    std::cout<<"coll and coll2 don't have equal elements"<<std::endl;
+  }
+
+  //check for corresponding number of even and odd elements
+  if(is_permutation(coll.cbegin(),coll.cend(),//first range
+                    coll1.cbegin(),//second range
+                    bothEvenOrOdd)){//comparison criterion
+    std::cout<<"numbers of even and odd elements match"<<std::endl;
+  }
+  else{
+    std::cout<<"numbers of even and odd elements don't match"<<std::endl;
+  }
+
+  //pair<InputIterator1,InputIterator2>
+  //mismatch(InputIterator1 beg,InputIterator1 end,InputIterator2 cmpBeg)
+  //pair<InputIterator1,InputIterator2>
+  //mismatch(InputIterator1 beg,InputIterator1 end,InputIterator2 cmpBeg,BinaryPredicate op)
+  //第一形式返回[beg,end)区间和”以cmpBeg起始的区间“内第一组两两相异的对应元素
+  //第二形式返回[beg,end)区间和”以cmpBeg起始的区间“内第一组”造成以下binaray predicate结果为false“的对应元素：
+  // op(elem,cmpElem)
+  //如果没有找到相异点，就返回”以end和第二序列的对应元素组成“的pair<>。这并不意味着两序列相等，因为第二序列有可能内含较多元素
+  //注意，op不应在函数调用过程中改变状态(state)，op不应改动传入的实参
+  //调用者必须确保”以cmpBeg开头“的区间内含足够元素
+  //如果想知道两个序列是否相等，应当使用equal()算法
+  //复杂度：线性。至多比较（或调用op()）共numElems次
+
+  coll.clear();
+  coll={1,2,3,4,5,6};
+  coll2.clear();
+  coll2={1,2,4,8,16,3};
+
+  PRINT_ELEMENTS(coll,"coll: ");
+  PRINT_ELEMENTS(coll2,"coll2: ");
+
+  //find first mismatch
+  auto values=mismatch(coll.cbegin(),coll.cend(),//first range
+                       coll2.cbegin());//second range
+  if(values.first==coll.end()){
+    std::cout<<"no mismatch"<<std::endl;
+  }
+  else{
+    std::cout<<"first mismatch: "
+             <<*values.first<<" and "
+             <<*values.second<<std::endl;
+  }
+
+  //find first position where the element of coll is not
+  //less than the corresponding element of coll2
+  values=mismatch(coll.cbegin(),coll.cend(),//first range
+                  coll2.cbegin(),//second range
+                  std::less_equal<int>());//criterion
+  if(values.first==coll.end()){
+    std::cout<<"always less-or-equal"<<std::endl;
+  }
+  else{
+    std::cout<<"not less-or-equal: "
+             <<*values.first<<" and "
+             <<*values.second<<std::endl;
+  }
+
+  //bool
+  //lexicographical_compare(InputIterator1 beg1,InputIterator1 end1,InputIterator2 beg2,InputIterator2 end2)
+  //bool
+  //lexicographical_compare(InputIterator1 beg1,InputIterator1 end1,InputIterator2 beg2,InputIterator2 end2,CompFunc op)
+  //两个形式都用来判断[beg1,end1)区间内的元素是否小于[beg2,end2)的元素。所谓”小于“是指就”字典(lexicographical)次序“意义而言
+  //第一形式以operator<比较元素
+  //第二形式以binary predicate
+  // op(elem1,elem2)
+  //比较元素。如果elem1小于elem2，应当返回true
+  //所谓字典次序的排序意味着两序列中的元素一一比较，直到以下情况发生：
+  //-如果两元素不相等，则这两个元素的比较结果就是整个两序列的比较结果
+  //-如果两序列的元素数量不同，则元素较少的序列小于另一序列。所以如果第一序列的元素数量较少，比较结果是true
+  //如果两序列都没有更多的元素可进行比较，则这两个序列相等，整个比较结果是false
+  //注意，op不应在函数调用过程中改变状态(state)，op不应改动传入的实参
+  //复杂度：线性。至多比较（或调用op()）min(numElems1,numElems2)次
+
+  std::list<int> c1,c2,c3,c4;
+
+  //fill all collections with the same starting values
+  INSERT_ELEMENTS(c1,1,5);
+  c4=c3=c2=c1;
+
+  //and now some differences
+  c1.push_back(7);
+  c3.push_back(2);
+  c3.push_back(0);
+  c4.push_back(2);
+
+  //create collection of collections
+  std::vector<std::list<int>> cc;
+  cc.insert(cc.begin(),{c1,c2,c3,c4,c3,c1,c4,c2});
+
+  //print all collections
+  for_each(cc.cbegin(),cc.cend(),
+           printCollection);
+  std::cout<<std::endl;
+
+  //sort collection lexicographically
+  sort(cc.begin(),cc.end(),//range
+       lessForCollection);//sorting criterion
+
+  //print all collections again
+  for_each(cc.cbegin(),cc.cend(),
+           printCollection);
+
+  //11.5.5 Predicate用以检验区间
+
+  //bool
+  //is_sorted(ForwardIterator beg,ForwardIterator end)
+  //bool
+  //is_sorted(ForwardIterator beg,ForwardIterator end,BinaryPredicate op)
+  //bool
+  //ForwardIterator
+  //is_sorted_until(ForwardIterator beg,ForwardIterator end)
+  //ForwardIterator
+  //is_sorted_until(ForwardIterator beg,ForwardIterator end,BinaryPredicate op)
+  //is_sorted()检验[beg,end)区间内的元素是否已经排序
+  //is_sorted_until()返回[beg,end)区间内元素第一个破坏排序的元素。如果没有这样的元素，返回end
+  //第一和第三形式使用operator<比较元素。第二和第四形式使用binary predicate op(elem1,elem2)比较元素——如果elem1”小于“elem2它就该返回true
+  //如果区间为空，这些算法返回true，如果只有一个元素则返回end
+  //注意，op不应在函数调用过程中改变状态(state),op不应改动传入的实参，这些算法全部始自C++11
+  //复杂度：线性。至多调用<或op()共numElems-1次
+
 
 
 
