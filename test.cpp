@@ -1191,6 +1191,79 @@ int main()
   std::cout<<std::endl;
 
   //11.6.3 转换和结合元素(Transforming and Combining Element)
+  //OutputIterator
+  //transform(InputIterator sourceBeg,InputIterator sourceEnd,OutputIterator destBeg,UnaryFunc op)
+  //针对源区间[sourceBeg,sourceEnd)中的每一个元素调用：
+  // op(elem)并将结果写到以destBeg起始的目标区间内
+  //返回目标区间内“最后一个被转换元素”的下一位置，也就是第一个未被覆盖(overwritten)的元素的位置
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //sourceBeg与destBeg可以完全相同，所以，和for_each()算法一样，你可以使用这个算法来改动“序列内”的元素。
+  //如果想以某值替换掉“符合给定准则”的元素，应使用replace()
+  //复杂度：线性，对op()执行numElems次调用
+
+  coll.clear();
+  coll2.clear();
+
+  INSERT_ELEMENTS(coll,1,9);
+  PRINT_ELEMENTS(coll,"coll: ");
+
+  //negate all elements in coll
+  transform(coll.cbegin(),coll.cend(),//source range
+            coll.begin(),//destination range
+            std::negate<int>());
+  PRINT_ELEMENTS(coll,"negated: ");
+
+  //transform elements of coll into coll2 with ten times their value
+  transform(coll.cbegin(),coll.cend(),//source range
+            back_inserter(coll2),//destination range
+            std::bind(std::multiplies<int>(),
+                      std::placeholders::_1,
+                      10));//operation
+  PRINT_ELEMENTS(coll2,"coll2: ");
+
+  //print coll2 negatively and in reverse order
+  transform(coll2.crbegin(),coll2.crend(),//source range
+            std::ostream_iterator<int>(std::cout," "),//destination range
+            [](int elem){//operation
+              return -elem;
+            });
+  std::cout<<std::endl;
+
+  //OutputIterator
+  //transform(InputIterator1 source1Beg,InputIterator1 source1End,InputIterator2 source2Beg,OutputIterator destBeg,BinaryFunc op)
+  //针对第一源区间[source1Beg,source1End)以及“从source2Beg开始的第二源区间”的对应元素，调用
+  // op(source1Elem,source2Elem)
+  //并将结果写入以destBeg起始的目标区内
+  //返回目标区间内“最后一个被转换元素”的下一位置，就是第一个未被覆盖(overwritten)的元素的位置
+  //调用者必须保证第二源区间有足够空间（至少拥有和第一源区间相同的大小）
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //source1Beg、source2Beg和destBeg可相同。因此，你可以让元素自己和自己结合，然后将结果覆盖(overwrite)自己
+  //复杂度：线性，对op()执行numElems次调用
+
+  coll.clear();
+  coll2.clear();
+
+  INSERT_ELEMENTS(coll,1,9);
+  PRINT_ELEMENTS(coll,"coll: ");
+
+  //square each element
+  transform(coll.cbegin(),coll.cend(),//first source range
+            coll.cbegin(),//second source range
+            coll.begin(),//destination range
+            std::multiplies<int>());
+  PRINT_ELEMENTS(coll,"squared: ");
+
+  //add each element traversed forward with each element traversed backward
+  //and insert result into coll2
+  transform(coll.cbegin(),coll.cend(),//first source range
+            coll.crbegin(),//second source range
+            back_inserter(coll2),//destination range
+            std::plus<int>());//operation
+  PRINT_ELEMENTS(coll2,"coll2: ");
+
+  //print
+
+
 
 
 
