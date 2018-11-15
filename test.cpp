@@ -926,8 +926,226 @@ int main()
   //注意，op不应在函数调用过程中改变状态(state),op不应改动传入的实参，这些算法全部始自C++11
   //复杂度：线性。至多调用<或op()共numElems-1次
 
+  coll.clear();
+  coll={1,1,2,3,4,5,6,7,8,9};
 
+  PRINT_ELEMENTS(coll,"coll: ");
 
+  //check whether coll is sorted
+  if(is_sorted(coll.begin(),coll.end())){
+    std::cout<<"coll is sorted"<<std::endl;
+  }
+  else{
+    std::cout<<"coll is not sorted"<<std::endl;
+  }
+
+  std::map<int,std::string> collmap;
+  collmap={{1,"Bill"},{2,"Jim"},{3,"Nico"},{4,"Liu"},{5,"Ai"}};
+  PRINT_MAPPED_ELEMENTS(collmap,"collmap: ");
+
+  //define predicate to compare names
+  auto compareName=[](const std::pair<int,std::string>& e1,
+                      const std::pair<int,std::string>& e2){
+    return e1.second<e2.second;
+  };
+
+  //check whether the names in collmap are sorted
+  if(is_sorted(collmap.cbegin(),collmap.cend(),compareName)){
+    std::cout<<"names in collmap are sorted"<<std::endl;
+  }
+  else{
+    std::cout<<"names in collmap are not sorted"<<std::endl;
+  }
+
+  //print first unsorted name
+  auto posmap=is_sorted_until(collmap.cbegin(),collmap.cend(),compareName);
+  if(posmap!=collmap.end()){
+    std::cout<<"first unsorted name: "<<posmap->second<<std::endl;
+  }
+
+  //bool
+  //is_partitioned(InputIterator beg,InputIterator end,UnaryPredicate op)
+  //ForwardIterator
+  //partition_point(ForwardIterator beg,ForwardIterator end,BinaryPredicate op)
+  //is_partitioned()判断[beg,end)区间内的元素是否被分割(are partitions)，也就是所有符合predicate op()的元素都被置于所有不符合的元素之前（较早出现）
+  //partition_point()返回[beg,end)区间中的第一个元素的位置。因此，对于[beg,end)，is_partitioned()必定产出true on entry
+  //这些算法使用binary predicate
+  // op(elem1,elem2)
+  //它应该在elem1“小于”elem2时返回true
+  //如果区间为空，partition_point()返回end
+  //注意，op不应在函数调用过程中改变状态(state)
+  //op不应改动传入的实参
+  //这些算法都始自C++11
+  //复杂度：
+  //-is_partitioned()：线性（至多numElems次调用op()）
+  //-partition_point()：如果收到的是random-access iterator则为对数(logarithmic)，否则是线性（无论如何至多log(numElems)次调用op()）
+
+  coll.clear();
+  coll={5,3,9,1,3,4,8,2,6};
+  PRINT_ELEMENTS(coll,"coll: ");
+
+  //define predicate: check whether element is odd:
+  auto isOdd=[](int elem){
+    return elem%2==1;
+  };
+
+  //check whether coll is partitioned in odd and even elements
+  if(is_partitioned(coll.cbegin(),coll.cend(),//range
+                    isOdd)){//predicate
+    std::cout<<"coll is partitioned"<<std::endl;
+
+    //find first even element:
+    auto pos=partition_point(coll.cbegin(),coll.cend(),
+                             isOdd);
+    std::cout<<"first even element: "<<*pos<<std::endl;
+  }
+  else{
+    std::cout<<"coll is not partitioned"<<std::endl;
+  }
+
+  //bool
+  //is_heap(RandomAccessIterator beg,RandomAccessIterator end)
+  //bool
+  //is_heap(RandomAccessIterator beg,RandomAccessIterator end,BinaryPredicate op)
+  //RandomAccessIterator
+  //is_heap_until(RandomAccessIterator beg,RandomAccessIterator end)
+  //RandomAccessIterator
+  //is_heap_until(RandomAccessIterator beg,RandomAccessIterator end,BinaryPredicate op)
+  //is_heap()判断[beg,end)区间内的元素是否形成一个heap，那意味着beg是最大值元素（之一）
+  //is_heap_until()返回[beg,end)区间内第一个“破坏排序使无法成为heap“的元素位置（该元素将会比第一元素更大）。如果没有这样的元素就返回end
+  //第一和第三形式使用operator<比较元素，第二和第四形式使用binary predicate op(elem1,elem2)完成比较，后者应该在elem1”小于“elem2的情况下返回true
+  //如果区间为空，这些算法返回true，如果只有一个元素则返回end
+  //注意，op不应在函数调用过程中改变状态(state)，op不应改动传入的实参
+  //这些算法都始自C++11
+  //复杂度：线性。至多调用<或op()共numElems-1次
+
+  coll.clear();
+  coll={9,8,7,7,7,5,4,2,1};
+  std::vector<int> coll3={5,3,2,1,4,7,9,8,6};
+  PRINT_ELEMENTS(coll,"coll: ");
+  PRINT_ELEMENTS(coll3,"coll3: ");
+
+  //check whether the collections are heaps
+  std::cout<<std::boolalpha<<"coll is heap: "
+           <<is_heap(coll.cbegin(),coll.cend())<<std::endl;
+  std::cout<<"coll3 is heap: "
+           <<is_heap(coll3.cbegin(),coll3.cend())<<std::endl;
+
+  //print the first element that is not a heap in coll3
+  auto pos4=is_heap_until(coll3.cbegin(),coll3.cend());
+  if(pos4!=coll3.end()){
+    std::cout<<"first non-heap element: "<<*pos4<<std::endl;
+  }
+
+  //bool
+  //all_of(InputIterator beg,InputIterator end,UnaryPredicate op)
+  //bool
+  //any_of(InputIterator beg,InputIterator end,UnaryPredicate op)
+  //bool
+  //none_of(InputIterator beg,InputIterator end,UnaryPredicate op)
+  //这些算法将判断，[beg,end)区间内是否全部，或至少一个，或没有任何元素造成unary predicate op(elem)产出true
+  //如果区间为空，all_of()和none_of()返回true，而any_of()返回false
+  //注意，op不应在函数调用过程中改变状态(state)，op不应改动传入的实参
+  //这些算法都始自C++11
+  //复杂度：线性。至多调用op()numElems次
+
+  coll.clear();
+  std::vector<int>::iterator pos5;
+
+  INSERT_ELEMENTS(coll,1,9);
+  PRINT_ELEMENTS(coll,"coll: ");
+
+  //define an object for the predicate(using a lambda)
+  auto isEven=[](int elem){
+    return elem%2==0;
+  };
+
+  //print whether all,any, or none of the elements are/is even
+  std::cout<<std::boolalpha<<"all even?: "
+           <<all_of(coll.cbegin(),coll.cend(),isEven)<<std::endl;
+  std::cout<<"any even?: "
+           <<any_of(coll.cbegin(),coll.cend(),isEven)<<std::endl;
+  std::cout<<"none even?: "
+           <<none_of(coll.cbegin(),coll.cend(),isEven)<<std::endl;
+
+  //11.6 更易型算法(Modifying Algorithm)
+  //11.6.1 复制元素(Copying Element)
+
+  //OutputIterator
+  //copy(InputIterator sourceBeg,InputIterator sourceEnd,OutputIterator destBeg)
+  //OutputIterator
+  //copy_if(InputIterator sourceBeg,InputIterator sourceEnd,OutputIterator destBeg,UnaryPredicate op)
+  //OutputIterator
+  //copy_n(InputIterator sourceBeg,Size num,OutputIterator destBeg)
+  //BidirectionalIterator2
+  //copy_backward(BidirectionalIterator1 sourceBeg,BidirectionalIterator1 sourceEnd,BidirectionalIterator2 destEnd)
+  //上述四个算法都将源区间[sourceBeg,sourceEnd)中的所有元素复制到以destBeg为起点或以destEnd为终点的目标区间
+  //它们都返回目标区间内最后一个被复制元素的下一位置，也就是第一个未被覆盖(overwritten)的元素的位置
+  //关于copy()，destBeg不可处于[sourceBeg,sourceEnd)区间内。关于copy_if()，源区间和目标区间不可重叠。关于copy_backward()，destEnd不可处于(sourceBeg,sourceEnd]区间内
+  //copy()正向遍历(forward)，而copy_backward()反向遍历(backward)。只有当源区间和目标区间重叠时，这个不同点才会导致一些问题：
+  //-若要把一个子区间复制到前端，应使用copy()。因此对copy()而言，destBeg的位置应该在sourceBeg之前。
+  //-若要把一个子区间复制到后端，应使用copy_backward()。因此对copy_backward()而言，destEnd的位置应该在sourceEnd之后
+  //所以，只要第三实参位于”前两个实参所指出的源区间”中，你就应该使用另一算法。注意，如果转而使用另一形式，意味着原本应传入目标区间的起点，现在要改而传入终点了。
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //自C++11起，如果源端元素不再被使用，你应该以move()取代copy()，以move_backward()取代copy_backward()
+  //C++11之前并未提供copy_if()和copy_n()算法，因此若要复制“符合某给定准则”之元素，必须选择remove_copy_if()并搭配一个negated predicate
+  //如果希望在复制过程中反转元素次序，应使用reverse_copy()。该算法比起"copy()算法搭配reverse iterator"略快些
+  //如果想把容器内的所有元素赋值(assign)给另一个容器，应当使用assignment操作符（当两个容器的类型相同时才能这么做）或使用容器的assign()成员函数（当两个容器的类型不同时就采用此法）
+  //如果希望在复制的同时移除元素，应使用算法remove_copy()和remove_copy_if()
+  //如果希望在复制过程中改动元素，请使用transform()或replace_copy()
+  //可使用partition_copy()将元素复制到两个目标区间：其中一组满足predicate而另一组不满足
+  //复杂度：线性，执行numElems次赋值
+
+  std::vector<std::string> coll4={"Hello","this","is","an","example"};
+  std::list<std::string> coll5;
+
+  //copy elements of coll4 into coll5
+  //-use back inserter to insert instead of overwrite
+  copy(coll4.cbegin(),coll4.cend(),//source range
+       back_inserter(coll5));//destination range
+
+  //print elements of coll5
+  //-copy elements to cout using an ostream iterator
+  copy(coll5.cbegin(),coll5.cend(),//source range
+       std::ostream_iterator<std::string>(std::cout," "));//destination range
+  std::cout<<std::endl;
+
+  //copy elements of coll4 into coll5 in reverse order
+  //-now overwriting
+  copy(coll4.crbegin(),coll4.crend(),//source range
+       coll5.begin());//destination range
+
+  //print elements of coll5 again
+  copy(coll5.cbegin(),coll5.cend(),//source range
+       std::ostream_iterator<std::string>(std::cout," "));//destination range
+  std::cout<<std::endl;
+
+  //initialize source collection with "..........abcdef.........."
+  std::vector<char> source(10,'.');
+  for(int c='a';c<='f';c++){
+    source.push_back(c);
+  }
+  source.insert(source.end(),10,'.');
+  PRINT_ELEMENTS(source,"source: ");
+
+  //copy all letters three elements in front of the 'a'
+  std::vector<char> c5(source.cbegin(),source.cend());
+  copy(c5.cbegin()+10,c5.cbegin()+16,//source range
+       c5.begin()+7);//destination range
+  PRINT_ELEMENTS(c5,"c5:     ");
+
+  //copy all letters three elements behind the 'f'
+  std::vector<char> c6(source.cbegin(),source.cend());
+  copy_backward(c6.cbegin()+10,c6.cbegin()+16,//source range
+                c6.begin()+19);//destination range
+  PRINT_ELEMENTS(c6,"c6:     ");
+
+  //copy(std::istream_iterator<std::string>(std::cin),//beginning of source
+  //     std::istream_iterator<std::string>(),//end of source
+  //     std::ostream_iterator<std::string>(std::cout,"\n"));//destination
+
+  //11.6.2 搬移元素(Moving Element)
+  
 
 
   return 0;
