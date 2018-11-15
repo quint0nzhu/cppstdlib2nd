@@ -1145,7 +1145,53 @@ int main()
   //     std::ostream_iterator<std::string>(std::cout,"\n"));//destination
 
   //11.6.2 搬移元素(Moving Element)
-  
+  //OutputIterator
+  //move(InputIterator sourceBeg,InputIterator sourceEnd,OutputIterator destBeg)
+  //BidirectionalIterator2
+  //move_backward(BidirectionalIterator1 sourceBeg,BidirectionalIterator1 sourceEnd,BidirectionalIterator2 destEnd)
+  //上述两个算法将源区间[sourceBeg,sourceEnd)中的所有元素搬移至以destBeg为起点或以destEnd为终点的目标区间
+  //它们会针对每一个元素调用
+  // *destElem=std::move(*sourceElem)
+  //因此，如果元素类型提供有move语义，源端元素从此不再明确，它们也就不该再被使用，除非重新初始化或被赋予新值。如果元素类型未提供move语义，元素会被copy，就像copy()或copy_backward()的行为一样
+  //它们会返回目标区间内最后一个被复制元素的下一位置，也就是第一个未被覆盖(overwritten)的元素的位置
+  //move()的destBeg不可处于[sourceBeg,sourceEnd)区间内。move_backward()的destEnd不可处于(sourceBeg,sourceEnd]区间内
+  //move()正向遍历(forward)，而move_backward()反向遍历(backward)。只有当源区间和目标区间重叠时，这个不同点才会导致一些问题：
+  //-若要把一个子区间搬移到前端，应使用move()。因此对move()而言，destBeg的位置应该在sourceBeg之前
+  //-若要把一个子区间复制到后端，应使用move_backward()。因此对move_backward()而言，destEnd的位置应该在sourceEnd之后
+  //所以，只要第三实参位于“前两个实参所指出的源区间”中，你就应该使用另一算法。注意，如果转而使用另一形式，意味着原本应传入目标区间的起点，现在要改而传入终点了。
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //这些算法都始自C++11
+  //复杂度：线性，执行numElems次“搬移赋值”(move assignment)
+
+  coll5.clear();
+
+  //copy elements of coll4 into coll5
+  //-use back inserter to insert instead of overwrite
+  //-use copy() because the elements in coll4 are used again
+  copy(coll4.cbegin(),coll4.cend(),//source range
+       back_inserter(coll5));//destination range
+
+  //print elements of coll5
+  //-copy elements to cout using an ostream iterator
+  //-use move() because these elements in coll5 are not used again
+  move(coll5.cbegin(),coll5.cend(),//source range
+       std::ostream_iterator<std::string>(std::cout," "));//destination range
+  std::cout<<std::endl;
+
+  //copy elements of coll4 into coll5 in reverse order
+  //-now overwriting(coll5.size() still fits)
+  //-use move() because the elements in coll4 are not used again
+  move(coll4.crbegin(),coll4.crend(),//source range
+       coll5.begin());//destination
+
+  //print elements of coll5 again
+  //-use move() because the elements in coll5 are not used again
+  move(coll5.cbegin(),coll5.cend(),//source range
+       std::ostream_iterator<std::string>(std::cout," "));//destination range
+  std::cout<<std::endl;
+
+  //11.6.3 转换和结合元素(Transforming and Combining Element)
+
 
 
   return 0;
