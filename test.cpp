@@ -1651,10 +1651,66 @@ int main()
   //reverse(BidirectionalIterator beg,BidirectionalIterator end)
   //OutputIterator
   //reverse_copy(BidirectionalIterator sourceBeg,BidirectionalIterator sourceEnd,OutputIterator destBeg)
+  //reverse()会将[beg,end)区间内的元素全部反转次序
+  //reverse_copy()会将源区间[sourceBeg,sourceEnd)内的元素复制到“以destBeg起始的目标区间”，并在复制过程中颠倒次序
+  //reverse_copy()返回目标区间内“最后一个被复制元素”的下一位置，也就是第一个未被覆盖(overwritten)的元素
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //List提供了一个效果相同的成员函数reverse()，但它并非重新赋值，而是重新链接pointer，因此具有更佳效能
+  //复杂度：线性，分别进行numElems/2次交换，或numElems次赋值
 
+  coll.clear();
 
+  INSERT_ELEMENTS(coll,1,9);
+  PRINT_ELEMENTS(coll,"coll: ");
 
+  //reverse order of elements
+  reverse(coll.begin(),coll.end());
+  PRINT_ELEMENTS(coll,"coll: ");
 
+  //reverse order from second to last element but one
+  reverse(coll.begin()+1,coll.end()-1);
+  PRINT_ELEMENTS(coll,"coll: ");
+
+  //print all of them in reverse order
+  reverse_copy(coll.cbegin(),coll.cend(),//source
+               std::ostream_iterator<int>(std::cout," "));//destination
+  std::cout<<std::endl;
+
+  //11.8.2 旋转元素(Rotating Elements)
+
+  //ForwardIterator
+  //rotate(ForwardIterator beg,ForwardIterator newBeg,ForwardIterator end)
+  //将[beg,end)区间内的元素旋转，执行后，*newBeg成为新的第一元素
+  //自C++11起，它返回beg+(end-newbeg)，那是原本的第一元素经旋转后的新位置。C++11之前的返回类型是void
+  //调用者必须确保newBeg是[beg,end)区间内的一个有效位置，否则会引发不确定的行为
+  //复杂度：线性，最多进行numElems次交换
+
+  coll.clear();
+
+  INSERT_ELEMENTS(coll,1,9);
+  PRINT_ELEMENTS(coll,"coll:       ");
+
+  //rotate one element to the left
+  rotate(coll.begin(),//beginning of range
+         coll.begin()+1,//new first element
+         coll.end());//end of range
+  PRINT_ELEMENTS(coll,"one left:   ");
+
+  //rotate two elements to the right
+  rotate(coll.begin(),//beginning of range
+         coll.end()-2,//new first element
+         coll.end());//end of range
+  PRINT_ELEMENTS(coll,"two right:  ");
+
+  //rotate so that element with value 4 is the beginning
+  rotate(coll.begin(),//beginning of range
+         find(coll.begin(),coll.end(),4),//new first element
+         coll.end());//end of range
+  PRINT_ELEMENTS(coll,"4 first:    ");
+
+  //OutputIterator
+  //rotate_copy(ForwardIterator sourceBeg,ForwardIterator newBeg,ForwardIterator sourceEnd,OutputIterator destBeg)
+  //它是copy()和rotate()的组合
 
 
 
