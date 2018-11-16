@@ -141,6 +141,19 @@ bool lessForCollection(const std::list<int>& l1,const std::list<int>& l2)
                                  l2.cbegin(),l2.cend());//second range
 }
 
+bool differenceOne(int elem1,int elem2)
+{
+  return elem1+1==elem2||elem1-1==elem2;
+}
+
+bool bothSpaces(char elem1,char elem2)
+{
+  return elem1==' '&&elem2==' ';
+}
+
+
+
+
 
 int main()
 {
@@ -1261,7 +1274,385 @@ int main()
             std::plus<int>());//operation
   PRINT_ELEMENTS(coll2,"coll2: ");
 
-  //print
+  //print differences of two corresponding elements
+  std::cout<<"diff: ";
+  transform(coll.cbegin(),coll.cend(),//first source range
+            coll2.cbegin(),//second source range
+            std::ostream_iterator<int>(std::cout," "),//destination range
+            std::minus<int>());//operation
+  std::cout<<std::endl;
+
+  //11.6.4 互换元素(Swapping Elements)
+
+  //ForwardIterator2
+  //swap_ranges(ForwardIterator1 beg1,ForwardIterator1 end1,ForwardIterator2 beg2)
+  //将区间[beg1,end1)内的元素和“从beg2开始的区间”内的对应元素互换
+  //返回第二区间中“最后一个被交换元素”的下一位置
+  //调用者必须确保目标区间有足够空间，两区间不得重叠
+  //如果要将相同类型的两个容器内的所有元素都互换，应使用swap()成员函数，因为该成员函数通常具备常量复杂度
+  //复杂度：线性，执行numElems次交换动作
+
+  coll.clear();
+  coll1.clear();
+
+  INSERT_ELEMENTS(coll,1,9);
+  INSERT_ELEMENTS(coll1,11,23);
+
+  PRINT_ELEMENTS(coll,"coll: ");
+  PRINT_ELEMENTS(coll1,"coll1: ");
+
+  //swap elements of coll with corresponding elements of coll1
+  std::deque<int>::iterator pos6;
+  pos6=swap_ranges(coll.begin(),coll.end(),//first range
+                   coll1.begin());//second range
+
+  PRINT_ELEMENTS(coll,"\ncoll: ");
+  PRINT_ELEMENTS(coll1,"coll1: ");
+  if(pos6!=coll1.end()){
+    std::cout<<"first element not modified: "
+             <<*pos6<<std::endl;
+  }
+
+  //mirror first three with last three elements in coll1
+  swap_ranges(coll1.begin(),coll1.begin()+3,//first range
+              coll1.rbegin());//second range
+  PRINT_ELEMENTS(coll1,"\ncoll1: ");
+
+  //11.6.5 赋值(Assigning New Value)
+
+  //void
+  //fill(ForwardIterator beg,ForwardIterator end,const T& newValue)
+  //void
+  //fill_n(OutputIterator beg,Size num,const T& newValue)
+  //fill()将区间[beg,end)内的每一个元素都赋予新值newValue
+  //fill_n()将“从beg开始的前num个元素”赋予新值newValue。如果num为负值则不做任何事（始自C++11）
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //自C++11起，fill_n()返回最后被改动的元素的下一位置(beg+num)，如果num是负值则返回beg（在C++11之前，fill_n()的返回类型是void）
+  //复杂度：线性（执行numElems次或num次或0次赋值）
+
+  //print ten times 7.7
+  fill_n(std::ostream_iterator<float>(std::cout," "),//beginning of destination
+         10,//count
+         7.7);//new value
+  std::cout<<std::endl;
+
+  coll5.clear();
+
+  //insert "hello" nine times
+  fill_n(back_inserter(coll5),//beginning of destination
+         9,//count
+         "hello");//new value
+  PRINT_ELEMENTS(coll5,"coll5: ");
+
+  //overwrite all elements with "again"
+  fill(coll5.begin(),coll5.end(),//destination
+       "again");//new value
+  PRINT_ELEMENTS(coll5,"coll5: ");
+
+  //replace all but two elements with "hi"
+  fill_n(coll5.begin(),//beginning of destination
+         coll5.size()-2,//count
+         "hi");//new value
+  PRINT_ELEMENTS(coll5,"coll5: ");
+
+  //replace the second and up to the last element but one with "hmmm"
+  std::list<std::string>::iterator pos7,pos8;
+  pos7=coll5.begin();
+  pos8=coll5.end();
+  fill(++pos7,--pos8,//destination
+       "hmmm");//new value
+  PRINT_ELEMENTS(coll5,"coll5: ");
+
+  //void
+  //generate(ForwardIterator beg,ForwardIterator end,Func op)
+  //void
+  //generate_n(OutputIterator beg,Size num,Func op)
+  //generate()会调用op()产生新值，并将它赋值给区间[beg,end)内的每个元素
+  //generate_n()会调用op()产生新值，并将它赋值给“以beg起始的区间”内的前num个元素。如果num为负值则不做任何事（始自C++11）
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //自C++11起，generate_n()返回最后被改动的元素的下一位置(beg+num)，如果num是负值则返回beg（在C++11之前，generate_n()的返回类型是void）
+  //复杂度：线性（op()动作和赋值，执行numElems次或num次或0次）
+
+  coll2.clear();
+
+  //insert five random numbers
+  generate_n(back_inserter(coll2),//beginning of destination range
+             5,//count
+             rand);//new value generator
+  PRINT_ELEMENTS(coll2);
+
+  //overwrite with five new random numbers
+  generate(coll2.begin(),coll2.end(),//destination range
+           rand);//new value generator
+  PRINT_ELEMENTS(coll2);
+
+  //void
+  //iota(ForwardIterator beg,ForwardIterator end,T startValue)
+  //依序赋值startValue、startValue+1、startValue+2......
+  //始自C++11
+  //复杂度：线性（执行numElems次赋值和累加）
+
+  std::array<int,10> coll6;
+
+  std::iota(coll6.begin(),coll6.end(),//destination range
+       42);//start value
+
+  PRINT_ELEMENTS(coll6,"coll6: ");
+
+  //11.6.6替换元素(Replacing Element)
+
+  //void
+  //replace(ForwardIterator beg,ForwardIterator end,const T& oldValue,const T&newValue)
+  //void
+  //replace_if(ForwardIterator beg,ForwardIterator end,UnaryPredicate op,const T& newValue)
+  //replace()将[beg,end)区间内每一个“与oldValue相等”的元素替换为newValue
+  //replace_if()将[beg,end)区间内每一个令以下unary predicate：
+  // op(elem)
+  //产生true的元素替换为newValue
+  //注意，op不应在函数调用过程中改变状态(state)
+  //复杂度：线性（执行比较动作或调用op()，numElems次）
+
+  coll2.clear();
+
+  INSERT_ELEMENTS(coll2,2,7);
+  INSERT_ELEMENTS(coll2,4,9);
+  PRINT_ELEMENTS(coll2,"coll2: ");
+
+  //replace all elements with value 6 with 42
+  replace(coll2.begin(),coll2.end(),//range
+          6,//old value
+          42);//new value
+  PRINT_ELEMENTS(coll2,"coll2: ");
+
+  //replace all elements with value less than 5 with 0
+  replace_if(coll2.begin(),coll2.end(),//range
+             [](int elem){//criterion for replacement
+               return elem<5;
+             },
+             0);//new value
+  PRINT_ELEMENTS(coll2,"coll2: ");
+
+  //OurputIterator
+  //replace_copy(InputIterator sourceBeg,InputIterator sourceEnd,OutputIterator destBeg,const T& oldValue,const T& newValue)
+  //OutputIterator
+  //replace_copy_if(InputIterator sourceBeg,InputIterator sourceEnd,OutputIterator destBeg,UnaryPredicate op,const T& newValue)
+  //replace_copy()是copy()和replace()的组合。它将源区间[sourceBeg,sourceEnd)中的元素复制到“以destBeg为起点”的目标区，同时将其中“与oldValue相等”的所有元素替换为newValue
+  //replace_copy_if()是copy()和replace_if()的组合。[sourceBeg,sourceEnd)中的元素被复制到“以destBeg为起点”的目标区，同时将其中“令unary predicate op(elem)结果为true”的所有元素替换为newValue
+  //两个算法都返回目标区间中“最后一个被复制元素”的下一位置，也就是第一个未被覆盖(overwritten)的元素的位置
+  //注意，op不应在函数调用过程中改变状态(state)
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //复杂度：线性，执行比较动作（或调用op()）numElems次
+
+  coll2.clear();
+
+  INSERT_ELEMENTS(coll2,2,6);
+  INSERT_ELEMENTS(coll2,4,9);
+  PRINT_ELEMENTS(coll2);
+
+  //print all elements with value 5 replace with 55
+  replace_copy(coll2.cbegin(),coll2.cend(),//source
+               std::ostream_iterator<int>(std::cout," "),//destination
+               5,//old value
+               55);//new value
+  std::cout<<std::endl;
+
+  //print all elements with a value less than 5 replaced with 42
+  replace_copy_if(coll2.cbegin(),coll2.cend(),//source
+                  std::ostream_iterator<int>(std::cout," "),//destination
+                  std::bind(std::less<int>(),
+                            std::placeholders::_1,5),//replacement criterion
+                  42);//new value
+  std::cout<<std::endl;
+
+  //print each element while each odd element is replace with 0
+  replace_copy_if(coll2.cbegin(),coll2.cend(),//source
+                  std::ostream_iterator<int>(std::cout," "),//destination
+                  [](int elem){//replacement criterion
+                    return elem%2==1;
+                  },
+                  0);//new value
+  std::cout<<std::endl;
+
+  //11.7 移除型算法(Removing Algorithm)
+  //11.7.1 移除某些元素
+
+  //ForwardIterator
+  //remove(ForwardIterator beg,ForwardIterator end,const T& value)
+  //ForwardIterator
+  //remove_if(ForwardIterator beg,ForwardIterator end,UnaryPredicate op)
+  //remove()会移除[beg,end)区间中每一个“与value相等”的元素
+  //remove_if()会移除[beg,end)区间中每一个“令unary predicate op(elem)结果为true”的元素
+  //两个算法都返回被改动的序列的新逻辑终点（也就是最后一个未被移除元素的下一位置）
+  //这些算法会把原本置于后面的未移除元素向前移动，覆盖被移除元素
+  //未被移除的元素在相对次序上保持不变
+  //调用者在调用此算法之后，应保证从此采用其所返回的新逻辑终点，不再使用原始终点end
+  //注意，op不应在函数调用过程中改变状态(state)
+  //注意，remove_if()通常会在内部复制它所获得的那个unary predicate，然后两次运用它。如果该unary predicate在函数调用过程中改变状态，就可能导致问题
+  //由于元素会被改动，所以这些算法不可用于associative或unordered容器。然而这些容器提供了功能类似的成员函数erase()
+  //List提供了一个效果相同的成员函数remove()，效能较高，原因是它不重新赋值，而是重新链接pointer
+  //复杂度：线性，执行比较动作（或调用op()）numElems次
+
+  coll.clear();
+
+  INSERT_ELEMENTS(coll,2,6);
+  INSERT_ELEMENTS(coll,4,9);
+  INSERT_ELEMENTS(coll,1,7);
+  PRINT_ELEMENTS(coll,"coll:             ");
+
+  //remove all elements with value 5
+  pos=remove(coll.begin(),coll.end(),//range
+             5);//value to remove
+
+  PRINT_ELEMENTS(coll,"size not changed: ");
+
+  //erase the "removed" elements in the container
+  coll.erase(pos,coll.end());
+  PRINT_ELEMENTS(coll,"size changed:     ");
+
+  //remove all elements less than 4
+  coll.erase(remove_if(coll.begin(),coll.end(),//range
+                       [](int elem){//remove criterion
+                         return elem<4;
+                       }),
+             coll.end());
+  PRINT_ELEMENTS(coll,"<4 removed:       ");
+
+  //OutputIterator
+  //remove_copy(InputIterator sourceBeg,InputIterator sourceEnd,OutputIterator destBeg,const T& value)
+  //OutputIterator
+  //remove_copy_if(InputIterator sourceBeg,InputIterator sourceEnd,OutputIterator destBeg,UnaryPredicate op)
+  //remove_copy()是copy()和remove()的组合。它将源区间[sourceBeg,sourceEnd)内的所有元素复制到“以destBeg为起点”的目标区间去，并在复制过程中移除“与value相等”的所有元素
+  //remove_copy_if()是copy()和remove_if()的组合。它将源区间[sourceBeg,sourceEnd)内的元素复制到“以destBeg为起点”的目标区间去，并在复制过程中移除“造成unary predicate op(elem)结果为true”的所有元素
+  //两个算法都返回目标区间中最后一个被复制元素的下一位置（也就是第一个未被覆盖的元素）
+  //注意，op不应在函数调用过程中改变状态(state)
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //partition_copy()会把元素复制到两个目标区间：其中一个满足某个predicate而另一个不满足（始自C++11）
+  //复杂度：线性，执行比较动作（或调用op()）以及赋值numElems次
+
+  coll2.clear();
+
+  INSERT_ELEMENTS(coll2,1,6);
+  INSERT_ELEMENTS(coll2,1,9);
+  PRINT_ELEMENTS(coll2);
+
+  //print elements without those having the value 3
+  remove_copy(coll2.cbegin(),coll2.cend(),//source
+              std::ostream_iterator<int>(std::cout," "),//destination
+              3);//remove value
+  std::cout<<std::endl;
+
+  //print elements without those having a value greater than 4
+  remove_copy_if(coll2.cbegin(),coll2.cend(),//source
+                 std::ostream_iterator<int>(std::cout," "),//destination
+                 [](int elem){//criterion for elements NOT copied
+                   return elem>4;
+                 });
+  std::cout<<std::endl;
+
+  //copy all elements not less than 4 into a multiset
+  std::multiset<int> collmset;
+  remove_copy_if(coll2.cbegin(),coll2.cend(),//source
+                 inserter(collmset,collmset.end()),//destination
+                 std::bind(std::less<int>(),
+                           std::placeholders::_1,4));//elements NOT copied
+  PRINT_ELEMENTS(collmset);
+
+  PRINT_ELEMENTS(coll2);
+
+  //11.7.2 移除重复元素
+
+  //ForwardIterator
+  //unique(ForwardIterator beg,ForwardIterator end)
+  //ForwardIterator
+  //unique(ForwardIterator beg,ForwardIterator end,BinaryPredicate op)
+  //以上两种形式都会移除连续重复元素中的多余元素
+  //第一形式将[beg,end)区间内所有“与前一元素相等“的元素移除。因此源序列必须先经过排序，才能使用这个算法移除所有重复元素
+  //第二形式将每一个”位于元素e之后并造成binary predicate op(e,elem)结果为true“的所有elem元素移除。换言之，上述predicate并非拿元素和其原本的前一元素比较，而是拿它和”经过处理后仍健在”的前一元素比较，参见以下实例。（换言之，如果序列A，B，C，D，E，A不符合移除条件，B符合，轮到C时，C将被拿来和A比较，而不是和原本的前一元素（但已被移除的）B比较。）
+  //两个形式都返回被改动的序列的新逻辑终点（也就是最后一个未被移除元素的下一位置）
+  //这两个算法将“原本位置在后”的未移除元素向前移动，覆盖掉(overwrite)被移除元素
+  //未被移除的元素在相对次序上保持不变
+  //调用者在调用这些算法之后，应保证从此使用返回的新逻辑终点，不再使用原始终点end
+  //注意，op不应在函数调用过程中改变状态(state)
+  //由于会造成元素被改动，所以这些算法不可用于associative或unordered容器
+  //List提供了一个效果相同的成员函数unique()，原因是它不重新赋值，而是重新链接pointer
+  //复杂度：线性，执行比较动作（或调用op()）numElems次
+
+  //source data
+  int sourcedata[]={1,4,4,6,1,2,2,3,1,6,6,6,5,7,5,4,4};
+  coll2.clear();
+
+  //initialize coll2 with elements from sourcedata
+  copy(std::begin(sourcedata),std::end(sourcedata),//source
+       back_inserter(coll2));//destination
+  PRINT_ELEMENTS(coll2);
+
+  //remove consecutive duplicates
+  pos1=unique(coll2.begin(),coll2.end());
+
+  //print elements not removed
+  //-use new logical end
+  copy(coll2.begin(),pos1,//source
+       std::ostream_iterator<int>(std::cout," "));//destination
+  std::cout<<std::endl<<std::endl;
+
+  //reinitialize coll2 with elements from sourcedata
+  copy(std::begin(sourcedata),std::end(sourcedata),//source
+       coll2.begin());//destination
+  PRINT_ELEMENTS(coll2);
+
+  //remove elements if there was a previous greater element
+  coll2.erase(unique(coll2.begin(),coll2.end(),
+                     std::greater<int>()),
+              coll2.end());
+  PRINT_ELEMENTS(coll2);
+
+  //OutputIterator
+  //unique_copy(InputIterator sourceBeg,InputIterator sourceEnd,OutputIterator destBeg)
+  //OutputIterator
+  //unique_copy(InputIterator sourceBeg,InputIterator sourceEnd,OutputIterator destBeg,BinaryPredicate op)
+  //两种形式都是copy()和unique()的组合
+  //两者都将源区间[sourceBeg,sourceEnd)内的元素复制到“以destBeg起始的目标区间”，并移除重复元素
+  //两个算法都返回目标区间内“最后一个被复制元素”的下一位置（也就是第一个未被覆盖的元素）
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //复杂度：线性，执行比较动作（或调用op()）numElems次
+
+  coll2.clear();
+
+  //initialize coll2 with elements from sourcedata
+  copy(std::begin(sourcedata),std::end(sourcedata),//source
+       back_inserter(coll2));//destination
+  PRINT_ELEMENTS(coll2);
+
+  //print elements with consecutive duplicates removed
+  unique_copy(coll2.cbegin(),coll2.cend(),//source
+              std::ostream_iterator<int>(std::cout," "));//destination
+  std::cout<<std::endl;
+
+  //print elements without consecutive entries that differ by one
+  unique_copy(coll2.cbegin(),coll2.cend(),//source
+              std::ostream_iterator<int>(std::cout," "),//destination
+              differenceOne);//duplicates criterion
+  std::cout<<std::endl;
+
+  //don't skip leading whitespaces by default
+  // std::cin.unsetf(std::ios::skipws);
+
+  //copy standard input to standard output
+  //-while compressing spaces
+  //unique_copy(std::istream_iterator<char>(std::cin),//beginning of source:cin
+  //            std::istream_iterator<char>(),//end of source:end-of-file
+  //            std::ostream_iterator<char>(std::cout),//destination:cout
+  //            bothSpaces);
+
+  //11.8 变序型算法(Mutating Algorithm)
+  //11.8.1 反转元素次序(Reversing the Order of Elements)
+
+  //void
+  //reverse(BidirectionalIterator beg,BidirectionalIterator end)
+  //OutputIterator
+  //reverse_copy(BidirectionalIterator sourceBeg,BidirectionalIterator sourceEnd,OutputIterator destBeg)
+
+
 
 
 
