@@ -20,6 +20,7 @@
 #include <iostream>
 #include <string>
 
+
 //INSERT_ELEMENTS(collection,first,last)
 //-fill values from first to last into the collection
 //-NOTE: NO half-open range
@@ -149,6 +150,21 @@ bool differenceOne(int elem1,int elem2)
 bool bothSpaces(char elem1,char elem2)
 {
   return elem1==' '&&elem2==' ';
+}
+
+class MyRandom{
+public:
+std::ptrdiff_t operator()(std::ptrdiff_t max){
+    double tmp;
+    tmp=static_cast<double>(rand())
+      /static_cast<double>(RAND_MAX);
+return static_cast<std::ptrdiff_t>(tmp*max);
+  }
+};
+
+bool lessLength(const std::string& s1,const std::string& s2)
+{
+  return s1.length()<s2.length();
 }
 
 
@@ -1711,6 +1727,404 @@ int main()
   //OutputIterator
   //rotate_copy(ForwardIterator sourceBeg,ForwardIterator newBeg,ForwardIterator sourceEnd,OutputIterator destBeg)
   //它是copy()和rotate()的组合
+  //将源区间[sourceBeg,sourceEnd)内的元素复制到“以destBeg起始”之目标区间内，同时旋转元素，使*newBeg成为新的第一元素
+  //返回目标区间内“最后一个被复制元素”的下一位置destBeg+(sourceEnd-sourceBeg)
+  //调用者必须确保newBeg是[beg,end)区间内的一个有效位置，否则会引发不确定行为
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //源区间和目标区间两者不可重叠
+  //复杂度：线性，执行numElems次赋值
+
+  std::set<int> collset;
+
+  INSERT_ELEMENTS(collset,1,9);
+  PRINT_ELEMENTS(collset);
+
+  //print elements rotated one element to the left
+  std::set<int>::const_iterator posset=next(collset.cbegin());
+  rotate_copy(collset.cbegin(),//beginning of source
+              posset,//new first element
+              collset.cend(),//end of source
+              std::ostream_iterator<int>(std::cout," "));//destination
+  std::cout<<std::endl;
+
+  //print elements rotated two elements to the right
+  posset=collset.cend();
+  advance(posset,-2);
+  rotate_copy(collset.cbegin(),//beginning of source
+              posset,//new first element
+              collset.cend(),//end of source
+              std::ostream_iterator<int>(std::cout," "));//destination
+  std::cout<<std::endl;
+
+  //print elements rotated so that element with value 4 is the beginning
+  rotate_copy(collset.cbegin(),//beginning of source
+              collset.find(4),//new first element
+              collset.cend(),//end of source
+              std::ostream_iterator<int>(std::cout," "));//destination
+  std::cout<<std::endl;
+
+  //11.8.3 排列元素(Permuting Elements)
+
+  //bool
+  //next_permutation(BidirectionalIterator beg,BidirectionalIterator end)
+  //bool
+  //next_permutation(BidirectionalIterator beg,BidirectionalIterator end,BinaryPredicate op)
+  //bool
+  //prev_permutation(BidirectionalIterator beg,BidirectionalIterator end)
+  //bool
+  //prev_permutation(BidirectionalIterator beg,BidirectionalIterator end,BinaryPredicate op)
+  //next_permutation()会改变[beg,end)区间内的元素次序，使它们符合“下一排列次序”
+  //prev_permutation()会改变[beg,end)区间内的元素次序，使它们符合“上一排列次序”
+  //第一形式使用operator<比较元素
+  //第二形式使用binary predicate
+  // op(elem1,elem2)
+  //比较元素，如果“elem1小于elem2”它应该返回true
+  //如果元素得以排列成正规次序（normal order，意指字典序），则两个算法都返回false。所谓正规次序，对next_permutation()而言是升序，对prev_permutation()而言是降序。因此，如果要遍历所有排列，你必须首先将所有元素（按升序或降序）排序，然后逐次调用next_permutation()或 prev_permutation()，直到算法返回true
+  //复杂度：线性，最多执行numElems/2次交换
+
+  coll.clear();
+  INSERT_ELEMENTS(coll,1,3);
+  PRINT_ELEMENTS(coll,"on entry:   ");
+
+  //permute elements until they are sorted
+  //-runs through all permutations because the elements are sorted now
+  while(next_permutation(coll.begin(),coll.end())){
+    PRINT_ELEMENTS(coll," ");
+  }
+  PRINT_ELEMENTS(coll,"afterward:  ");
+
+  //permute until descending sorted
+  //-this is the next permutation after ascending sorting
+  //-so the loop ends immediately
+  while(prev_permutation(coll.begin(),coll.end())){
+    PRINT_ELEMENTS(coll," ");
+  }
+  PRINT_ELEMENTS(coll,"now:        ");
+
+  //permute elements until they are sorted in descending order
+  //-runs through all permutations because the elements are sorted in descending order now
+  while(prev_permutation(coll.begin(),coll.end())){
+    PRINT_ELEMENTS(coll," ");
+  }
+  PRINT_ELEMENTS(coll,"afterward:  ");
+
+  //11.8.4 对元素重新洗牌(Shuffling Elements)
+
+  //void
+  //shuffle(RandomAccessIterator beg,RandomAccessIterator end,UniformRandomNumberGenerator&& eng)
+  //void
+  //random_shuffle(RandomAccessIterator beg,RandomAccessIterator end)
+  //void
+  //random_shuffle(RandomAccessIterator beg,RandomAccessIterator end,RandomFunc&& op)
+  //第一形式始自C++11,将[beg,end)区间内的元素打乱次序重新洗牌，使用你所给定的随机数引擎eng
+  //第二形式使用一个均匀分布随机数产生器(uniform distribution random number generator)打乱[beg,end)区间内的元素次序
+  //第三形式使用op打乱[beg,end)区间内的元素次序。算法内部使用一个整数值（其类型为“迭代器所提供之difference_type"）来调用op：
+  // op(max)
+  //这个操作应该返回一个”大于0，小于max“的随机数，不包括max自身
+  //对于shuffle()，你不该传入一个只是临时创建出来的引擎。
+  //在C++11之前，op被声明为RandomFunc&，所以你不能够对此传入一个临时对象或一个寻常函数
+  //复杂度：线性，执行numElems-1次交换
+
+  coll.clear();
+
+  INSERT_ELEMENTS(coll,1,9);
+  PRINT_ELEMENTS(coll,"coll:     ");
+
+  //shuffle all elements randomly
+  random_shuffle(coll.begin(),coll.end());
+
+  PRINT_ELEMENTS(coll,"shuffled: ");
+
+  //sort them again
+  sort(coll.begin(),coll.end());
+  PRINT_ELEMENTS(coll,"sorted:   ");
+
+  //shuffle elements with default engine
+  std::default_random_engine dre;
+  shuffle(coll.begin(),coll.end(),//range
+          dre);//random-number generator
+
+  PRINT_ELEMENTS(coll,"shuffled: ");
+
+  coll.clear();
+
+  INSERT_ELEMENTS(coll,1,9);
+  PRINT_ELEMENTS(coll,"coll:      ");
+
+  //shuffle elements with self-written random-number generator
+  MyRandom rd;
+  random_shuffle(coll.begin(),coll.end(),//range
+                 rd);//random-number generator
+
+  PRINT_ELEMENTS(coll,"shuffled:  ");
+
+  //random_shuffle(coll.begin(),coll.end(),MyRandom());//ERROR before C++11
+
+  //11.8.5 将元素向前搬(Moving Elements to the Front)
+
+  //ForwardIterator
+  //partition(ForwardIterator beg,ForwardIterator end,UnaryPredicate op)
+  //BidirectionalIterator
+  //stable_partition(BidirectionalIterator beg,BidirectionalIterator end,UnaryPredicate op)
+  //这两个算法将[beg,end)区间内造成以下unary predicate op(elem)结果为true的元素向前端移动(to the front)
+  //这两个算法都返回“令op()结果为false”的第一个元素位置
+  //两都的差别是，无论元素是否满足给定准则，stable_partition()会保持它们之间的相对次序
+  //你可以运用此算法，根据排序准则，将所有元素分割为两部分。nth_element()具有类似能力。至于这些算法和nth_element()之间的区别，请看前面的例子
+  //注意，op不应在函数调用过程中改变状态(state)
+  //在C++11之前，partition()要求的是bidirectional iterator而不是forward iterator，并保证至多执行numElems/2次交换
+  //可使用partition_copy()将满足某个predicate的元素复制到一个目标区间内，将不满足的元素复制到另一个目标区间（始自C++11）
+  //复杂度：
+  //-对于partition()：线性，共执行op()numElems次，以及最多numElems/2次交换
+  //-对于stable_partition()：如果系统拥有足够内存，那么就是线性复杂度，执行op()及交换共numElems次；如果没有足够内存，则是n-log-n复杂度，执行op()动作numElems*log(numElems)次
+
+  std::vector<int> coll7;
+  std::vector<int> coll8;
+
+  INSERT_ELEMENTS(coll7,1,9);
+  INSERT_ELEMENTS(coll8,1,9);
+  PRINT_ELEMENTS(coll7,"coll7:    ");
+  PRINT_ELEMENTS(coll8,"coll8:    ");
+  std::cout<<std::endl;
+
+  //move all even elements to the front
+  std::vector<int>::iterator pos9,pos10;
+  pos9=partition(coll7.begin(),coll7.end(),//range
+                 [](int elem){//criterion
+                   return elem%2==0;
+                 });
+  pos10=stable_partition(coll8.begin(),coll8.end(),//range
+                         [](int elem){//criterion
+                           return elem%2==0;
+                         });
+
+  //print collections and first odd element
+  PRINT_ELEMENTS(coll7,"coll7:    ");
+  std::cout<<"first odd element: "<<*pos9<<std::endl;
+  PRINT_ELEMENTS(coll8,"coll8:    ");
+  std::cout<<"first odd element: "<<*pos10<<std::endl;
+
+  //11.8.6 划分为两个子区间(Partition into Two Subranges)
+
+  //pair<OutputIterator1,OutputIterator2>
+  //partition_copy(InputIterator sourceBeg,InputIterator sourceEnd,OutputIterator1 destTrueBeg,OutputIterator2 destFalseBeg,UnaryPredicate op)
+  //以predicate op()为依据，拆分[beg,end)区间内的所有元素成为两个子区间
+  //所有“造成unary predicate op(elem)产生true”的元素都被复制到始于destTrueBeg的区间内。所有“造成该predicate产生false”的元素都被复制到始于destFalseBeg的区间内
+  //返回一个pair，其内是两个iterator，分别指向destTrueBeg区间和destFalseBeg区间内之最末元素的下一位置
+  //注意，op不应在函数调用过程中改变状态(state)，始自C++11
+  //如果你只是需要“满足（或不满足）predicate”的元素，可使用copy_if()或remove_copy_if()
+  //复杂度：线性（至多numElems次调用op()）
+
+  coll.clear();
+  coll={1,6,33,7,22,4,11,33,2,7,0,42,5};
+  PRINT_ELEMENTS(coll,"coll: ");
+
+  //destination collections
+  std::vector<int> evenColl;
+  std::vector<int> oddColl;
+
+  //copy all elements partitioned accordingly into even and odd elements
+  partition_copy(coll.cbegin(),coll.cend(),//source range
+                 back_inserter(evenColl),//destination for even elements
+                 back_inserter(oddColl),//destination for odd elements
+                 [](int elem){//predicate:check for even elements
+                   return elem%2==0;
+                 });
+  PRINT_ELEMENTS(evenColl,"evenColl: ");
+  PRINT_ELEMENTS(oddColl,"oddColl: ");
+
+  //11.9 排序算法(Sorting Algorithm)
+  //11.9.1 对所有元素排序
+
+  //void
+  //sort(RandomAccessIterator beg,RandomAccessIterator end)
+  //void
+  //sort(RandomAccessIterator beg,RandomAccessIterator end,BinaryPredicate op)
+  //void
+  //stable_sort(RandomAccessIterator beg,RandomAccessIterator end)
+  //void
+  //stable_sort(RandomAccessIterator beg,RandomAccessIterator end,BinaryPredicate op)
+  //sort()和stable_sort()的第一形式使用operator<对区间[beg,end)内的所有元素排序
+  //sort()和stable_sort()的第二形式使用binary predicate op(elem1,elem2)作为排序准则，对区间[beg,end)内的所有元素排序
+  //注意，op必须针对元素值定义出strict weak ordering
+  //注意，op不应在函数调用过程中改变状态(state)
+  //sort()和stable_sort()的区别是，后者保证相等之各元素的相对次序在排序后保持不变
+  //不可以对list或forward list调用这些算法，因为两者都不提供random-access iterator。不过它们提供了成员函数sort()可用来对其自身元素排序
+  //sort()保证了很不错的平均效能n-log-n。然而如果你需要极力避免可能出现的最差状况，就该使用partial_sort()或stable_sort()
+  //复杂度：
+  //-sort()：平均n-log-n（平均大约执行numElems*log(numElems)次比较）
+  //-stable_sort()：如果系统拥有足够内存，那么就是n-log-n，也就是执行numElems*log(numElems)次比较；如果没有足够内存，则复杂度是n-log-n*log-n，亦即执行numElems*log(numElems)*log(numElems)次比较
+
+  coll1.clear();
+
+  INSERT_ELEMENTS(coll1,1,9);
+  INSERT_ELEMENTS(coll1,1,9);
+
+  PRINT_ELEMENTS(coll1,"on entry: ");
+
+  //sort elements
+  sort(coll1.begin(),coll1.end());
+
+  PRINT_ELEMENTS(coll1,"sorted: ");
+
+  //sorted reverse
+  sort(coll1.begin(),coll1.end(),//range
+       std::greater<int>());//sorting criterion
+
+  PRINT_ELEMENTS(coll1,"sorted >: ");
+
+  //fill two collections with the same elements
+  std::vector<std::string> coll9={"1xxx","2x","3x","4x","5xx","6xxxx","7xx","8xxx","9xx","10xxx","11","12","13","14xx","15","16","17"};
+  std::vector<std::string> coll10(coll9);
+
+  PRINT_ELEMENTS(coll9,"on entry:\n ");
+
+  //sort(according to the length of the strings)
+  sort(coll9.begin(),coll9.end(),//range
+       lessLength);//criterion
+  stable_sort(coll10.begin(),coll10.end(),//range
+              lessLength);//criterion
+
+  PRINT_ELEMENTS(coll9,"\nwith sort():\n");
+  PRINT_ELEMENTS(coll10,"\nwith stable_sort():\n");
+
+  //11.9.2 局部排序(Partial Sorting)
+
+  //void
+  //partial_sort(RandomAccessIterator beg,RandomAccessIterator sortEnd,RandomAccessIterator end)
+  //void
+  //partial_sort(RandomAccessIterator beg,RandomAccessIterator sortEnd,RandomAccessIterator end,BinaryPredicate op)
+  //第一形式以operator<对[beg,end)区间内的元素排序，使[beg,sortEnd)区间内的元素处于已序状态(sorted order)
+  //第二形式使用binary predicate op(elem1,elem2)作为排序准则，使[beg,sortEnd)区间内的元素处于已序状态(sorted order)
+  //注意，op必须针对元素值定义出strict weak ordering
+  //注意，op不应在函数调用过程中改变状态(state)
+  //和sort()不同的是，partial_sort()并不对全部元素排序：一旦第一个元素至sortEnd之间的所有元素都排妥次序，就立刻停止。所以，如果你只需要前3个排好序的元素，可使用partial_sort()来节省时间，它不会对剩余的元素进行非必要的排序
+  //如果sortEnd等end，那么partial_sort()会对整个序列排序。平均而言其效能不及sort()，不过以最差情况而论则优于sort()
+  //复杂度：在线性和n-log-n之间，大约执行numElems*log(numSortedElems)次比较
+
+  coll1.clear();
+
+  INSERT_ELEMENTS(coll1,3,7);
+  INSERT_ELEMENTS(coll1,2,6);
+  INSERT_ELEMENTS(coll1,1,5);
+  PRINT_ELEMENTS(coll1);
+
+  //sort until the first five elements are sorted
+  partial_sort(coll1.begin(),//beginning of the range
+               coll1.begin()+5,//end of sorted range
+               coll1.end());//end of full range
+  PRINT_ELEMENTS(coll1);
+
+  //sort inversely until the first five elements are sorted
+  partial_sort(coll1.begin(),//beginning of the range
+               coll1.begin()+5,//end of sorted range
+               coll1.end(),//end of full range
+               std::greater<int>());//sorting criterion
+  PRINT_ELEMENTS(coll1);
+
+  //sort all elements
+  partial_sort(coll1.begin(),//beginning of the range
+               coll1.end(),//end of sorted range
+               coll1.end());//end of full range
+  PRINT_ELEMENTS(coll1);
+
+  //RandomAccessIterator
+  //partial_sort_copy(InputIterator sourceBeg,InputIterator sourceEnd,RandomAccessIterator destBeg,RandomAccessIterator destEnd)
+  //RandomAccessIterator
+  //partial_sort_copy(InputIterator sourceBeg,InputIterator sourceEnd,RandomAccessIterator destBeg,RandomAccessIterator destEnd,BinaryPredicate op)
+  //两者都是copy()和partial_sort()的组合
+  //它们将元素从源区间[sourceBeg,sourceEnd)复制到目标区间[destBeg,destEnd)并且进行排序
+  //“被排序（被复制）的元素量”是源区间和目标区间两者所含元素量的较小值
+  //两者都返回目标区间内“最后一个被复制元素”的下一位置（也就是第一个未被覆盖的元素）
+  //如果源区间[sourceBeg,sourceEnd)内的元素量小于目标区间[destBeg,destEnd)内的元素量，所有元素都会被排序并复制，整个行为相当于copy()和sort()的组合
+  //注意，op必须针对元素值定义出strict weak ordering
+  //复杂度：在线性和n-log-n之间，大约执行numElems*log(numSortedElems)次比较
+
+  coll1.clear();
+  std::vector<int> coll11(6);//initialize with 6 elements
+  std::vector<int> coll30(30);//initialize with 30 elements
+
+  INSERT_ELEMENTS(coll1,3,7);
+  INSERT_ELEMENTS(coll1,2,6);
+  INSERT_ELEMENTS(coll1,1,5);
+  PRINT_ELEMENTS(coll1);
+
+  //copy elements of coll1 sorted into coll11
+  std::vector<int>::const_iterator pos11;
+  pos11=partial_sort_copy(coll1.cbegin(),coll1.cend(),
+                          coll11.begin(),coll11.end());
+
+  //print all copied elements
+  copy(coll11.cbegin(),pos11,
+       std::ostream_iterator<int>(std::cout," "));
+  std::cout<<std::endl;
+
+  //copy elements of coll1 sorted into coll30
+  std::vector<int>::const_iterator pos30;
+  pos30=partial_sort_copy(coll1.cbegin(),coll1.cend(),
+                          coll30.begin(),coll30.end(),
+                          std::greater<int>());
+
+  //print all copied elements
+  copy(coll30.cbegin(),pos30,
+       std::ostream_iterator<int>(std::cout," "));
+  std::cout<<std::endl;
+
+  //11.9.3 根据第n个元素排序
+
+  //void
+  //nth_element(RandomAccessIterator beg,RandomAccessIterator nth,RandomAccessIterator end)
+  //void
+  //nth_element(RandomAccessIterator beg,RandomAccessIterator nth,RandomAccessIterator end,BinaryPredicate op)
+  //两种形式都对[beg,end)区间内的元素排序，使第n个位置上的元素就位，也就是说所有在位置n之前的元素都小于等于它，所有在位置n之后的元素都大于等于它。这样，你就得到了“根据n位置上的元素”分割开来的两个子序列，第一子序列的元素统统小于第二子序列的元素。如果你只需要n个最大或最小元素，但不要求它们必须处于排序状态(sorted)，这个算法就很有用
+  //第一形式使用operator<作为排序准则，第二形式使用binary predicate op(elem1,elem2)作为排序准则
+  //注意，op必须针对元素值定义出strict weak ordering
+  //注意，op不应在函数调用过程中改变状态(state)
+  //partition()算法也可以根据某个排序准则将序列中的元素分割成两部分。
+  //复杂度：平均为线性
+
+  coll1.clear();
+
+  INSERT_ELEMENTS(coll1,3,7);
+  INSERT_ELEMENTS(coll1,2,6);
+  INSERT_ELEMENTS(coll1,1,5);
+  PRINT_ELEMENTS(coll1);
+
+  //extract the four lowest elements
+  nth_element(coll1.begin(),//beginning of range
+              coll1.begin()+3,//element that should be sorted correctly
+              coll1.end());//end of range
+
+  //print them
+  std::cout<<"the four lowest elements are: ";
+  copy(coll1.cbegin(),coll1.cbegin()+4,
+       std::ostream_iterator<int>(std::cout," "));
+  std::cout<<std::endl;
+
+  //extract the four highest elements
+  nth_element(coll1.begin(),//beginning of range
+              coll1.end()-4,//element that should be sorted correctly
+              coll1.end());//end of range
+
+  //print them
+  std::cout<<"the four highest elements are: ";
+  copy(coll1.cend()-4,coll1.cend(),
+       std::ostream_iterator<int>(std::cout," "));
+  std::cout<<std::endl;
+
+  //extract the four highest elements(second version)
+  nth_element(coll1.begin(),//beginning of range
+              coll1.begin()+3,//element that should be sorted correctly
+              coll1.end(),//end of range
+              std::greater<int>());//sorting criterion
+
+  //print them
+  std::cout<<"the four highest elements are: ";
+  copy(coll1.cbegin(),coll1.cbegin()+4,
+       std::ostream_iterator<int>(std::cout," "));
+  std::cout<<std::endl;
+
+  //11.9.4 Heap算法
+  
 
 
 
