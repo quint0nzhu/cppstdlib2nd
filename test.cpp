@@ -2124,7 +2124,156 @@ int main()
   std::cout<<std::endl;
 
   //11.9.4 Heap算法
-  
+
+  //void
+  //make_heap(RandomAccessIterator beg,RandomAccessIterator end)
+  //void
+  //make_heap(RandomAccessIterator beg,RandomAccessIterator end,BinaryPredicate op)
+  //两种形式都将[beg,end)区间内的元素转化为heap
+  //op是个可有可无的（可选的）binary predicate，被视为排序准则：
+  // op(elem1,elem2)
+  //只有在多于一个元素的情况下，才有必要使用这些函数处理heap，如果只有单一元素，那么它自动形成一个heap
+  //复杂度：线性，至多执行3*numElems次比较
+
+  //void
+  //push_heap(RandomAccessIterator beg,RandomAccessIterator end)
+  //void
+  //push_heap(RandomAccessIterator beg,RandomAccessIterator end,BinaryPredicate op)
+  //两种形式都将end之前的最后一个元素加入原本就是heap的[beg,end-1)区间内，使整个[beg,end)区间成为一个heap
+  //op是个可有可无的（可选的）binary predicate，被视为排序准则：
+  // op(elem1,elem2)
+  //调用者必保证，进入函数时，[beg,end-1)区间内的元素原本便已形成一个heap（在相同的排序准则下），而新元素紧跟其后
+  //复杂度：对数，至多执行log(numElems)次比较
+
+  //void
+  //pop_heap(RandomAccessIterator beg,RandomAccessIterator end)
+  //void
+  //pop_heap(RandomAccessIterator beg,RandomAccessIterator end,BinaryPredicate op)
+  //以上两种形式都将heap[beg,end)内的最高元素（也就是第一个元素）移到最后位置，并将剩余区间[beg,end-1]内的元素组织起来，成为一个新的heap
+  //op是个可有可无的（可选的）binary predicate，被视为排序准则：
+  // op(elem1,elem2)
+  //调用者必须保证，进入函数时，[beg,end)区间内的元素原本便已形成一个heap（在相同的排序准则下）
+  //复杂度：对数，至多执行2*log(numElems)次比较
+
+  //void
+  //sort_heap(RandomAccessIterator beg,RandomAccessIterator end)
+  //void
+  //sort_heap(RandomAccessIterator beg,RandomAccessIterator end,BinaryPredicate op)
+  //以上两种形式都可以将heap[beg,end)转换为一个已排序(sorted)序列
+  //op是个可有可无的（可选的）binary predicate，被视为排序准则：
+  // op(elem1,elem2)
+  //注意，此算法一旦结束，该区间就不再是个heap了
+  //调用者必须保证，进入函数时，区间[beg,end)内的元素原本已形成一个heap（在相同的排序准则下）
+  //复杂度：n-log-n，最多执行numElems*log(numElems)次比较动作
+
+  coll.clear();
+
+  INSERT_ELEMENTS(coll,3,7);
+  INSERT_ELEMENTS(coll,5,9);
+  INSERT_ELEMENTS(coll,1,4);
+
+  PRINT_ELEMENTS(coll,"on entry:           ");
+
+  //convert collection into a heap
+  make_heap(coll.begin(),coll.end());
+
+  PRINT_ELEMENTS(coll,"after make_heap():  ");
+
+  //pop next element out of the heap
+  pop_heap(coll.begin(),coll.end());
+  coll.pop_back();
+
+  PRINT_ELEMENTS(coll,"after pop_heap():   ");
+
+  //push new element into the heap
+  coll.push_back(17);
+  push_heap(coll.begin(),coll.end());
+
+  PRINT_ELEMENTS(coll,"after push_heap():  ");
+
+  //convert heap into a sorted collection
+  //-NOTE: after the call it is no longer a heap
+  sort_heap(coll.begin(),coll.end());
+
+  PRINT_ELEMENTS(coll,"after sort_heap():  ");
+
+  //11.10 已排序区间算法(Sorted-Range Algorithm)
+  //11.10.1 查找元素(Searching Element)
+
+  //bool
+  //binary_search(ForwardIterator beg,ForwardIterator end,const T& value)
+  //bool
+  //binary_search(ForwardIterator beg,ForwardIterator end,const T& value,BinaryPredicate op)
+  //两种形式都用来判断已排序区间[beg,end)中是否包含“和value等值”的元素
+  //op是个可有可无的（可选的）binary predicate，被视为排序准则：
+  // op(elem1,elem2)
+  //如果想要获得你所查找的元素的位置，应该使用lower_bound()、upper_bound()或equal_range()
+  //调用者必须确保，进入算法之际，工作区间已排序（在指定的排序准则下）
+  //复杂度：如果搭配random-access iterator将是对数复杂度，否则为线性复杂度（这些算法至多执行log(numElems)+2次比较，但若搭配的不是random-access iterator，遍历元素的操作复杂度是线性，于是整体复杂度就是线性了）
+
+  coll2.clear();
+
+  INSERT_ELEMENTS(coll2,1,9);
+  PRINT_ELEMENTS(coll2);
+
+  //check existence of element with value 5
+  if(binary_search(coll2.cbegin(),coll2.cend(),5)){
+    std::cout<<"5 is present"<<std::endl;
+  }
+  else{
+    std::cout<<"5 is not present"<<std::endl;
+  }
+
+  //check existence of element with value 42
+  if(binary_search(coll2.cbegin(),coll2.cend(),42)){
+    std::cout<<"42 is present"<<std::endl;
+  }
+  else{
+    std::cout<<"42 is not present"<<std::endl;
+  }
+
+  //bool
+  //includes(InputIterator1 beg,InputIterator1 end,InputIterator2 searchBeg,InputIterator2 searchEnd)
+  //bool
+  //includes(InputIterator1 beg,InputIterator1 end,InputIterator2 searchBeg,InputIterator2 searchEnd,BinaryPredicate op)
+  //两种形式都用来判断已排序区间[beg,end)是否包含另一个已排序区间[searchBeg,searchEnd)的全部元素。也就是说，对于[searchBeg,searchEnd)中的每一个元素，如果[beg,end)必有一个对应的相等元素，那么[searchBeg,searchEnd)肯定是[beg,end)的子集
+  //op是个可有可无的（可选的）binary predicate，被视为排序准则：
+  // op(elem1,elem2)
+  //调用者必须确保在进入算法之际，两区间都已根据同一个排序准则排好序了
+  //复杂度：线性，至多执行2*(numElems+numSearchElems)-1次比较动作
+
+  coll2.clear();
+  coll.clear();
+
+  INSERT_ELEMENTS(coll2,1,9);
+  PRINT_ELEMENTS(coll2,"coll:     ");
+
+  coll.push_back(3);
+  coll.push_back(4);
+  coll.push_back(7);
+  PRINT_ELEMENTS(coll,"search:    ");
+
+  //check whether all elements in search are also in coll
+  if(includes(coll2.cbegin(),coll2.cend(),
+              coll.cbegin(),coll.cend())){
+    std::cout<<"all elements of search are also in coll"<<std::endl;
+  }
+  else{
+    std::cout<<"not all elements of search are also in coll"<<std::endl;
+  }
+
+  //ForwardIterator
+  //lower_bound(ForwardIterator beg,ForwardIterator end,const T& value)
+  //ForwardIterator
+  //lower_bound(ForwardIterator beg,ForwardIterator end,const T& value,BinaryPredicate op)
+  //ForwardIterator
+  //upper_bound(ForwardIterator beg,ForwardIterator end,const T& value)
+  //ForwardIterator
+  //upper_bound(ForwardIterator beg,ForwardIterator end,const T& value,BinaryPredicate op)
+  //
+
+
+
 
 
 
