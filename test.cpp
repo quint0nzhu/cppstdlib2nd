@@ -2270,9 +2270,162 @@ int main()
   //upper_bound(ForwardIterator beg,ForwardIterator end,const T& value)
   //ForwardIterator
   //upper_bound(ForwardIterator beg,ForwardIterator end,const T& value,BinaryPredicate op)
-  //
+  //lower_bound()返回第一个“大于等于value”的元素位置。这是可插入“元素值为value”且“不破坏区间[beg,end)之已排序性”的第一个位置
+  //upper_bound()返回第一个“大于value”的元素位置。这是可插入“元素值为value”且“不破坏区间[beg,end)已排序性”的最后一个位置
+  //如果不存在“其值为value”的元素，上述所有算法都返回end
+  //op是个可有可无的（可选的）binary predicate，被视为排序准则：
+  // op(elem1,elem2)
+  //调用者必须确保进入算法之际，所有区间都已根据排序准则排好序了
+  //若要同时获得lower_bound()和upper_bound()的结果，请使用equal_range()
+  //Associative容器提供等效的成员函数，且效能更佳
+  //复杂度：如果搭配random-access iterator将是对数复杂度，否则为线性复杂度（这些算法至多执行log(numElems)+1次比较，但若搭配的不是random-access iterator，遍历元素的操作复杂度是线性，于是整体复杂度就是线性了）
 
+  coll2.clear();
 
+  INSERT_ELEMENTS(coll2,1,9);
+  INSERT_ELEMENTS(coll2,1,9);
+  coll2.sort();
+  PRINT_ELEMENTS(coll2);
+
+  //print first and last position 5 could get inserted
+  auto pos12=lower_bound(coll2.cbegin(),coll2.cend(),5);
+  auto pos13=upper_bound(coll2.cbegin(),coll2.cend(),5);
+
+  std::cout<<"5 could get position "
+           <<distance(coll2.cbegin(),pos12)+1
+           <<" up to "
+           <<distance(coll2.cbegin(),pos13)+1
+           <<" without breaking the sorting"<<std::endl;
+
+  //insert 3 at the first possible position without breaking the sorting
+  coll2.insert(lower_bound(coll2.begin(),coll2.end(),
+                           3),
+               3);
+
+  //insert 7 at the last possible position without breaking the sorting
+  coll2.insert(upper_bound(coll2.begin(),coll2.end(),
+                           7),
+               7);
+
+  PRINT_ELEMENTS(coll2);
+
+  //pair<ForwardIterator,ForwardIterator>
+  //equal_range(ForwardIterator beg,ForwardIterator end,const T& value)
+  //pair<ForwardIterator,ForwardIterator>
+  //equal_range(ForwardIterator beg,ForwardIterator end,const T& value,BinaryPredicate op)
+  //两种形式都返回“与value相等”的元素所形成的区间。在此区间内插入“其值为value”的元素，并不会破坏[beg,end)区间的已排序性
+  //和下式等效：
+  // make_pair(lower_bound(...),upper_bound(...))
+  //op是个可有可无的（可选的）binary predicate，被视为排序准则：
+  // op(elem1,elem2)
+  //调用者必须确保在进入算法之际，区间已按照排序准则排好序了
+  //Associative和unordered容器都提供有等效的成员函数，且效能更佳
+  //复杂度：如果搭配random-access iterator将是对数复杂度，否则为线性复杂度（这些算法至多执行2*log(numElems)+1次比较，但搭配的不是random-access iterator，遍历元素的操作复杂度是线性，于是整体复杂度就是线性了）
+
+  coll2.clear();
+
+  INSERT_ELEMENTS(coll2,1,9);
+  INSERT_ELEMENTS(coll2,1,9);
+  coll2.sort();
+  PRINT_ELEMENTS(coll2);
+
+  //print first and last position 5 could get inserted
+  std::pair<std::list<int>::const_iterator,std::list<int>::const_iterator> range;
+  range=equal_range(coll2.cbegin(),coll2.cend(),5);
+
+  std::cout<<"5 could get position "
+           <<distance(coll2.cbegin(),range.first)+1
+           <<" up to "
+           <<distance(coll2.cbegin(),range.second)+1
+           <<" without breaking the sorting"<<std::endl;
+
+  //11.10.2 合并元素(Merging Elements)
+
+  //OutputIterator
+  //merge(InputIterator source1Beg,InputIterator source1End,InputIterator source2Beg,InputIterator source2End,OutputIterator destBeg)
+  //OutputIterator
+  //merge(InputIterator source1beg,InputIterator source1End,InputIterator source2Beg,InputIterator source2End,OutputIterator destBeg,BinaryPredicate op)
+  //两者都是将源区间[source1Beg,source1End)和[source2Beg,source2End)内的元素合并，使得“以destBeg起始之目标区间”内含两个源区间的所有元素
+  //目标区间内的所有元素都将处于排序状态下
+  //两者都返回目标区间内“最后一个被复制元素”的下一位置（也就是第一个未被覆盖的元素位置）
+  //op是个可有可无的（可选的）binary predicate，被视为排序准则：
+  // op(elem1,elem2)
+  //源区间不会有任何变化
+  //根据C++ standard的说法，调用者应当确保两个源区间一开始都已排序。然而在大部分实现中，上述算法可以将两个未排序的源区间内的元素合并到一个未排序的目标区间中。不过，如果考量移植性，这种情况下你应该改而调用copy()两次，而不是使用merge()
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //源区间和目标区间两者不可重叠
+  //List和forward list都提供一个特殊成员函数merge()，用来合并两个list
+  //如果你要确保“两个源区间中都出现的元素”在目标区间中只出现一次，请使用set_union()
+  //如果你只想获得“同时存在于两个源区间内”的元素，请使用set_intersection()
+  //复杂度：线性，至多执行numElems1+numElems2-1次比较
+
+  coll2.clear();
+  collset.clear();
+
+  //fill both collections with some sorted elements
+  INSERT_ELEMENTS(coll2,1,6);
+  INSERT_ELEMENTS(collset,3,8);
+
+  PRINT_ELEMENTS(coll2,"coll1:     ");
+  PRINT_ELEMENTS(collset,"coll2:     ");
+
+  //print merged sequence
+  std::cout<<"merged:  ";
+  merge(coll2.cbegin(),coll2.cend(),collset.cbegin(),collset.cend(),
+        std::ostream_iterator<int>(std::cout," "));
+  std::cout<<std::endl;
+
+  //OutputIterator
+  //set_union(InputIterator source1Beg,InputIterator source1End,InputIterator source2Beg,InputIterator source2End,OutputIterator destBeg)
+  //OutputIterator
+  //set_union(InputIterator source1Beg,InputIterator source1End,InputIterator source2Beg,InputIterator source2End,OutputIterator destBeg,BinaryPredicate op)
+  //两者都是将已排序的源区间[source1Beg,source1End)和[source2Beg,source2End)内的元素合并，得到“以destBeg起始”之目标区间，后者内含的元素要么来自第一源区间，要么来自第二源区间，抑或同时来自两者
+  //目标区间内的所有元素都处于排序状态
+  //同时出现于两个源区间内的元素，在并集区间(union range)中将只出现一次。不过如果原来的某个源区间内原本就存在重复元素，则目标区间内也会有重复元素——重复的次数是两个源区间内的重复次数的较大值
+  //两者都返回目标区间内“最后一个被复制元素”的下一位置（也就是第一个未被覆盖的元素的位置）//op是个可有可无的（可选的）binary predicate，被视为排序准则：
+  // op(elem1,elem2)
+  //源区间不会有任何变化，调用者应当确保两个源区间一开始都已根据排序准则排好序
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //源区间和目标区间两者不可重叠，如果你想得到两个源区间内的全部元素，请用merge()
+  //复杂度：线性，至多执行2*(numElems1+numElems2)-1次比较
+
+  //OutputIterator
+  //set_intersection(InputIterator source1Beg,InputIterator source1End,InputIterator source2Beg,InputIterator source2End,OutputIterator destBeg)
+  //OutputIterator
+  //set_intersection(InputIterator source1Beg,InputIterator source1End,InputIterator source2Beg,InputIterator source2End,OutputIterator destBeg,BinaryPredicate op)
+  //两者都是将已排序之源区间[source1Beg,source1End)和[source2Beg,source2end)的元素合并，得到“以destBeg起始”之目标区间，后者内含的元素不但存在于第一源区间，也存在于第二源区间
+  //目标区间内的所有元素都处于排序状态
+  //如果某个源区间内原就存在有重复元素，则目标区间内也会有重复元素——重复的次数是两个源区间内的重复次数的较小值
+  //两者都返回目标区间内“最后一个被合并元素”的下一位置
+  //op是个可有可无的（可选的）binary predicate，被视为排序准则：
+  // op(elem1,elem2)
+  //源区间不会有任何变化，调用者应当确保两个源区间一开始都已根据排序准则排好序
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //源区间和目标区间两者不可重叠
+  //复杂度：线性，至多执行2*(numElems1+numElems2)-1次比较
+
+  //OutputIterator
+  //set_difference(InputIterator source1Beg,InputIterator source1End,InputIterator source2Beg,InputIterator source2End,OutputIterator destBeg)
+  //OutputIterator
+  //set_difference(InputIterator source1Beg,InputIterator source1End,InputIterator source2Beg,InputIterator source2End,OutputIterator destBeg,BinaryPredicate op)
+  //两者都是将已排序之源区间[source1Beg,source1End)和[source2Beg,source2End)的元素合并，得到“以destBeg起始”之目标区间，后者内含的元素只存在于第一源区间，不存在于第二源区间
+  //目标区间内的所有元素都处于排序状态
+  //如果某个源区间内原就存在有重复元素，则目标区间内也会有重复元素——重复次数是第一源区间内的重复次数减去第二源区间内的相应重复次数，如果第二源区间内的重复次数大于第一源区间内的相应重复次数，目标区间内的对应重复次数将会是0
+  //两者都返回目标区间内“最后一个被合并元素”的下一位置
+  //op是个可有可无的（可选的）binary predicate，被视为排序准则：
+  // op(elem1,elem2)
+  //源区间不会有任何变化，调用者应当确保两个源区间一开始都已根据排序准则排好序
+  //调用者必须确保目标区间有足够空间，要不就得使用insert iterator
+  //源区间和目标区间两者不可重叠
+  //复杂度：线性，至多执行2*(numElems1+numElems2)-1次比较
+
+  //OutputIterator
+  //set_symmetric_difference(InputIterator source1Beg,InputIterator source1End,InputIterator source2Beg,InputIterator source2End,OutputIterator destBeg)
+  //OutputIterator
+  //set_symmetric_difference(InputIterator source1Beg,InputIterator source1End,InputIterator source2Beg,InputIterator source2End,OutputIterator destBeg,BinaryPredicate op)
+  //两者都是将已排序之源区间[source1Beg,source1end)和[source2Beg,source2End)的元素合并，得到”以destBeg起始“之目标区间，后者内含的元素或存在于第一源区间，或存在于第二源区间，但不同时存在于两个源区间内。
+  //目标区间内的所有元素都处于排序状态
+  //如果某个源区间内原就存在有重复元素，则目标区间内也会有重复元素——重复的次数是两个源区间
 
 
 
