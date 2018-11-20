@@ -208,6 +208,143 @@ int main()
 
   //12.3 Priority Queue（带优先级的队列）
 
+  std::priority_queue<float> pbuffer;//priority queue for floats
+
+  std::priority_queue<float,std::vector<float>,std::greater<float>> pbuffer1;
+
+  //12.3.1 核心接口
+
+  //push()将一个元素放入priority queue中
+  //top()返回priority queue内的“下一个元素”
+  //pop()从priority queue内移除一个元素
+
+  //12.3.2 Priority Queue运用实例
+
+  std::priority_queue<float> pq;
+
+  //insert three elements into the priority queue
+  pq.push(66.6);
+  pq.push(22.2);
+  pq.push(44.4);
+
+  //read and print two elements
+  std::cout<<pq.top()<<' ';
+  pq.pop();
+  std::cout<<pq.top()<<std::endl;
+  pq.pop();
+
+  //insert three more elements
+  pq.push(11.1);
+  pq.push(55.5);
+  pq.push(33.3);
+
+  //skip one element
+  pq.pop();
+
+  //pop and print remaining elements
+  while(!pq.empty()){
+    std::cout<<pq.top()<<' ';
+    pq.pop();
+  }
+  std::cout<<std::endl;
+
+  //12.3.3 细究Class priority_queue<>
+
+  //12.4 细究Container Adapter
+  //12.4.1 类型定义
+
+  //contadapt::value_type
+  //元素的类型
+  //和container::value_type相当
+
+  //contadapt::reference
+  //“用以指向元素”之reference的类型
+  //和container::reference相当
+  //始自C++11
+
+  //contadapt::const_reference
+  //"用以指向只读元素(read-only element)"之reference的类型
+  //和container::const_reference相当
+  //始自C++11
+
+  //contadapt::size_type
+  //不带正负号的整数类型，用来表现大小
+  //和container::size_type相当
+
+  //contadapt::container_type
+  //内部容器的类型
+
+  //12.4.2 构造函数(Constructor)
+
+  //contadapt::contadapt()
+  //Default构造函数
+  //创建一个空的stack或(priority)queue
+
+  //explicit contadapt::contadapt(const Container& cont)
+  //explicit contadapt::contadapt(Container&& cont)
+  //创建一个stack或queue，以容器cont的元素为初值，后者必须是container adapter的container_type之下的一个对象
+  //第一形式中，cont内的所有元素均被复制
+  //第二形式中，cont内的所有元素均被搬移(moved)——前提是被传入之容器提供有move语义，否则元素仍然是被复制
+  //两种形式都不存在于priority_queue<>中
+
+  //12.4.3 Priority Queue额外提供的构造函数
+
+  //explicit priority_queue::priority_queue(const CompFunc& op)
+  //创建一个空的priority queue，以op为排序准则
+  //如何将排序准则当作实参传入，见前面的例子
+
+  //priority_queue::priority_queue(const CompFunc& op,const Container& cont)
+  //创建一个priority queue,以op为排序准则，以容器cont内的元素为初值
+  //cont的所有元素都被复制过来
+
+  //priority_queue::priority_queue(InputIterator beg,InputIterator end)
+  //创建一个priority queue,以[beg,end)区间内的元素为初值
+  //这是一个template memeber，所以只要源区间内的元素类型可以转化为本容器内的元素类型，此构造函数即可运作
+
+  //priority_queue::priority_queue(InputIterator beg,InputIterator end,const CompFunc& op)
+  //创建一个priority queue，以op为排序准则，并以[beg,end)区间内的元素为初值
+  //这是一个template member，所以只要源区间内的元素类型可以转化为本容器内的元素类型，此构造函数即可运作
+  //如何将排序准则当作实参传入，见前面的例子
+
+  //priority_queue::priority_queue(InputIterator beg,InputIterator end,const CompFunc& op,const Container& cont)
+  //创建一个priority queue,以op为排序准则，以[beg,end)区间内的元素加上cont容器内的元素为初值
+  //这是一个template member，所以只要源区间内的元素类型可以转化为本容器内的元素类型，此构造函数即可运作
+
+  //12.4.4 各项操作(Operation)
+
+  //bool contadapt::empty()const
+  //判断container adapter是否为空（不含任何元素）
+  //与contadapt::size()==0等效，但速度可能更快
+
+  //size_type contadapt::size()const
+  //返回当前的元素个数
+  //若要检验容器是否为空（不含任何元素），应使用empty()，因为后者可能更快
+
+  //void contadapt::push(const value_type& elem)
+  //void contadapt::push(value_type&& elem)
+  //第一形式安插elem的一份拷贝（副本）
+  //第二形式始自C++11，elem将被搬移（如果元素类型提供move语义的话），否则elem将被复制
+
+  //void contadapt::emplace(args)
+  //安插一个新元素，它将被args初始化
+  //始自C++11
+
+  //reference contadapt::top()
+  //const_reference contadapt::top()const
+  //reference contadapt::front()
+  //const_reference contadapt::front()const
+  //上述任何形式，只要container adapter提供了它们，都会返回下一元素
+  //-Stack提供两个形式的top()，返回最后一个安插元素
+  //-Queue提供两个形式的front()，返回第一个安插元素
+  //-Priority queue只提供第二形式的top，获得的是带有最大值的元素。如果候选多于1,究竟返回哪个元素并不明确
+  //调用者必须确保container adapter不为空(size()>0)，否则可能导致不明确的行为
+  //上述形式中“返回non-const reference”者允许你改动下一元素（当它还在stack/queue内）。这样做合宜与否，由你自己决定
+  //在C++11之前，返回类型是const value_type&，通常那是相同的
+
+  //void 
+
+
+
 
 
 
