@@ -339,9 +339,43 @@ int main()
   //-Priority queue只提供第二形式的top，获得的是带有最大值的元素。如果候选多于1,究竟返回哪个元素并不明确
   //调用者必须确保container adapter不为空(size()>0)，否则可能导致不明确的行为
   //上述形式中“返回non-const reference”者允许你改动下一元素（当它还在stack/queue内）。这样做合宜与否，由你自己决定
-  //在C++11之前，返回类型是const value_type&，通常那是相同的
+  //在C++11之前，返回类型是(const)value_type&，通常那是相同的
 
-  //void 
+  //void contadapt::pop()
+  //移除container adapter内的下一个元素
+  //-对于stack而言，所谓“下一元素”是指“最后一个被安插元素”
+  //-对于queue而言，所谓“下一元素”是指“第一个被安插元素”
+  //-对于priority queue而言，所谓“下一元素”是指“带有最大值的元素”。如果候选多于1,究竟移除哪个元素并不明确
+  //此函数无返回值。如果想处理被移除的那个元素，你必须先调用top()才能取得它
+  //调用者必须确保stack不为空(size()>0)，否则可能导致不明确的行为
+
+  //reference queue::back()
+  //const_reference quque::back()const
+  //两种形式都返回queue的最终元素。所谓“最终元素”是指最后一个被插入的元素
+  //调用者必须确保queue不为空(size()>0)，否则可能导致不明确的行为
+  //第一形式是针对non-const queue而设计，返回一个reference。所以你可以改动最终元素（当它还在queue内）。这样做合宜与否，由你自己决定
+  //在C++11之前，返回类型是(const)value_type&，通常那是相同的
+  //只有queue<>提供
+
+  //bool comparison(const contadapt& stack1,const contadapt& stack2)
+  //返回两个相同类型的stack或queue的比较结果
+  //comparison可以是下面任何运算：
+  // operators==和!=
+  // operators<、>、<=和>=
+  //如果两个stack（或两个queue）的元素个数相等，且相同次序上的元素值也相等（也就是所有对应元素之间的比较都得到true），则这两个容器相等
+  //Stack中queue之间的大小比较是以“字典顺序”来决定(lexicographically)
+  //priority_queue<>不提供这个操作
+
+  //void contadapt::swap(contadapt& c)
+  //void swap(contadapt& c1,contadapt& c2)
+  //交换*this和c的内容，或交换c1和c2的内容。对于priority queue，还交换排序准则
+  //调用相应容器之swap()
+  //始自C++11
+
+  //12.5 Bitset
+
+
+
 
 
 
