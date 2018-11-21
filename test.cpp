@@ -144,6 +144,133 @@ int main(int argc, char* argv[])
 
   //13.2.6 元素访问(Element Access)
 
+  const std::string cs("nico");//cs contains: 'n' 'i' 'c' 'o'
+  std::string s7("abcde");//s7 contains: 'a' 'b' 'c' 'd' 'e'
+  std::string t;//t contains no character(is empty)
+
+  std::cout<<s7[2]<<std::endl;//yeilds 'c' as char&
+  std::cout<<s7.at(2)<<std::endl;//yields 'c' as char&
+  std::cout<<s7.front()<<std::endl;//yields 'a' as char&
+  std::cout<<cs[1]<<std::endl;//yields 'i' as const char&
+  std::cout<<cs.back()<<std::endl;//yields 'o' as const char&
+
+  std::cout<<s7[100]<<std::endl;//ERROR: undefined behavior
+  //std::cout<<s7.at(100)<<std::endl;//throws out_of_range
+  std::cout<<t.front()<<std::endl;//yields '\0'
+  std::cout<<t.back()<<std::endl;//ERROR: undefined behavior, BUT IT IS WORK!
+
+  std::cout<<s7[s7.length()]<<std::endl;//yields '\0' (undefined behavior before C++11)
+  std::cout<<cs[cs.length()]<<std::endl;//yields '\0'
+  //std::cout<<s7.at(s7.length())<<std::endl;//throws out_of_range
+  //std::cout<<cs.at(cs.length())<<std::endl;//throws out_of_range
+
+  char& r=s7[2];//reference to third character
+  char* p1=&s7[3];//pointer to fourth character
+
+  r='X';//OK, s7 contains: 'a' 'b' 'X' 'd' 'e'
+  std::cout<<s7<<std::endl;
+  *p1='Y';//OK, s7 contains: 'a' 'b' 'X' 'Y' 'e'
+  std::cout<<s7<<std::endl;
+
+  s7="new long value";//reallocation invalidates r and p
+
+  r='X';//ERROR: undefined behavior, BUT IT IS WORK!
+  std::cout<<s7<<std::endl;
+  *p1='Y';//ERROR: undefined behavior,BUT IT IS WORK!
+  std::cout<<s7<<std::endl;
+
+  //13.2.7 比较(Comparison)
+
+  std::string s8,s9;
+  std::cout<<(s8==s9)<<std::endl;//returns true if s8 and s9 contain the same characters
+  std::cout<<("hello"<s8)<<std::endl;//return whether s8 is less than the C-string "hello"
+
+  std::cout<<(std::string("aaaa")<std::string("bbbb"))<<std::endl;
+  std::cout<<(std::string("aaaa")<std::string("abba"))<<std::endl;
+  std::cout<<(std::string("aaaa")<std::string("aaaaaa"))<<std::endl;
+
+  std::string s10("abcd");
+
+  std::cout<<s10.compare("abcd")<<std::endl;//returns 0
+  std::cout<<s10.compare("dcba")<<std::endl;//returns a value < 0 (s10 is less)
+  std::cout<<s10.compare("ab")<<std::endl;//returns a value > 0 (s10 is greater)
+
+  std::cout<<s10.compare(s10)<<std::endl;//returns 0 (s10 is equal to s10)
+  std::cout<<s10.compare(0,2,s10,2,2)<<std::endl;//returns a value < 0 ("ab" is less than "cd")
+  std::cout<<s10.compare(1,2,"bcx",2)<<std::endl;//returns 0 ("bc" is equal to "bc")
+
+  //13.2.8 更改内容(Modifier)
+
+  const std::string aString("othello");
+  std::string s11;
+
+  std::cout<<(s11=aString)<<std::endl;//assign "othello"
+  std::cout<<(s11="two\nlines")<<std::endl;//assign a C-string
+  std::cout<<(s11=' ')<<std::endl;//assign a single character
+
+  std::cout<<s11.assign(aString)<<std::endl;//assign "othello" (equivalent to operator =)
+  std::cout<<s11.assign(aString,1,3)<<std::endl;//assign "the"
+  std::cout<<s11.assign(aString,2,std::string::npos)<<std::endl;//assign "hello"
+
+  std::cout<<s11.assign("two\nlines")<<std::endl;//assign a C-string(equivalent to operator =)
+  std::cout<<s11.assign("nico",5)<<std::endl;//assign the character array: 'n' 'i' 'c' 'o' '\0'
+  std::cout<<s11.assign(5,'x')<<std::endl;//assign five characters: 'x' 'x' 'x' 'x' 'x'
+
+  s11="";//assign the empty string
+  s11.clear();//clear contents
+  s11.erase();//erase all characters
+
+  std::string s12;
+  std::cout<<(s12+=aString)<<std::endl;//append "othello"
+  std::cout<<(s12+="two\nlines")<<std::endl;//append C-string
+  std::cout<<(s12+='\n')<<std::endl;//append single character
+  std::cout<<(s12+={'o','k'})<<std::endl;//append an initializer list of characters (since C++11)
+
+
+  s12.clear();
+
+  std::cout<<s12.append(aString)<<std::endl;//append "othello" (equivalent to operator +=)
+  std::cout<<s12.append(aString,1,3)<<std::endl;//append "the"
+  std::cout<<s12.append(aString,2,std::string::npos)<<std::endl;//append "hello"
+
+  std::cout<<s12.append("two\nlines")<<std::endl;//append C-string (equivalent to operator +=)
+  std::cout<<s12.append("nico",5)<<std::endl;//append character array: 'n' 'i' 'c' 'o' '\0'
+  std::cout<<s12.length()<<std::endl;
+
+  std::cout<<s12.append(5,'x')<<std::endl;//append five characters: 'x' 'x' 'x' 'x' 'x'
+
+ s12.push_back('\n');//append single character (equivalent to operator +=)
+ std::cout<<s12<<std::endl;
+
+ const std::string bString("age");
+ std::string s13("p");
+
+ std::cout<<s13.insert(1,bString)<<std::endl;//s13: page
+ std::cout<<s13.insert(1,"ersifl")<<std::endl;//s13: persiflage
+
+ //std::cout<<s13.insert(0,' ')<<std::endl;//ERROR
+ std::cout<<s13.insert(0," ")<<std::endl;//OK
+ std::cout<<s13.insert(0,1,' ')<<std::endl;//ERROR: ambiguous,BUT IT IS WORK!
+
+ //insert(size_type idx,size_type num,charT c);//position is index
+ //insert(iterator pos,size_type num,charT c);//position is iterator
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
