@@ -9,6 +9,14 @@
 #include <iostream>
 #include <string>
 #include <sstream> //for std::stringstream()
+#include <limits>
+#include <exception>
+#include <algorithm>
+#include <cctype>
+#include <regex>
+
+
+
 
 void f(const char* s,int n)
 {
@@ -310,6 +318,67 @@ int main(int argc, char* argv[])
  process("first line\nsecond line");
 
  //13.2.11 搜索和查找(Searching and Finding)
+
+ std::string s18("Hi Bill, I'm ill, so please pay the bill");
+
+ std::cout<<s18.find("il")<<std::endl;//returns 4(first substring "il")
+ std::cout<<s18.find("il",10)<<std::endl;//returns 13(first substring "il" starting from s18[10])
+ std::cout<<s18.rfind("il")<<std::endl;//returns 37(last substring "il")
+ std::cout<<s18.find_first_of("il")<<std::endl;//returns 1(first char 'i' or 'l')
+ std::cout<<s18.find_last_of("il")<<std::endl;//returns 39)(last char 'i' or 'l')
+ std::cout<<s18.find_first_not_of("il")<<std::endl;//returns 0(first char neither 'i' nor 'l')
+ std::cout<<s18.find_last_not_of("il")<<std::endl;//returns 36(last char neither 'i' nor 'l')
+ std::cout<<(s18.find("hi")==std::string::npos?true:false)<<std::endl;//returns npos
+
+ //13.2.12 npos的意义
+
+ std::string s19;
+ std::string::size_type idx;//be careful: don't use any other type!
+
+ idx=s19.find("substring");
+ if(idx==std::string::npos){
+   std::cout<<"not found!"<<std::endl;
+ }
+
+ //int idx=s.find("not found");//assume it returns npos
+ //if(idx==std::string::npos){}//ERROR: comparison might not work
+
+ //const int NPOS=-1;
+ //if(idx==NPOS){}//works almost always
+
+ //13.2.13 数值转换(Numeric Conversion)
+
+ try{
+   //convert to numeric type
+   std::cout<<std::stoi("   77")<<std::endl;
+   std::cout<<std::stod("   77.7")<<std::endl;
+   std::cout<<std::stoi("-0x77")<<std::endl;
+
+   //use index of characters not processed
+   std::size_t idx1;
+
+   std::cout<<std::stoi("  42 is the truth",&idx1)<<std::endl;
+   std::cout<<" idx of first unprocessed char: "<<idx1<<std::endl;
+
+   //use bases 16 and 8
+   std::cout<<std::stoi("  42",nullptr,16)<<std::endl;
+   std::cout<<std::stol("789",&idx1,8)<<std::endl;
+   std::cout<<" idx of first unprocessed char: "<<idx1<<std::endl;
+
+   //convert numeric value to string
+   long long ll=std::numeric_limits<long long>::max();
+   std::string s19=std::to_string(ll);//converts maximum long long to string
+   std::cout<<s19<<std::endl;
+
+   //try to convert back
+   std::cout<<std::stoi(s19)<<std::endl;//throws out_of_range
+ }
+ catch(const std::exception& e){
+   std::cout<<e.what()<<std::endl;
+ }
+
+ //13.2.14 String对迭代器的支持
+
 
 
 
