@@ -8,12 +8,32 @@
 
 #include <iostream>
 #include <string>
-
+#include <sstream> //for std::stringstream()
 
 void f(const char* s,int n)
 {
   std::cout<<s<<std::endl;
   std::cout<<"length: "<<n<<std::endl;
+}
+
+std::string foo()
+{
+  std::string s1("international");
+  std::string s2("ization");
+
+  std::string s=std::move(s1)+std::move(s2);//OK
+  //s1 and s2 have valid state with unspecified value
+
+  return s;
+}
+
+void process(const std::string& filecontents)
+{
+  //process first line of passed string:
+  std::string firstLine;
+  std::getline(std::stringstream(filecontents),//OK since C++11
+               firstLine);
+  std::cout<<firstLine<<std::endl;
 }
 
 int main(int argc, char* argv[])
@@ -254,28 +274,45 @@ int main(int argc, char* argv[])
 
  //insert(size_type idx,size_type num,charT c);//position is index
  //insert(iterator pos,size_type num,charT c);//position is iterator
+ //s.insert((std::string::size_type)0,1,' ');//OK
+
+ std::string s14="i18n";//s14:i18n
+ std::cout<<s14.replace(1,2,"nternationalizatio")<<std::endl;//s14:internationalization
+ std::cout<<s14.erase(13)<<std::endl;//s14:international
+ std::cout<<s14.erase(7,5)<<std::endl;//s14:internal
+ s14.pop_back();//s14:interna(since C++11)
+ std::cout<<s14<<std::endl;
+ std::cout<<s14.replace(0,2,"ex")<<std::endl;//s14:externa
+
+ //13.2.9 子字符串(Substring)及字符串接合(String Concatenation)
+
+ std::string s15("interchangeability");
+
+ std::cout<<s15.substr()<<std::endl;//returns a copy of s15
+ std::cout<<s15.substr(11)<<std::endl;//returns string("ability")
+ std::cout<<s15.substr(5,6)<<std::endl;//returns string("change")
+ std::cout<<s15.substr(s15.find('c'))<<std::endl;//returns string("changeability")
+
+ std::string s16("enter");
+ std::string s17("nation");
+ std::string i18n;
+
+ i18n='i'+s16.substr(1)+s17+"aliz"+s17.substr(1);
+ std::cout<<"i18n means: "+i18n<<std::endl;
+
+ std::cout<<foo()<<std::endl;
+
+ //13.2.10 I/O操作符
+
+ //while(getline(cin,s))//for each line read from cin
+ //while(getline(cin,s,':'))//for each token separated by ':'
+
+ process("first line\nsecond line");
+
+ //13.2.11 搜索和查找(Searching and Finding)
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  return 0;
+ return 0;
 }
