@@ -12,9 +12,9 @@
 #include <limits>
 #include <exception>
 #include <algorithm>
-#include <cctype>
+#include <cctype> //for toupper()
 #include <regex>
-
+#include <locale>
 
 
 
@@ -43,6 +43,55 @@ void process(const std::string& filecontents)
                firstLine);
   std::cout<<firstLine<<std::endl;
 }
+
+//replace functions of the standard char_traits<char>
+//so that strings behave in a case-insensitive way
+struct ignorecase_traits:public std::char_traits<char>{
+  //return whether c1 and c2 are equal
+  static bool eq(const char& c1,const char& c2){
+    return std::toupper(c1)==std::toupper(c2);
+  }
+  //return whether c1 is less than c2
+  static bool lt(const char& c1,const char& c2){
+    return std::toupper(c1)<std::toupper(c2);
+  }
+  //compare up to n characters of s1 and s2
+  static int compare(const char* s1,const char* s2,
+                     std::size_t n){
+    for(std::size_t i=0;i<n;++i){
+      if(!eq(s1[i],s2[i])){
+        return lt(s1[i],s2[i])?-1:1;
+      }
+    }
+    return 0;
+  }
+  //search c in s
+  static const char* find(const char* s,std::size_t n,
+                          const char& c){
+    for(std::size_t i=0;i<n;++i){
+      if(eq(s[i],c)){
+        return &(s[i]);
+      }
+    }
+    return 0;
+  }
+};
+
+//define a special type for such strings
+typedef std::basic_string<char,ignorecase_traits> icstring;
+
+//define an output operator
+//because the traits type is different from that for std::ostream
+inline
+std::ostream& operator<<(std::ostream& strm,const icstring& s)
+{
+  //simply convert the icstring into a normal string
+  return strm<<std::string(s.data(),s.length());
+}
+
+
+
+
 
 int main(int argc, char* argv[])
 {
@@ -378,6 +427,261 @@ int main(int argc, char* argv[])
  }
 
  //13.2.14 String对迭代器的支持
+
+ //create a string
+ std::string s20("The zip code of Braunschweig in Germany is 38100");
+ std::cout<<"original: "<<s20<<std::endl;
+
+ //lowercase all characters
+ transform(s20.cbegin(),s20.cend(),//source
+           s20.begin(),//destination
+           [](char c){//operation
+             return tolower(c);
+           });
+ std::cout<<"lowered: "<<s20<<std::endl;
+
+ //uppercase all characters
+ transform(s20.cbegin(),s20.cend(),//source
+           s20.begin(),//destination
+           [](char c){//operation
+             return toupper(c);
+           });
+ std::cout<<"uppered: "<<s20<<std::endl;
+
+ //search case-insensitive for Germany
+ std::string g("Germany");
+ std::string::const_iterator pos;
+ pos=search(s20.cbegin(),s20.cend(),//source string in which to search
+            g.cbegin(),g.cend(),//substring to search
+            [](char c1,char c2){//comparison criterion
+              return toupper(c1)==toupper(c2);
+            });
+ if(pos!=s20.cend()){
+   std::cout<<"substring \""<<g<<"\" found at index "
+            <<pos-s20.cbegin()<<std::endl;
+ }
+
+ //search case-insensitive for Germany
+ std::regex pat("Germany",//expression to search for
+                std::regex_constants::icase);//search case-insensitive
+ std::smatch m;
+ if(regex_search(s20,m,pat)){//search regex pattern in s
+   std::cout<<"substring \"Germany\" found at index "
+            <<m.position()<<std::endl;
+ }
+
+ //create constant string
+ const std::string hello("Hello, how are you?");
+
+ //initialize string s21 with all characters of string hello
+ std::string s21(hello.cbegin(),hello.cend());
+
+ //ranged-based for loop that iterates through all the characters
+ for(char c:s21){
+   std::cout<<c;
+ }
+ std::cout<<std::endl;
+
+ //reverse the order of all characters inside the string
+ reverse(s21.begin(),s21.end());
+ std::cout<<"reverse:        "<<s21<<std::endl;
+
+ //sort all characters inside the string
+ sort(s21.begin(),s21.end());
+ std::cout<<"ordered:        "<<s21<<std::endl;
+
+ //remove adjacent duplicates
+ //-unique() reorders and returns new end
+ //-erase() shrinks accordingly
+ s21.erase(unique(s21.begin(),
+                  s21.end()),
+           s21.end());
+ std::cout<<"no duplicates:  "<<s21<<std::endl;
+
+ std::string input;
+
+ //don't skip leading whitespaces
+ std::cin.unsetf(std::ios::skipws);
+
+ //read all characters while compressing whitespaces
+ const std::locale& loc(std::cin.getloc());//locale
+ unique_copy(std::istream_iterator<char>(std::cin),//beginning of source
+             std::istream_iterator<char>(),//end of source
+             back_inserter(input),//destination
+             [=](char c1,char c2){//criterion for adj.duplicates
+               return isspace(c1,loc)&&isspace(c2,loc);
+             });
+
+ //process input
+ //-here: write it to the standard output
+ std::cout<<input<<std::endl;
+
+ //13.2.15 国际化(Internationalization)
+
+ icstring s22("hallo");
+ icstring s23("otto");
+ icstring s24("hAllo");
+
+ std::cout<<std::boolalpha;
+ std::cout<<s22<<" == "<<s23<<" : "<<(s22==s23)<<std::endl;
+ std::cout<<s22<<" == "<<s24<<" : "<<(s22==s24)<<std::endl;
+
+ icstring::size_type idx2=s22.find("All");
+ if(idx2!=icstring::npos){
+   std::cout<<"index of \"All\" in \""<<s22<<"\": "
+            <<idx2<<std::endl;
+ }
+ else{
+   std::cout<<"\"All\" not found in \""<<s22<<std::endl;
+ }
+
+ //13.2.16 效率(Performance)
+ //13.2.17 String和Vector
+
+ //13.3 细究String Class
+ //13.3.1 类型定义和静态值
+
+ //string::traits_type
+ //Character trait的类型
+ //basic_string的第二个template参数
+ //对类型string而言，这等价于char_traits<char>
+
+ //string::value_type
+ //字符类型
+ //等价于traits_type::char_type
+ //对类型string而言，这等价于char
+
+ //string::size_type
+ //未带正负号的整数类型，用来指定大小值和索引
+ //等价于allocator_type::size_type
+ //对类型string而言，这等价于size_t
+
+ //string::difference_type
+ //带正负号的整数类型，用来指定差值（距离）
+ //等价于allocator_type::difference_type
+ //对类型string而言，这等价于ptrdiff_t
+
+ //string::reference
+ //字符的reference类型
+ //等价于allocator_type::reference
+ //对类型string而言，这等价于char&
+
+ //string::const_reference
+ //常量型的字符的reference类型
+ //等价于allocator_type::const_reference
+ //对类型string而言，这等价于const char&
+
+ //string::pointer
+ //字符的pointer类型
+ //等价于allocator_type::pointer
+ //对类型string而言，这等价于char*
+
+ //string::const_pointer
+ //常量型的字符pointer类型
+ //等价于allocator_type::const_pointer
+ //对类型string而言，这等价于const char*
+
+ //string::iterator
+ //Iterator（迭代器）类型
+ //确切类型由实现定义
+ //对类型string而言通常是char*
+
+ //string::const_iterator
+ //常量型iterator(迭代器)类型
+ //确切类型由实现定义
+ //对类型string而言通常是const char*
+
+ //string::reverse_iterator
+ //Reverse iterator（反向迭代器）类型
+ //等价于reverse_iterator<iterator>
+
+ //string::const_reverse_iterator
+ //Constant reverse iterator（常量型反向迭代器）类型
+ //等价于reverse_iterator<const_iterator>
+
+ //static const size_type string::npos
+ //这是一个特殊值，表示未找到或所有剩余字符
+ //它是个无正负号整数，初值为-1
+ //使用npos时要十分小心
+
+ //13.3.2 创建、复制、销毁(Create,Copy,and Destroy)
+
+ //string::string()
+ //Default构造函数
+ //建立一个空的string
+
+ //string::string(const string& str)
+ //Copy（拷贝）构造函数
+ //建立一个新的string，是str的拷贝（副本）
+
+ //string::string(string&& str)
+ //Move（搬移）构造函数
+ //建立一个新的string，以既有的string str的元素为初值
+ //执行之后，str的内容不明确
+ //始自C++11
+
+ //string::string(const string& str,size_type str_idx)
+ //string::string(const string& str,size_type str_idx,size_type str_num)
+ //建立一个新string，其初值为“str之内从索引str_idx开始的最多str_num个字符”
+ //如果没有指定str_num，则取“从str_idx开始到str末尾”的所有字符
+ //如果str_idx>str.size(),抛出out_of_range异常
+
+ //string::string(const char* cstr)
+ //建立一个string，以C-string cstr为初值
+ //初值为cstr内“以'\0'为结束符（但不包括'\0'）”的所有字符
+ //cstr不可以是null pointer(nullptr或NULL)，否则会导致不确定的行为
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string::string(const char* chars,size_type chars_len)
+ //建立一个string，以字符数组chars内的chars_len个字符为初值
+ //chars必须至少包含chars_len个字符。这些字符可以为任意值，'\0'无特殊意义
+ //如果chars_len等于string::npos，抛出length_error异常
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string::string(size_type num,char c)
+ //建立一个string，初值为num个字符c
+ //如果num等于string::npos，抛出length_error异常
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string::string(InputIterator beg,InputIterator end)
+ //建立一个字符串，以[beg,end)区间内的字符为初值
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string::string(initializer-list)
+ //建立一个新的string，以initializer-list的字符为初值
+ //始自C++11
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string::~string()
+ //析构函数
+ //销毁所有字符并释放内存
+
+ //13.3.3 大小和容量(Size and Capacity)
+
+ //bool string::empty()const
+ //判断string是否为空（不含任何字符）
+ //等价于string::size()==0，但有可能更快
+
+ //size_type string::size()const
+ //size_type string::length()const
+ //两个函数都返回现有的字符数
+ //两者等价(equivalent)
+ //如果想检查string是否为空，应采用速度更快的empty()
+
+ //size_type string::max_size()const
+ //返回“字符串可含之最多字符数”
+ //任何操作一旦生成的string长度大于max_size()，就会抛出length_error异常
+
+ //size_type string::capacity()const
+ //返回重分配之前string所能包含的最多字符数
+
+ //void string::reserve()
+ //void string::reserve(size_type num)
+ //第一形式是个“非强制性合身缩减”请求(nonbinding shrink-to-fit request)
+ //第二形式保留“至少能容纳num个字符”的内存
+ //如果num小于当前容量，这一调用相当于一个“非强制性缩减容量”请求(nonbinding request to shrink the capacity)
+ //如果num小于当前字符数，这一调用相当于一个“非强制性缩减容量”请求，希望能够令容量吻合当前字符数
+ //
 
 
 
