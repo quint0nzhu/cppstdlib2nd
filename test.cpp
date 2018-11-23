@@ -681,8 +681,311 @@ int main(int argc, char* argv[])
  //第二形式保留“至少能容纳num个字符”的内存
  //如果num小于当前容量，这一调用相当于一个“非强制性缩减容量”请求(nonbinding request to shrink the capacity)
  //如果num小于当前字符数，这一调用相当于一个“非强制性缩减容量”请求，希望能够令容量吻合当前字符数
- //
+ //容量永远不能小于实际字符数
+ //这个操作有可能造成“指向string所含字符”之reference、pointer和iterator失效。然而可以保证的是，在调用reserve()之后的安插过程中不会发生重分配，直到某次安插造成大小超过num。因此，我们可事先调用reserve()来加快速度并保持reference、pointer和iterator的有效性
 
+ //void string::shrink_to_fit()
+ //降低内部内存，以符合当前字符数
+ //其效果相当于reserve(0)
+ //这一调用被视为一个非强性请求(nonbinding request)，允许实现方有优化余地
+ //这个操作有可能造成“指向string所含字符”的reference、pointer和iterator失效
+ //始自C++11
+
+ //13.3.4 比较(Comparison)
+
+ //bool comparison(const string& str1,const string& str2)
+ //bool comparison(const string& str,const char* cstr)
+ //bool comparison(const char* cstr,const string& str)
+ //第一形式返回两个string的比较结果
+ //第二形式和第三形式返回string和C-string的比较结果
+ //comparison可以是以下任何一种动作：
+ // operator ==
+ // operator !=
+ // operator <
+ // operator >
+ // operator <=
+ // operator >=
+ //按字典次序(lexicographically)进行比较
+
+ //int string::compare(const string& str)const
+ //把string *this拿来和string str比较
+ //返回值：
+ //-0，表示两端strings相等
+ //-<0，表示*this小于str（按字典次序）
+ //->0，表示*this大于str（按字典次序）
+ //以traits::compare()为比较准则
+
+ //int string::compare(size_type idx,size_type len,const string& str)const
+ //将string *this之内“从idx开始的最多len个字符”拿来和str比较
+ //如果idx>size()，抛出out_of_range异常
+ //比较动作和前述的compare(str)相同
+
+ //int string::compare(size_type idx,size_type len,const string& str,size_type str_idx,size_type str_len)const
+ //将string *this内“从idx开始的最多len个字符”拿来和str之内“从str_idx开始的最多str_len个字符”相较
+ //如果idx>size()，抛出out_of_range异常
+ //如果str_idx>str.size()，抛出out_of_range异常
+ //比较动作和前述的compare(str)相同
+
+ //int string::compare(const char* cstr)const
+ //将string *this的字符和C-string cstr的字符进行比较
+ //比较动作和前述的compare(str)相同
+
+ //int string::compare(size_type idx,size_type len,const char* cstr)const
+ //将string *this内“从idx开始最多len个字符”和C-string cstr的所有字符比较
+ //比较动作和前述的compare(str)相同
+ //cstr不可以是null pointer（nullptr或NULL），否则会导致不确定的行为
+
+ //int string::compare(size_type idx,size_type len,const char* chars,size_type chars_len)const
+ //将string *this内“从idx开始最多len个字符”拿来和字符数组chars内的chars_len个字符相较
+ //比较动作和前述的compare(str)相同
+ //chars必须至少包含chars_len个字符。这些字符可以为任意值，'\0'无特殊意义
+ //如果chars_len等于string::npos，抛出length_error异常
+
+ //13.3.5 字符访问
+
+ //char& string::operator[](size_type idx)
+ //const char& string::operator[](size_type idx)const
+ //两种形式都返回索引idx所指的字符（首字符索引为0）
+ //length()和size()都是有效索引，本操作符会对此返回一个“由字符类型的default构造函数生成”的值（对string而言是'\0'）。在C++11之前，non-const string的length()或size()都是无效索引
+ //无效索引会导致不明确的行为
+ //操作non-const string时，返回的reference会因为string被改动或重分配而失效
+ //如果调用者无法确定索引有否有效，就应该采用at()
+
+ //char& string::at(size_type idx)
+ //const char& string::at(size_type idx)const
+ //两种形式都返回索引idx所指的字符（首字符索引为0）
+ //对于所有string，以length()的结果为索引，都是无效的
+ //传递无效索引（小于0或大于等于length()或size()）会导致out_of_range异常
+ //操作non-const string时，返回的reference会因为string被改动或重分配而失效
+ //如果调用者确定索引是有效的，可改用操作符[]，速度更快
+
+ //char& string::front()
+ //const char& string::front()const
+ //两种形式都返回第一个字符
+ //对string调用front()，会返回一个“由字符类型的default构造函数生成”的值（对string而言是'\0'）
+ //操作non-const string时，返回的reference会因为string被改动或重分配而失效
+
+ //char& string::back()
+ //const char& string::back()const
+ //两种形式都返回最末字符
+ //对空string调用back()，会导致不明确的行为
+ //操作non-const string时，返回的reference会因为string被改动或重分配而失效
+
+ //13.3.6 产生C-String和字符数组(Character Array)
+
+ //const char* string::c_str()const
+ //const char* string::data()const
+ //将string的内容以C-string（一个字符数组，尾部添加'\0'）形式返回。因此这可说是string对应的一个有效的C-string
+ //返回值隶属于该string，所以调用者不能修改、释放或删除该返回值
+ //只有当string尚且存在，并且用来处理该返回值的函数是个“常量型函数”时，这个返回值才保持有效
+ //在C++11之前，data()的返回值保证内含string的所有字符但没有结束符'\0'，因此不能说是个有效的C-string
+
+ //size_type string::copy(char* buf,size_type buf_size)const
+ //size_type string::copy(char* buf,size_type buf_size,size_type idx)const
+ //两种形式都将string *this内从索引idxgavc最多buf_size个字符复制到字符数组buf中
+ //返回被复制的字符数
+ //不添加null字符。因此函数执行后的buf内容可能不是个有效的C-string
+ //调用者必须确保buf有足够内存；否则会导致不明确的行为
+ //如果idx>size()，抛出out_of_range异常
+
+ //13.3.7 ”改动“之相关操作(Modifying Operation)
+
+ //string& string::operator=(const string& str)
+ //string& string::assign(const string& str)
+ //所谓copy assignment（拷贝赋值）操作符
+ //以上两种形式都将str的内容赋值给*this
+ //都返回*this
+
+ //string& string::operator=(string&& str)
+ //string& string::assign(string&& str)
+ //所谓的move assignment（搬移赋值）操作符
+ //将str的内容搬移至*this
+ //完成后，str的内容不可知（不明确）
+ //返回*this
+ //始自C++11
+
+ //string& string::assign(const string& str,size_type str_idx,size_type str_num)
+ //将str内”从索引str_idx开始最多str_num个字符“赋值给*this
+ //返回*this
+ //如果str_idx>str.size()，抛出out_of_range异常
+
+ //string& string::operator=(const char* cstr)
+ //string& string::assign(const char* cstr)
+ //两种形式都将C-string cstr的内容赋值给*this
+ //它们操作的是以'\0'结尾的cstr所有字符，但不包含'\0'
+ //都返回*this
+ //cstr不可以是null pointer（nullptr或NULL），否则会导致不确定的行为
+ //如果所得结果超出最大字符数，两函数都抛出length_error异常
+
+ //string& string::assign(const char* chars,size_type chars_len)
+ //将数组chars内的chars_len个字符赋值给*this
+ //返回*this
+ //chars必须至少包含chars_len个字符。这些字符可以为任意值，'\0'无特殊意义
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string& string::operator=(char c)
+ //将字符c赋值给*this
+ //返回*this
+ //调用后，*this只含这个单一字符
+
+ //string& string::assign(size_type num,char c)
+ //将num个字符c赋值给*this
+ //返回*this
+ //如果num等于string::npos，抛出length_error异常
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string& string::assign(InputIterator beg,InputIterator end)
+ //赋值的来源是[beg,end)区间内的所有字符
+ //返回*this
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string& string::operator=(initializer-list)
+ //string& string::assign(initializer-list)
+ //赋值的来源是initializer-list内的所有字符
+ //都返回*this
+ //如果所得结果超出最大字符数，两operations都抛出length_error异常
+ //始自C++11
+
+ //void string::swap(string& str)
+ //void swap(string& str1,string& str2)
+ //两种形式都用来交换string。第一版本（成员函数）交换*this和str的内容。第二版本（全局函数）交换str1和str2的内容
+ //应该尽可能使用这些函数取代赋值(assignment)，因为它们更快。它们具有常量复杂度
+
+ //string& string::operator+=(const string& str)
+ //string& string::append(const string& str)
+ //两种形式都将str的字符添加到*this尾部
+ //都返回*this
+ //如果所得结果超出最大字符数，两者都抛出length_error异常
+
+ //string& string::append(const string& str,size_type str_idx,size_type str_num)
+ //将str内”从str_idx开始最长str_num个字符“添加到*this末尾
+ //返回*this
+ //如果str_idx>str.size()，抛出out_of_range异常
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string& string::operator+=(const char* cstr)
+ //string& string::append(const char* cstr)
+ //都将C-string的字符添加到*this末尾
+ //都返回*this
+ //cstr不可以是null pointer（nullptr或NULL），否则会导致不确定的行为
+ //如果所得结果超出最大字符数，两者都抛出length_error异常
+
+ //string& string::append(const char* chars,size_type chars_len)
+ //将字符数组chars内的chars_len个字符添加到*this末尾
+ //返回*this
+ //chars必须至少包含chars_len个字符。这些字符可以为任意值，'\0'无特殊意义
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string& string::append(size_type num,char c)
+ //将num个字符c添加到*this尾部
+ //返回*this
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string& string::operator+=(char c)
+ //void string::push_back(char c)
+ //将字符c添加到*this尾部
+ //Operator+=返回*this
+ //如果所得结果超出最大字符数，两者都抛出length_error异常
+
+ //string& string::append(InputIterator beg,InputIterator end)
+ //将[beg,end)区间内的所有字符添加到*this尾部
+ //返回*this
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string& string::operator+=(initializer-list)
+ //void string::append(initializer-list)
+ //都将initializer-list的字符添加到*this末尾
+ //都返回*this
+ //如果所得结果超出最大字符数，两者都抛出length_error异常
+ //始自C++11
+
+ //string& string::insert(size_type idx,const string& str)
+ //将str插入*this内，从索引idx处开始安插新增字符
+ //返回*this
+ //如果idx>size()，抛出out_of_range异常
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string& string::insert(size_type idx,const string& str,size_type str_idx,size_type str_num)
+ //将str内”从str_idx开始最多str_num个字符“插入*this，从索引idx处开始安插
+ //返回*this
+ //如果idx>size()，抛出out_of_range异常
+ //如果str_idx>str.size()，抛出out_of_range异常
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string& string::insert(size_type idx,const char* cstr)
+ //将C-string cstr插入*this，从索引idx处开始安插新增字符
+ //返回*this
+ //cstr不可以是null pointer（nullptr或NULL），否则会导致不确定的行为
+ //如果idx>size()，抛出out_of_range异常
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string& string::insert(size_type idx,const char* chars,size_type chars_len)
+ //将字符数组chars内的chars_len个字符插入*this，从索引idx处开始安插新增字符
+ //返回*this
+ //chars必须至少包含chars_len个字符。这些字符可以为任意值，'\0'无特殊意义
+ //如果idx>size()，抛出out_of_range异常
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string& string::insert(size_type idx,size_type num,char c)
+ //iterator string::insert(const_iterator pos,size_type num,char c)
+ //分别在idx或pos指定的位置上安插num个字符c
+ //第一形式将新字符插入str，从索引idx开始
+ //第二形式在iterator pos所指字符之前方插入新字符
+ //第一形式返回*this
+ //第二形式返回被安插的第一个字符的位置，如果没有安插任何字符就返回pos
+ //这两个函数构成重载(overloaded)形式，因此可能导致歧义（模棱两可）。如果你以0为第一实参，由于0可被视为索引（通常被转换为unsigned），也可被视为iterator（通常被转换为char*），因而导致岐义。这种情况下你应该明确告知实参是个”索引“。例如
+ //std::string s;
+ //...;
+ //s.insert(0,1,' ');//ERROR: ambiguous
+ //s.insert((std::string::size_type)0,1,' ');//OK
+ //如果idx>size()，两种形式都抛出out_of_range异常
+ //如果最终结果超出最大字符数，抛出length_error异常
+ //在C++11之前，pos的类型是iterator，第二形式的返回类型是void
+
+ //iterator string::insert(const_iterator pos,char c)
+ //在iterator pos所指字符之前方插入字符c的拷贝（副本）
+ //返回新被插入的字符的位置
+ //如果所得结果超出最大字符数，抛出length_error异常
+ //在C++11之前，pos的类型是iterator
+
+ //iterator string::insert(const_iterator pos,InputIterator beg,InputIterator end)
+ //在iterator pos所指字符之前方插入[beg,end)区间的所有字符
+ //返回被安插的第一个字符的位置，如果没有安插任何字符就返回pos
+ //如果所得结果超出最大字符数，抛出length_error异常
+ //在C++11之前，pos的类型是iterator，返回类型是void
+
+ //iterator string::insert(const_interator pos,initializer-list)
+ //在iterator pos所指字符之前方插入initializer-list的所有字符
+ //返回被安插的第一个字符的位置，如果没有安插任何字任就返回pos
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //void string::clear()
+ //string& string::erase()
+ //两个函数都会删除(delete)string内的所有字符，因此调用后string成空
+ //erase()返回*this
+
+ //string& string::erase(size_type idx)
+ //string& string::erase(size_type idx,size_type len)
+ //两种形式都删除*this之内从索引idx开始的最多len个字符
+ //都返回*this
+ //如果未指定len，则删除idx之后的所有字符
+ //如果idx>size()，两种形式都抛出out_of_range异常
+
+ //iterator string::erase(const_iterator pos)
+ //iterator string::erase(const_iterator beg,const_iterator end)
+ //分别删除pos所指的单一字符或[beg,end)区间内的所有字符
+ //都返回最后一个被删除字符的下一字符（因此第二形式返回的是end）
+ //在C++11之前，pos、beg和end的类型都是iterator
+
+ //void string::pop_back()
+ //删除最末字符
+ //对空string调用此函数，会导致不明确的行为
+ //始自C++11
+
+ //void string::resize(size_type num)
+ //void string::resize(size_type num,char c)
+ //两种形式都将*this的字符数改为num。也就是说，如果num不等于目前的size()，则在尾部添加或删除足够字符，使字符数等于新的大小num
+ //
 
 
 
