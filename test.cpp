@@ -985,8 +985,67 @@ int main(int argc, char* argv[])
  //void string::resize(size_type num)
  //void string::resize(size_type num,char c)
  //两种形式都将*this的字符数改为num。也就是说，如果num不等于目前的size()，则在尾部添加或删除足够字符，使字符数等于新的大小num
- //
+ //如果字符数增加，则以c为初值。如果未指定c，则使用“字符类型”的default构造函数为新字符设初值（对string而言将是'\0'）
+ //如果num等于string::npos，两者都抛出length_error异常
+ //如果最终结果超出最大字符数，抛出length_error异常
 
+ //string& string::replace(size_type idx,size_type len,const string& str)
+ //string& string::replace(begin_iterator beg,begin_iterator end,const string& str)
+ //第一种形式将*this内"从idx开始，最长为len"的字符替换为str内的所有字符
+ //第二种形式将[beg,end)区间内的字符替换为str的所有字符
+ //返回*this
+ //如果idx>size()，两种形式都抛出out_of_range异常
+ //如果最终结果超出最大字符数，抛出length_error异常
+ //在C++11之前，beg和end的类型是iterator
+
+ //string& string::replace(size_type idx,size_type len,const string& str,size_type str_idx,size_type str_num)
+ //将*this内“从idx开始，最长为len“的字符替换为str内”从str_idx开始，最长为str_num“的所有字符
+ //返回*this
+ //如果idx>size()，抛出out_of_range异常
+ //如果str_idx>str.size()，抛出out_of_range异常
+ //如果所得结果超出最大字符数，抛出length_error异常
+
+ //string& string::replace(size_type idx,size_type len,const char* cstr)
+ //string& string::replace(const_iterator beg,const_iterator end,const char* cstr)
+ //分别将*this中”以idx开始，最长为len“的字符，或[beg,end)区间内的字符替换为C-string cstr的所有字符
+ //都返回*this
+ //cstr不可以是null pointer（nullptr或NULL），否则会导致不确定的行为
+ //如果idx>size()，两种形式都抛出out_of_range异常
+ //如果最终结果超出最大字符数，抛出length_error异常
+ //在C++11之前，beg和end的类型是iterator
+
+ //string& string::replace(size_type idx,size_type len,const char* chars,size_type chars_len)
+ //string& string::replace(const_iterator beg,const_iterator end,const char* chars,size_type chars_len)
+ //分别将*this中”以idx开始，最长为len“的字符或[beg,end)区间内的字符，替换为字符数组chars中的chars_len个字符
+ //都返回*this
+ //chars必须至少包含chars_len个字符。这些字符可以为任意值，'\0'无特殊意义
+ //如果idx>size()，两种形式都抛出out_of_range异常
+ //如果最终结果超出最大字符数，抛出length_error异常
+ //在C++11之前，beg和end的类型是iterator
+
+ //string& string::replace(size_type idx,size_type len,size_type num,char c)
+ //string& string::replace(const_iterator beg,const_iterator end,size_type num,char c)
+ //分别将*this内”从idx开始，最长为len“的字符，或[beg,end)区间内的字符，替换为num个字符c
+ //都返回*this
+ //如果idx>size()，两种形式都抛出out_of_range异常
+ //如果最终结果超出最大字符数，抛出length_error异常
+ //在C++11之前，beg和end的类型是iterator
+
+ //string& string::replace(const_iterator beg,const_iterator end,InputIterator newBeg,InputIterator newEnd)
+ //以[newBeg,newEnd)区间内的所有字符替换[beg,end)区间内的所有字符
+ //返回*this
+ //如果所得结果超出最大字符数，抛出length_error异常
+ //在C++11之前，beg和end的类型是iterator
+
+ //string& string::replace(const_iterator beg,const_iterator end,initializer-list)
+ //以initializer-list内的所有字符替换[beg,end)区间内的所有字符
+ //返回*this
+ //如果所得结果超出最大字符数，抛出length_error异常
+ //始自C++11
+
+ //13.3.8 查找(Searching and Finding)
+
+ //
 
 
 
