@@ -16,6 +16,52 @@ void out(bool b)
   std::cout<<(b?"found":"not found")<<std::endl;
 }
 
+template<typename T>
+std::string regexCode(T code)
+{
+  switch(code){
+  case std::regex_constants::error_collate:
+    return "error_collate: "
+      "regex has invalid collating element name";
+  case std::regex_constants::error_ctype:
+    return "error_ctype: "
+      "regex has invalid character class name";
+  case std::regex_constants::error_escape:
+    return "error_escape: "
+      "regex has invalid escaped char. or trailing escape";
+  case std::regex_constants::error_backref:
+    return "error_backref: "
+      "regex has invalid back reference";
+  case std::regex_constants::error_brack:
+    return "error_brack: "
+      "regex has mismatched '[' and ']'";
+  case std::regex_constants::error_paren:
+    return "error_paren: "
+      "regex has mismatched '(' and ')'";
+  case std::regex_constants::error_brace:
+    return "error_brace: "
+      "regex has mismatched '{' and '}'";
+  case std::regex_constants::error_badbrace:
+    return "error_badbrace: "
+      "regex has invalid range in {} expression";
+  case std::regex_constants::error_range:
+    return "error_range: "
+      "regex has invalid character range, such as '[b-a]'";
+  case std::regex_constants::error_space:
+    return "error_space: "
+      "insufficient memory to convert regex into finite state";
+  case std::regex_constants::error_badrepeat:
+    return "error_badrepeat: "
+      "one of *?+{ not preceded by valid regex";
+  case std::regex_constants::error_complexity:
+    return "error_complexity: "
+      "complexity of match against regex over pre-set level";
+  case std::regex_constants::error_stack:
+    return "error_stack: "
+      "insufficient memory to determine regex match";
+  }
+  return "unknown/non-standard regex error code";
+}
 
 
 int main(int argc, char* argv[])
@@ -211,6 +257,37 @@ int main(int argc, char* argv[])
                      |std::regex_constants::format_first_only);
   std::cout<<res2<<std::endl;
 
+  //14.6 Regex Flag
+
+  //case-insensitive find LaTeX index entries
+  std::string pat1="\\\\.*index\\{([^}]*)\\}";//first capture group
+  std::string pat2="\\\\.*index\\{(.*)\\}\{(.*)\\}";//2nd and 3rd capture group
+  try{
+    std::regex pat(pat1+"\n"+pat2,
+                   std::regex_constants::egrep|std::regex_constants::icase);
+
+    //initialize string with characters from standard input:
+    std::string data3((std::istreambuf_iterator<char>(std::cin)),
+                      std::istreambuf_iterator<char>());
+
+    //search and print matching index entries:
+    std::smatch m3;
+    auto pos4=data3.cbegin();
+    auto end4=data3.cend();
+    for(;std::regex_search(pos4,end4,m3,pat);pos4=m3.suffix().first){
+      std::cout<<"match:    "<<m3.str()<<std::endl;
+      std::cout<<"  val:    "<<m3.str(1)+m3.str(2)<<std::endl;
+      std::cout<<"  see:    "<<m3.str(3)<<std::endl;
+    }
+  }
+  catch(const std::regex_error& e){
+    std::cerr<<"regex_error: \n"
+             <<" what(): "<<e.what()<<"\n"
+             <<" code(): "<<regexCode(e.code())<<std::endl;
+   }
+
+
+  //14.7 Regex的异常(Exception)
 
 
 
