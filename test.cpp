@@ -165,11 +165,11 @@ int main(int argc, char* argv[])
   //14.4 Regex Token Iterator
 
   //iterate over all matches(using a regex_token_iterator):
-  std::sregex_token_iterator pos3(data1.cbegin(),data1,cend(),//sequence
+  std::sregex_token_iterator pos3(data1.cbegin(),data1.cend(),//sequence
                                   reg,//token separator
                                   {0,2});//0:full match,2:second substring
   std::sregex_token_iterator end3;
-  for(;pos3!=end3;++pos){
+  for(;pos3!=end3;++pos3){
     std::cout<<"match:     "<<pos3->str()<<std::endl;
   }
   std::cout<<std::endl;
@@ -183,6 +183,33 @@ int main(int argc, char* argv[])
   for(;p!=e;++p){
     std::cout<<"name:      "<<*p<<std::endl;
   }
+
+  //14.5 用于替换的正则表达式
+
+  //print data with replacement for matched patterns
+  std::cout<<std::regex_replace(data1,//data
+                                reg,//regular expression
+                                "<$1 value=\"$2\"/>")//replacement
+           <<std::endl;
+
+  //some using sed syntax
+  std::cout<<std::regex_replace(data1,//data
+                                reg,//regular expression
+                                "<\\1 value=\"\\2\"/>",//replacement
+                                std::regex_constants::format_sed)//format flag
+           <<std::endl;
+
+  //use iterator interface and
+  //-format_no_copy: don't copy characters that don't match
+  //-format_first_only: replace only the first match found
+  std::string res2;
+  std::regex_replace(back_inserter(res2),//destination
+                     data1.begin(),data1.end(),//source range
+                     reg,//regular expression
+                     "<$1 value=\"$2\"/>",//replacement
+                     std::regex_constants::format_no_copy//format flags
+                     |std::regex_constants::format_first_only);
+  std::cout<<res2<<std::endl;
 
 
 
