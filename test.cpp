@@ -10,6 +10,7 @@
 #include <complex>
 #include <iomanip>
 #include <chrono>
+#include <limits>
 
 
 namespace MyLib{
@@ -71,6 +72,42 @@ namespace MyLib1{
     return sum;
   }
 }
+
+template <typename charT,typename traits>
+inline
+std::basic_istream<charT,traits>&
+ignoreLine(std::basic_istream<charT,traits>& strm)
+{
+  //skip until end-of-file
+  strm.ignore(std::numeric_limits<std::streamsize>::max(),
+              strm.widen('\n'));
+
+  //return stream for concatenation
+  return strm;
+}
+
+class ignoreLinen
+{
+private:
+  int num;
+public:
+  explicit ignoreLinen(int n=1):num(n){}
+
+  template<typename charT,typename traits>
+  friend std::basic_istream<charT,traits>&
+  operator>>(std::basic_istream<charT,traits>& strm,
+             const ignoreLinen& ign)
+  {
+    //skip until end-of-line num times
+    for(int i=0;i<ign.num;++i){
+      strm.ignore(std::numeric_limits<std::streamsize>::max(),
+                  strm.widen('\n'));
+    }
+
+    //return stream for concatenation
+    return strm;
+  }
+};
 
 
 
@@ -353,13 +390,148 @@ int main(int argc, char* argv[])
     //print it
     std::cout.put(c2);
   }
-  */
 
   //15.5.4 sentry对象（岗哨）
 
   //15.6 操控器(Manipulator)
   //15.6.1 操控器概览
   //15.6.2 操控器如何运作
+  //std::endl(std::cout)
+  //带有实参的操控器，使用前要包含<iomanip>
+  //15.6.3 用户自定义的操控器
+
+  //ignore the rest of the line
+  std::cin>>ignoreLine;
+
+  //ignore two lines
+  std::cin>>ignoreLine>>ignoreLine;
+
+  //ignore another two lines
+  std::cin>>ignoreLinen(2);
+
+  std::string s;
+  std::cin>>s;
+  std::cout<<s<<std::endl;
+
+  //15.7 格式化(Formatting)
+  //15.7.1 Format Flag（格式标志）
+
+  */
+  //set flags showpos and uppercase
+  std::cout.setf(std::ios::showpos | std::ios::uppercase);
+  std::cout<<34<<std::endl;
+
+  //set only the flag hex in the group basefield
+  std::cout.setf(std::ios::hex,std::ios::basefield);
+  std::cout<<0x12f<<std::endl;
+
+  //clear the flag uppercase
+  std::cout.unsetf(std::ios::uppercase);
+  std::cout<<0x12f<<std::endl;
+
+  //save current format flags
+  std::ios::fmtflags oldFlags=std::cout.flags();
+
+  //do some changes
+  std::cout.setf(std::ios::showpos|std::ios::showbase|std::ios::uppercase);
+  std::cout.setf(std::ios::internal,std::ios::adjustfield);
+  std::cout<<34<<std::endl;
+  std::cout<<std::oct<<34<<std::endl;
+
+  //restore saved format flags
+  std::cout.flags(oldFlags);
+  std::cout<<34<<std::endl;
+
+  std::cout.unsetf(std::ios::hex);
+  std::cout.unsetf(std::ios::showpos);
+  std::cout<<34<<std::endl;
+
+  std::cout<<resetiosflags(std::ios::adjustfield)//clear adjustm.flags
+           <<setiosflags(std::ios::left);//left-adjust values
+  std::cout<<34<<std::endl;
+  std::cout.unsetf(std::ios::left);
+
+  //15.7.2 Boolean的I/O格式
+
+  bool b;
+
+  std::cout<<std::noboolalpha<<b<<" == "
+           <<std::boolalpha<<b<<std::endl;
+
+  //15.7.3 栏位宽度、填充字符、位置调整
+
+  std::cout<<std::setw(8)<<std::setfill('_')<<-3.14
+           <<' '<<42<<std::endl;
+  std::cout<<std::setw(8)<<"sum: "
+           <<std::setw(8)<<42<<std::endl;
+
+  char buffer1[81];
+
+  //read, at most, 80 characters:
+  std::cin>>std::setw(sizeof(buffer1))>>buffer1;
+
+  //char* s1;
+  //std::cin>>std::setw(sizeof(s1))>>s1;//RUNTIME ERROR
+
+  std::string s1;
+  std::cin>>s1;//OK
+  std::cout<<s1<<std::endl;
+
+  //15.7.4 正号与大写
+
+  std::cout<<12345678.9<<std::endl;
+
+  std::cout.setf(std::ios::showpos|std::ios::uppercase);
+  std::cout<<12345678.9<<std::endl;
+
+  std::cout<<std::noshowpos<<std::nouppercase;
+  std::cout<<12345678.9<<std::endl;
+
+  //15.7.5 数值基数(Numeric Base)
+
+  std::cout.unsetf(std::ios::dec);
+  std::cout.setf(std::ios::hex);
+
+  std::cout.setf(std::ios::hex,std::ios::basefield);
+
+  int x=10,y=20,z=30;
+
+  std::cout<<std::hex<<x<<std::endl;
+  std::cout<<y<<' '<<std::dec<<z<<std::endl;
+
+  std::cout<<127<<' '<<255<<std::endl;
+
+  std::cout<<std::hex<<127<<' '<<255<<std::endl;
+
+  std::cout.setf(std::ios::showbase);
+  std::cout<<127<<' '<<255<<std::endl;
+
+  std::cout.setf(std::ios::uppercase);
+  std::cout<<127<<' '<<255<<std::endl;
+
+  std::cout<<std::nouppercase<<std::noshowbase<<std::dec;
+  std::cout<<234<<std::endl;
+
+  //15.7.6 浮点数(Floating-Point)表示法
+
+  std::cout<<0.123456789<<std::endl;
+
+  std::cout<<std::scientific<<std::showpoint
+           <<std::setprecision(8)
+           <<0.123456789<<std::endl;
+
+  //15.7.7 一般格式(General Formatting)定义
+
+  //cerr和wcerr预先设置了ios::unitbuf（每次输出后，刷清output缓冲区）
+
+  //15.8 国际化(Internationalization)
+
+  std::cout<<std::cout.widen('\n');
+
+  //15.9 文件访问(File Access)
+  //15.9.1 File Stream Class
+  
+
 
 
 
