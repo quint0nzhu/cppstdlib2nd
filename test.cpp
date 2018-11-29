@@ -11,6 +11,10 @@
 #include <iomanip>
 #include <chrono>
 #include <limits>
+#include <fstream> //for file I/O
+#include <sstream>
+
+
 
 
 namespace MyLib{
@@ -109,6 +113,76 @@ public:
   }
 };
 
+void writeCharsetToFile(const std::string& filename)
+{
+  //open output file
+  std::ofstream file(filename);
+
+  //file opened?
+  if(!file){
+    //NO, abort program
+    std::cerr<<"can't open output file \""<<"\""
+             <<std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  //write character set
+  for(int i=32;i<256;++i){
+    file<<"value: "<<std::setw(3)<<i<<" "
+        <<"char:  "<<static_cast<char>(i)<<std::endl;
+  }
+}//close file automatically
+
+void outputFile(const std::string& filename)
+{
+  //open input file
+
+  std::ifstream file(filename);
+
+  //file opened?
+  if(!file){
+    //NO, abort program
+    std::cerr<<"can't open input file \""<<filename<<"\""
+            <<std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  //copy file contents to cout
+  char c;
+  while(file.get(c)){
+    std::cout.put(c);
+  }
+
+  //another method for copy file contents to cout
+  std::cout<<file.rdbuf();
+
+}//close file automatically
+
+std::ofstream openFile(const std::string& filename)
+{
+  std::ofstream file(filename);
+
+  return file;
+}
+
+void printFileTwice(const char* filename)
+{
+  //open file
+  std::ifstream file(filename);
+
+  //print contents the first time
+  std::cout<<file.rdbuf();
+
+  //seek to the beginning
+  file.seekg(0);
+
+  //print contents the second time
+  char c;
+  while(file.get(c)){
+    std::cout.put(c);
+  }
+  std::cout<<std::endl;
+}
 
 
 int main(int argc, char* argv[])
@@ -416,7 +490,6 @@ int main(int argc, char* argv[])
   //15.7 格式化(Formatting)
   //15.7.1 Format Flag（格式标志）
 
-  */
   //set flags showpos and uppercase
   std::cout.setf(std::ios::showpos | std::ios::uppercase);
   std::cout<<34<<std::endl;
@@ -530,8 +603,103 @@ int main(int argc, char* argv[])
 
   //15.9 文件访问(File Access)
   //15.9.1 File Stream Class
-  
 
+  writeCharsetToFile("charset.out");
+  outputFile("charset.out");
+
+  */
+
+  //15.9.2 File Stream的Rvalue和Move语义
+
+  //write string to a temporarily created file stream(since C++11)
+  std::string s2("hello");
+  std::ofstream("fstream2.tmp")<<s2<<std::endl;
+
+  //write C-string to a temporarily created file stream
+  //-NOTE:wrote a pointer value before C++11
+  std::ofstream("fstream2.tmp",std::ios::app)<<"world"<<std::endl;
+
+  std::ofstream file;
+  file=openFile("xyz.tmp");//use returned file stream(since C++11)
+  file<<"hello, world"<<std::endl;
+
+  //15.9.3 File Flag（文件标志）
+
+  //for all filenames passed as command-line arguments
+  //-open, print contents, and close file
+
+  std::ifstream file1;
+
+  //for all command-line arguments
+  for(int i=1;i<argc;++i){
+
+    //open file
+    file1.open(argv[i]);
+
+    //write file contents to cout
+    char c;
+    while(file1.get(c)){
+      std::cout.put(c);
+    }
+
+    //another write file contents to cout
+    std::cout<<file1.rdbuf()<<std::endl;
+
+    //clear eofbit and failbit set due to end-of-file
+    file1.clear();
+
+    //close file
+    file1.close();
+  }
+  std::cout.clear();
+
+  //15.9.4 随机访问(Random Access)
+
+  //save current file position
+  //std::ios::pos_type pos=file.tellg();
+
+  //seek to file position saved in pos
+  //file.seekg(pos);
+
+  //seek to the beginning of the file
+  //file.seekg(0,std::ios::beg);
+
+  //seek 20 characters forward
+  //file.seekg(20,std::ios::cur);
+
+  //seek 10 characters before the end
+  //file.seekg(-10,std::ios::end);
+
+  //print all files passed as a command-line argument twice
+  for(int i=1;i<argc;++i){
+    printFileTwice(argv[i]);
+  }
+
+  //15.9.5 使用文件描述器(File Descriptor)
+
+  //15.10 为String而设计的Stream Class
+  //15.10.1 String Stream Class
+
+  std::ostringstream os;
+
+  //decimal and hexadecimal value
+  os<<"dec: "<<15<<std::hex<<" hex: "<<15<<std::endl;
+  std::cout<<os.str()<<std::endl;
+
+  //append floating value and bitset
+  std::bitset<15> b(5789);
+  os<<"float: "<<4.67<<" bitset: "<<b<<36<<std::endl;
+
+  //overwrite with octal value
+  os.seekp(0);
+  os<<"oct: "<<std::oct<<15;
+  std::cout<<os.str()<<std::endl;
+
+  os.str("");
+  std::cout<<"new os: "<<os.str()<<std::endl;
+
+  int x1;
+  float f2;
 
 
 
