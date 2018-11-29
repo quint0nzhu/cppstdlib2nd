@@ -13,8 +13,11 @@
 #include <limits>
 #include <fstream> //for file I/O
 #include <sstream>
-
-
+#include <tuple>
+#include <utility>
+#include <strstream>
+#include <vector>
+#include <iterator>
 
 
 namespace MyLib{
@@ -184,6 +187,79 @@ void printFileTwice(const char* filename)
   std::cout<<std::endl;
 }
 
+std::tuple<std::string,std::string,std::string> parseName(std::string name)
+{
+  std::string s1,s2,s3;
+  std::istringstream(name)>>s1>>s2>>s3;
+  if(s3.empty()){
+    return std::tuple<std::string,std::string,std::string>(std::move(s1),"",std::move(s2));
+  }
+  else{
+    return std::tuple<std::string,std::string,std::string>(std::move(s1),std::move(s2),std::move(s3));
+  }
+}
+
+void foo(const char* s)
+{
+  std::cout<<s<<std::endl;
+}
+
+class Fraction{
+private:
+  int num;
+  int den;
+public:
+  Fraction(int n=0,int d=1):num(n),den(d){}
+  int numerator()const{return num;}
+  int denominator()const{return den;}
+
+  void setNumerator(int n){num=n;}
+  void setDenominator(int d){
+    if(d!=0){
+      den=d;
+    }
+    else{
+      std::cout<<"Denominator could not be 0!"<<std::endl;
+    }
+  }
+};
+
+//inline
+//std::ostream& operator<<(std::ostream& strm,const Fraction& f)
+//{
+//  strm<<f.numerator()<<'/'<<f.denominator();
+//  return strm;
+//}
+
+template<typename charT,typename traits>
+inline
+std::basic_ostream<charT,traits>&
+operator<<(std::basic_ostream<charT,traits>& strm,
+           const Fraction& f)
+{
+  //string stream
+  //-with same format
+  //-without special field width
+  std::basic_ostringstream<charT,traits> s;
+  s.copyfmt(strm);
+  s.width(0);
+
+  //fill string stream
+  s<<f.numerator()<<'/'<<f.denominator();
+
+  //print string stream
+  strm<<s.str();
+
+  return strm;
+}
+
+template<typename T1,typename T2>
+std::ostream& operator<<(std::ostream& strm,const std::pair<T1,T2>& p)
+{
+  return strm<<"["<<p.first<<","<<p.second<<"]";
+}
+
+
 
 int main(int argc, char* argv[])
 {
@@ -193,14 +269,16 @@ int main(int argc, char* argv[])
   //15.1.2 Stream Class
   //15.1.3 全局的Stream对象
   //15.1.4 Stream操作符
-  /*
+  
   int a,b;
 
   //as long as input of a and b is successful
-  //while(std::cin>>a>>b){
+  while(std::cin>>a>>b){
     //output a and b
-  //  std::cout<<"a: "<<a<<" b: "<<b<<std::endl;
-  //}
+    std::cout<<"a: "<<a<<" b: "<<b<<std::endl;
+  }
+
+  std::cin.clear();
 
   //15.1.5 操控器(Manipulator)
   //15.1.6 一个简单例子
@@ -331,6 +409,8 @@ int main(int argc, char* argv[])
   if(std::cin.fail()){
     std::cout<<"read i error!"<<std::endl;
   }
+  std::cin.clear();
+  std::cout.clear();
 
   //15.4.4 Stream的状态和异常
 
@@ -483,9 +563,9 @@ int main(int argc, char* argv[])
   //ignore another two lines
   std::cin>>ignoreLinen(2);
 
-  std::string s;
-  std::cin>>s;
-  std::cout<<s<<std::endl;
+  std::string s3;
+  std::cin>>s3;
+  std::cout<<s3<<std::endl;
 
   //15.7 格式化(Formatting)
   //15.7.1 Format Flag（格式标志）
@@ -526,10 +606,10 @@ int main(int argc, char* argv[])
 
   //15.7.2 Boolean的I/O格式
 
-  bool b;
+  bool b1;
 
-  std::cout<<std::noboolalpha<<b<<" == "
-           <<std::boolalpha<<b<<std::endl;
+  std::cout<<std::noboolalpha<<b1<<" == "
+           <<std::boolalpha<<b1<<std::endl;
 
   //15.7.3 栏位宽度、填充字符、位置调整
 
@@ -567,10 +647,10 @@ int main(int argc, char* argv[])
 
   std::cout.setf(std::ios::hex,std::ios::basefield);
 
-  int x=10,y=20,z=30;
+  int x1=10,y1=20,z=30;
 
-  std::cout<<std::hex<<x<<std::endl;
-  std::cout<<y<<' '<<std::dec<<z<<std::endl;
+  std::cout<<std::hex<<x1<<std::endl;
+  std::cout<<y1<<' '<<std::dec<<z<<std::endl;
 
   std::cout<<127<<' '<<255<<std::endl;
 
@@ -606,8 +686,6 @@ int main(int argc, char* argv[])
 
   writeCharsetToFile("charset.out");
   outputFile("charset.out");
-
-  */
 
   //15.9.2 File Stream的Rvalue和Move语义
 
@@ -687,8 +765,8 @@ int main(int argc, char* argv[])
   std::cout<<os.str()<<std::endl;
 
   //append floating value and bitset
-  std::bitset<15> b(5789);
-  os<<"float: "<<4.67<<" bitset: "<<b<<36<<std::endl;
+  std::bitset<15> b2(5789);
+  os<<"float: "<<4.67<<" bitset: "<<b2<<36<<std::endl;
 
   //overwrite with octal value
   os.seekp(0);
@@ -698,8 +776,110 @@ int main(int argc, char* argv[])
   os.str("");
   std::cout<<"new os: "<<os.str()<<std::endl;
 
-  int x1;
-  float f2;
+  int x2;
+  float f3;
+  std::string s4="3.7";
+
+  std::istringstream is(s4);
+  is>>x2>>f3;
+
+  std::cout<<x2<<" "<<f3<<std::endl;
+
+  std::string s5("vlaue: ");
+
+  std::ostringstream os1(s5,std::ios::out|std::ios::ate);//pos is s5's last letter
+  os1<<77<<" "<<std::hex<<77<<std::endl;
+  std::cout<<os1.str();//writes:value:77 4d, it's a copy of s5+
+  std::cout<<s5;//writes:value:
+  std::cout<<std::endl;
+
+  //15.10.2 String Stream的Move语义
+
+  auto t1=parseName("Nicolai M. Josuttis");
+  std::cout<<"firstname: "<<std::get<0>(t1)<<std::endl;
+  std::cout<<"middle:    "<<std::get<1>(t1)<<std::endl;
+  std::cout<<"lastname:  "<<std::get<2>(t1)<<std::endl;
+
+  auto t2=parseName("Nico Josuttis");
+  std::cout<<"firstname: "<<std::get<0>(t2)<<std::endl;
+  std::cout<<"middle:    "<<std::get<1>(t2)<<std::endl;
+  std::cout<<"lastname:  "<<std::get<2>(t2)<<std::endl;
+
+  std::cin.clear();
+
+  //15.10.3 char* Stream Class
+
+  char buffer2[1000];//buffer for at most 999 characters
+
+  //read line
+  std::cin.get(buffer2,sizeof(buffer2));
+
+  //read/process line as stream
+  std::istrstream input(buffer2);
+
+  std::string s6;
+
+  input>>s6;
+
+  std::cout<<s6<<std::endl;
+  std::cout<<input.str()<<std::endl;
+
+  float x3=1.2345;
+
+  //create and fill char* stream
+  //-don't forget ends or '\0'!!!
+  std::ostrstream buffer3;//dynamic stream buffer
+  buffer3<<"float x: "<<x3<<std::ends;
+
+  //pass resulting C-string to foo() and return memory to buffer
+  char* s7=buffer3.str();
+  foo(s7);
+  buffer3.freeze(false);
+
+  float x4=2.34567;
+
+  std::ostrstream buffer4;//dynamic char* stream
+
+  //fill char* stream
+  buffer4<<"float x: "<<x4<<std::ends;
+
+  //pass resulting C-string to foo()
+  //-freezes the char* stream
+  foo(buffer4.str());
+
+  //unfreeze the char* stream
+  buffer4.freeze(false);
+
+  //seek writing position to the beginning
+  buffer4.seekp(0,std::ios::beg);
+
+  //refill char* stream
+  buffer4<<"once more float x: "<<x4<<std::ends;
+
+  //pass resulting C-string to foo() again
+  //-freezes the char* stream
+  foo(buffer4.str());
+
+  //return memory to buffer
+  buffer4.freeze(false);
+
+  //15.11 “用户自定义类型”之I/O操作符
+  //15.11.1 实现一个Output操作符
+
+  Fraction vat(19,100);//I'm German and we have a uniform VAT of 19%
+  std::cout<<"VAT: \""<<std::left<<std::setw(8)
+           <<vat<<'"'<<std::endl;
+
+  std::pair<int,long> p(42,77777);
+  std::cout<<p<<std::endl;//OK
+
+  std::vector<std::pair<int,long>> v({p});
+
+  //std::copy(v.begin(),v.end(),std::ostream_iterator<std::pair<int,long>>(std::cout,"\n"));//ERROR:doesn't compile:
+
+  //15.11.2 实现一个Input操作符
+
+  
 
 
 
