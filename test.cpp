@@ -235,10 +235,21 @@ public:
   }
 };
 
+//get index for new ostream data
+static const int iword_index=std::ios_base::xalloc();
+
 inline
 std::ostream& operator<<(std::ostream& strm,const Fraction& f)
 {
-  strm<<f.numerator()<<'/'<<f.denominator();
+  //query the ostream data
+  //-if true, use spaces between numerator and denominator
+  //-if false, use no spaces between numerator and denominator
+  if(strm.iword(iword_index)){
+    strm<<f.numerator()<<" / "<<f.denominator();
+  }
+  else{
+    strm<<f.numerator()<<'/'<<f.denominator();
+  }
   return strm;
 }
 
@@ -331,6 +342,15 @@ operator>>(std::basic_istream<charT,traits>& strm,Fraction& f)
 //  f.scanFrom(strm);
 //  return strm;
 //}
+
+//define manipulator that sets this data
+std::ostream& fraction_spaces(std::ostream& strm)
+{
+  strm.iword(iword_index)=true;
+  return strm;
+}
+
+
 
 int main(int argc, char* argv[])
 {
@@ -954,15 +974,50 @@ int main(int argc, char* argv[])
   std::cin>>f4;
   std::cout<<f4<<std::endl;
 
-  Fraction f5;
-  std::cin>>f5;
-  std::cout<<f5<<std::endl;
-
   //15.11.3 以辅助函数完成I/O
   //15.11.4 用户自定义之Format Flag（格式标志）
-  
 
+  Fraction f5;
+  std::cin>>f5;
+  std::cout<<fraction_spaces<<f5<<std::endl;
 
+  Fraction f6(1,7);
+  std::cout<<f6<<std::endl;
+
+  //15.11.5 用户自定义I/O操作符的规约(Convention)
+
+  //15.12 连接Input和Output Stream
+  //15.12.1 以tie()完成松耦合(Loose Coupling)
+
+  //predefined connections:
+  std::cin.tie(&std::cout);
+  //std::wcin.tie(&std::wcout);
+
+  int x5;
+
+  std::cout<<"Please enter x: ";
+  std::cin>>x5;
+  std::cout<<x5<<std::endl;
+
+  //decouple cin from any output stream
+  std::cin.tie(nullptr);
+
+  //tieing cout to cerr
+  std::cerr.tie(&std::cout);
+
+  //15.12.2 以Stream缓冲区完成紧耦合(Tight Coupling)
+
+  //stream for hexadecimal standard output
+  std::ostream hexout(std::cout.rdbuf());
+  hexout.setf(std::ios::hex,std::ios::basefield);
+  hexout.setf(std::ios::showbase);
+
+  //switch between decimal and hexadecimal output
+  hexout<<"hexout: "<<177<<" ";
+  std::cout<<"cout: "<<177<<" ";
+  hexout<<"hexout: "<<-49<<" ";
+  std::cout<<"cout: "<<-49<<" ";
+  hexout<<std::endl;
 
 
 
