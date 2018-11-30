@@ -222,14 +222,25 @@ public:
       std::cout<<"Denominator could not be 0!"<<std::endl;
     }
   }
+
+  virtual void printOn(std::ostream& strm)const{//output
+    strm<<num<<'/'<<den;
+  }
+
+  virtual void scanFrom(std::istream& strm){
+    //assign values directly to the components
+    strm>>num;
+    strm.ignore();
+    strm>>den;
+  }
 };
 
-//inline
-//std::ostream& operator<<(std::ostream& strm,const Fraction& f)
-//{
-//  strm<<f.numerator()<<'/'<<f.denominator();
-//  return strm;
-//}
+inline
+std::ostream& operator<<(std::ostream& strm,const Fraction& f)
+{
+  strm<<f.numerator()<<'/'<<f.denominator();
+  return strm;
+}
 
 template<typename charT,typename traits>
 inline
@@ -259,7 +270,67 @@ std::ostream& operator<<(std::ostream& strm,const std::pair<T1,T2>& p)
   return strm<<"["<<p.first<<","<<p.second<<"]";
 }
 
+inline
+std::istream& operator>>(std::istream& strm,Fraction& f)
+{
+  int n,d;
 
+  strm>>n;//read value of the numerator
+  strm.ignore();//skip '/'
+  strm>>d;//read value of the denominator
+
+  f=Fraction(n,d);//assign the whole fraction
+
+  return strm;
+}
+
+template<typename charT,typename traits>
+inline
+std::basic_istream<charT,traits>&
+operator>>(std::basic_istream<charT,traits>& strm,Fraction& f)
+{
+  int n,d;
+
+  //read value of numerator
+  strm>>n;
+
+  //if available
+  //-read '/' and value of denominator
+  if(strm.peek()=='/'){
+    strm.ignore();
+    strm>>d;
+  }
+  else{
+    d=1;
+  }
+
+  //if denominator is zero
+  //-set failbit as I/O format error
+  if(d==0){
+    strm.setstate(std::ios::failbit);
+    return strm;
+  }
+
+  //if everything is fine so far
+  //-change the value of the fraction
+  if(strm){
+    f=Fraction(n,d);
+  }
+
+  return strm;
+}
+
+//std::ostream& operator<<(std::ostream& strm,const Fraction& f)
+//{
+//  f.printOn(strm);
+//  return strm;
+//}
+
+//std::istream& operator>>(std::istream& strm,Fraction& f)
+//{
+//  f.scanFrom(strm);
+//  return strm;
+//}
 
 int main(int argc, char* argv[])
 {
@@ -879,7 +950,18 @@ int main(int argc, char* argv[])
 
   //15.11.2 实现一个Input操作符
 
+  Fraction f4;
+  std::cin>>f4;
+  std::cout<<f4<<std::endl;
+
+  Fraction f5;
+  std::cin>>f5;
+  std::cout<<f5<<std::endl;
+
+  //15.11.3 以辅助函数完成I/O
+  //15.11.4 用户自定义之Format Flag（格式标志）
   
+
 
 
 
