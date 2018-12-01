@@ -18,6 +18,7 @@
 #include <strstream>
 #include <vector>
 #include <iterator>
+#include <memory>
 
 
 namespace MyLib{
@@ -362,6 +363,24 @@ void hexMultiplicationTable(std::streambuf* buffer,int num)
     hexout<<std::endl;
   }
 }//does NOT close buffer
+
+void redirect(std::ostream& strm)
+{
+  //save output buffer of the stream
+  //-use unique pointer with deleter that ensures to restore
+  // the original output buffer at the end of the function
+  auto del=[&](std::streambuf* p){
+    strm.rdbuf(p);
+  };
+  std::unique_ptr<std::streambuf,decltype(del)> origBuffer(strm.rdbuf(),del);
+
+  //redirect output into the file redirect.txt
+  std::ofstream file("redirect.txt");
+  strm.rdbuf(file.rdbuf());
+
+  file<<"one row for the file"<<std::endl;
+  strm<<"one row for the stream"<<std::endl;
+}//closes file AND its buffer automatically
 
 
 int main(int argc, char* argv[])
@@ -1043,6 +1062,33 @@ int main(int argc, char* argv[])
 
   //15.12.3 将标准Stream重定向(Redirecting)
 
+  std::streambuf* oldcout;
+
+  std::ofstream file2("cout.txt");
+  oldcout=std::cout.rdbuf(file2.rdbuf());
+
+  std::cout<<"Hello Fuck You!"<<std::endl;
+
+  std::cout<<std::hex<<std::showbase;
+
+  std::ofstream file3("cout1.txt");
+  file3.copyfmt(std::cout);
+  std::cout.rdbuf(file3.rdbuf());
+
+  std::cout<<"hello fuck you!"<<34<<std::endl;
+
+  std::cout.rdbuf(oldcout);
+  std::cout.clear();
+
+  std::cout<<"the first row"<<std::endl;
+
+  redirect(std::cout);
+
+  std::cout<<"the last row"<<std::endl;
+
+  //15.12.4 可读可写的Stream
+
+  
 
 
 
