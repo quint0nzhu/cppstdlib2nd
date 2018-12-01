@@ -350,6 +350,18 @@ std::ostream& fraction_spaces(std::ostream& strm)
   return strm;
 }
 
+void hexMultiplicationTable(std::streambuf* buffer,int num)
+{
+  std::ostream hexout(buffer);
+  hexout<<std::hex<<std::showbase;
+
+  for(int i=1;i<=num;++i){
+    for(int j=1;j<=10;++j){
+      hexout<<i*j<<' ';
+    }
+    hexout<<std::endl;
+  }
+}//does NOT close buffer
 
 
 int main(int argc, char* argv[])
@@ -1018,6 +1030,20 @@ int main(int argc, char* argv[])
   hexout<<"hexout: "<<-49<<" ";
   std::cout<<"cout: "<<-49<<" ";
   hexout<<std::endl;
+
+  int num=5;
+
+  std::cout<<"We print "<<num
+           <<" lines hexadecimal"<<std::endl;
+
+  hexMultiplicationTable(std::cout.rdbuf(),num);
+
+  std::cout<<"That was the output of "<<num
+           <<" hexadecimal lines"<<std::endl;
+
+  //15.12.3 将标准Stream重定向(Redirecting)
+
+
 
 
 
