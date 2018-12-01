@@ -1088,8 +1088,40 @@ int main(int argc, char* argv[])
 
   //15.12.4 可读可写的Stream
 
-  
+  std::fstream file4("example.txt",std::ios::in|std::ios::out);
 
+  std::ofstream out("example.txt",std::ios::in|std::ios::out);
+  std::istream in(out.rdbuf());
+
+  std::filebuf buffer5;
+  std::ostream out1(&buffer5);
+  std::istream in1(&buffer5);
+  buffer5.open("example.txt",std::ios::in|std::ios::out);
+
+  //open file "example.dat" for reading and writing
+  std::filebuf buffer6;
+  std::ostream output(&buffer6);
+  std::istream input1(&buffer6);
+
+  buffer6.open("example.dat",std::ios::in|std::ios::out|std::ios::trunc);
+
+  for(int i=1;i<=4;++i){
+    //write one line
+    output<<i<<". line"<<std::endl;
+
+    //print all file contents
+    input1.seekg(0);//seek to the beginning
+    char c;
+    while(input1.get(c)){
+      std::cout.put(c);
+    }
+    std::cout<<std::endl;
+    input1.clear();//clear eofbit and failbit
+  }
+
+  //15.13 Stream Buffer Class
+  //15.13.1 Stream缓冲区接口
+  
 
 
 
