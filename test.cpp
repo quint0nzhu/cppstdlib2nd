@@ -19,7 +19,7 @@
 #include <vector>
 #include <iterator>
 #include <memory>
-
+#include <algorithm>
 
 namespace MyLib{
   double readAndProcessSum(std::istream& strm)
@@ -382,6 +382,57 @@ void redirect(std::ostream& strm)
   strm<<"one row for the stream"<<std::endl;
 }//closes file AND its buffer automatically
 
+class outbuf1:public std::streambuf
+{
+protected:
+  //central output function
+  //-print characters in uppercase mode
+  virtual int_type overflow(int_type c){
+    if(c!=EOF){
+      //convert lowercase to uppercase
+      c=std::toupper(c,getloc());
+
+      //and write the character to the standard output
+      if(std::putchar(c)==EOF){
+        return EOF;
+      }
+    }
+    return c;
+  }
+};
+
+template<typename charT,
+         typename traits=std::char_traits<charT> >
+class basic_outbuf:public std::basic_streambuf<charT,traits>
+{
+protected:
+  //central output function
+  //-print characters in uppercase mode
+  virtual typename traits::int_type
+  overflow(typename traits::int_type c){
+    if(!traits::eq_int_type(c,traits::eof())){
+      //convert lowercase to uppercase
+      c=std::toupper(c,this->getloc());
+
+      //convert the character into a char(default:'?')
+      char cc=std::use_facet<std::ctype<charT> >
+        (this->getloc()).narrow(c,'?');
+
+      //and write the character to the standard output
+      if(std::putchar(cc)==EOF){
+        return traits::eof();
+      }
+    }
+    return traits::not_eof(c);
+  }
+};
+
+typedef basic_outbuf<char> outbuf;
+typedef basic_outbuf<wchar_t> woutbuf;
+
+
+
+
 
 int main(int argc, char* argv[])
 {
@@ -391,7 +442,7 @@ int main(int argc, char* argv[])
   //15.1.2 Stream Class
   //15.1.3 全局的Stream对象
   //15.1.4 Stream操作符
-  
+
   int a,b;
 
   //as long as input of a and b is successful
@@ -1121,8 +1172,47 @@ int main(int argc, char* argv[])
 
   //15.13 Stream Buffer Class
   //15.13.1 Stream缓冲区接口
-  
+  //15.13.2 Stream缓冲区的Iterator
 
+  //create iterator for buffer of output stream cout
+  std::ostreambuf_iterator<char> bufWriter(std::cout);
+
+  std::string hello("hello, world\n");
+  copy(hello.begin(),hello.end(),//source:string
+       bufWriter);//destination:output buffer of cout
+
+  //input stream buffer iterator for cin
+  std::istreambuf_iterator<char> inpos(std::cin);
+
+  //end-of-stream iterator
+  std::istreambuf_iterator<char> endpos;
+
+  //output stream buffer iterator for cout
+  std::ostreambuf_iterator<char> outpos(std::cout);
+
+  //while input iterator is valid
+  while(inpos!=endpos){
+    *outpos=*inpos;//assign its value to the output iterator
+    ++inpos;
+    ++outpos;
+  }
+
+  std::cout.rdbuf(oldcout);
+
+  std::cout<<count(std::istreambuf_iterator<char>(std::cin),
+                        std::istreambuf_iterator<char>(),
+                   '\n')<<std::endl;
+
+  std::cout.clear();
+
+  //15.13.3 用户自定义之Stream缓冲区
+
+  outbuf ob;//create special output buffer
+  std::ostream out2(&ob);//initialize output stream with that output buffer
+
+  out2<<"31 hexadecimal: "<<std::hex<<31<<std::endl;
+
+  
 
 
   return 0;
