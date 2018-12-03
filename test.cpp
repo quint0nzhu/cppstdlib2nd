@@ -20,6 +20,7 @@
 #include <iterator>
 #include <memory>
 #include <algorithm>
+#include <cstring> //for std::memmove()
 
 namespace MyLib{
   double readAndProcessSum(std::istream& strm)
@@ -430,7 +431,194 @@ protected:
 typedef basic_outbuf<char> outbuf;
 typedef basic_outbuf<wchar_t> woutbuf;
 
+//for write():
+#ifdef _MSC_VER
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
+class fdoutbuf:public std::streambuf{
+protected:
+  int fd;//file descriptor
+
+public:
+  //constructor
+  fdoutbuf(int _fd):fd(_fd){}
+protected:
+  //write one character
+  virtual int_type overflow(int_type c){
+    if(c!=EOF){
+      char z=c;
+      if(write(fd,&z,1)!=1){
+        return EOF;
+      }
+    }
+    return c;
+  }
+  //write multiple characters
+  virtual std::streamsize xsputn(const char* s,
+                                 std::streamsize num){
+    return write(fd,s,num);
+  }
+};
+
+class fdostream:public std::ostream{
+protected:
+  fdoutbuf buf;
+public:
+  fdostream(int fd):std::ostream(0),buf(fd){
+    rdbuf(&buf);
+  }
+};
+
+class outbuf2:public std::streambuf{
+protected:
+  static const int bufferSize=10;//size of data buffer
+  char buffer[bufferSize];//data buffer
+
+public:
+  //constructor
+  //-initialize data buffer
+  //-one character less to let the bufferSizeth character cause a call of overflow()
+  outbuf2(){
+    setp(buffer,buffer+(bufferSize-1));
+  }
+
+  //destructor
+  //-flush data buffer
+  virtual ~outbuf2(){
+    sync();
+  }
+
+protected:
+  //flush the characters in the buffer
+  int flushBuffer(){
+    int num=pptr()-pbase();
+    if(write(1,buffer,num)!=num){
+      return EOF;
+    }
+    pbump(-num);//reset put pointer accordingly
+    return num;
+  }
+
+  //buffer full
+  //-write c and all previous characters
+  virtual int_type overflow(int_type c){
+    if(c!=EOF){
+      //insert character into the buffer
+      *pptr()=c;
+      pbump(1);
+    }
+    //flush the buffer
+    if(flushBuffer()==EOF){
+      //ERROR
+      return EOF;
+    }
+    return c;
+  }
+
+  //synchronize data with file/destination
+  //-flush the data in the buffer
+  virtual int sync(){
+    if(flushBuffer()==EOF){
+      //ERROR
+      return -1;
+    }
+    return 0;
+  }
+};
+
+class fdoutbuf1:public outbuf2{
+protected:
+  int fd;//file descriptor
+
+public:
+  //constructor
+  fdoutbuf1(int _fd):fd(_fd){}
+protected:
+  //write one character
+  virtual int_type overflow(int_type c){
+    if(c!=EOF){
+      char z=c;
+      if(write(fd,&z,1)!=1){
+        return EOF;
+      }
+    }
+    return c;
+  }
+  //write multiple characters
+  virtual std::streamsize xsputn(const char* s,
+                                 std::streamsize num){
+    return write(fd,s,num);
+  }
+};
+
+class fdostream1:public std::ostream{
+protected:
+   fdoutbuf1 buf;
+public:
+  fdostream1(int fd):std::ostream(0),buf(fd){
+    rdbuf(&buf);
+  }
+};
+
+class inbuf:public std::streambuf{
+protected:
+  //data buffer:
+  //-at most, four characters in putback area plus
+  //-at most, six characters in ordinary read buffer
+  static const int bufferSize=10;//size of the data buffer
+  char buffer[bufferSize];//data buffer
+
+public:
+  //constructor
+  //-initialize empty data buffer
+  //-no putback area
+  //=>force underflow()
+  inbuf(){
+    setg(buffer+4,//beginning of putback area
+         buffer+4,//read position
+         buffer+4);//end position
+  }
+
+protected:
+  //insert new characters into the buffer
+  virtual int_type underflow(){
+    if(gptr()<egptr()){
+      return traits_type::to_int_type(*gptr());
+    }
+
+    //process size of putback area
+    //-use number of characters read
+    //-but at most four
+    int numPutback;
+    numPutback=gptr()-eback();
+    if(numPutback>4){
+      numPutback=4;
+    }
+
+    //copy up to four characters previously read into
+    //the putback buffer(area of first four characters)
+    std::memmove(buffer+(4-numPutback),gptr()-numPutback,numPutback);
+
+    //read new characters
+    int num;
+    num=read(0,buffer+4,bufferSize-4);
+    if(num<=0){
+      //ERROR or EOF
+      return EOF;
+    }
+
+    //reset buffer pointers
+    setg(buffer+(4-numPutback),//beginning of putback area
+         buffer+4,//read position
+         buffer+4+num);//end of buffer
+
+    //return next character
+    return traits_type::to_int_type(*gptr());
+  }
+};
 
 
 
@@ -1212,7 +1400,39 @@ int main(int argc, char* argv[])
 
   out2<<"31 hexadecimal: "<<std::hex<<31<<std::endl;
 
+  fdostream out3(1);//stream with buffer writing to file descriptor 1
+
+  out3<<"31 hexadecimal: "<<std::hex<<31<<std::endl;
+
+  fdostream1 out4(1);
+  out4<<"hello stream and buffer"<<std::hex<<36<<std::endl;
+
+  inbuf ib;//create special stream buffer
+  std::istream in2(&ib);//initialize input stream with that buffer
+
+  char c3;
+  for(int i=1;i<=20;i++){
+    //read next character(out of the buffer)
+    in2.get(c3);
+
+    //print that character(and flush)
+    std::cout<<c3<<std::flush;
+
+    //after eight characters, put two characters back into the stream
+    if(i==8){
+      in2.unget();
+      in2.unget();
+      in2.unget();
+      in2.unget();
+      in2.unget();
+      in2.unget();
+    }
+  }
+  std::cout<<std::endl;
+
+  //15.14 关于效能(Performance)
   
+
 
 
   return 0;
