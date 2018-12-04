@@ -1431,7 +1431,14 @@ int main(int argc, char* argv[])
   std::cout<<std::endl;
 
   //15.14 关于效能(Performance)
+  //15.14.1 与C标准串流同步(Synchronization with C's Standard Streams)
+
+  std::ios::sync_with_stdio(false);//disable synchronization
+  std::ios::sync_with_stdio(true);//enable synchronization
+
+  //15.14.2 Stream缓冲区内的缓冲机制
   
+
 
 
 
