@@ -20,6 +20,7 @@ int main(int argc, char* argv[])
   //std::use_facet<std::ctype<charType>>(loc).widen(c);
 
   //16.2 Locale（地域）概念
+  //16.2.1 使用Locale
   
 
   return 0;
