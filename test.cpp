@@ -8,6 +8,11 @@
 #include <iostream>
 #include <locale>
 #include <exception>
+#include <vector>
+#include <algorithm>
+#include <ctime>
+#include <chrono>
+#include <iomanip>
 
 
 class germanBoolNames:public std::numpunct_byname<char>{
@@ -22,6 +27,47 @@ protected:
     return "falsch";
   }
 };
+
+//output operator for pos_format() and neg_format():
+std::ostream& operator<<(std::ostream& strm,std::moneypunct<char>::pattern p)
+{
+  for(int i=0;i<4;++i){
+    auto f=p.field[i];
+    strm<<(f==std::money_base::none?"none":
+           f==std::money_base::space?"space":
+           f==std::money_base::symbol?"symbol":
+           f==std::money_base::sign?"sign":
+           f==std::money_base::value?"value":
+           "???")<<" ";
+  }
+  return strm;
+}
+
+template<bool intl>
+void printMoneyPunct(const std::string& localeName)
+{
+  std::locale loc(localeName);
+  const std::moneypunct<char,intl>& mp
+    =std::use_facet<std::moneypunct<char,intl>>(loc);
+  std::cout<<"moneypunct in locale \""<<loc.name()<<"\":"<<std::endl;
+  std::cout<<" decimal_point: "<<(mp.decimal_point()!='\0'?
+                                  mp.decimal_point():' ')<<std::endl;
+  std::cout<<" thousands_sep: "<<(mp.thousands_sep()!='\0'?
+                                  mp.thousands_sep():' ')<<std::endl;
+  std::cout<<" grouping:      ";
+
+  for(int i=0;i<mp.grouping().size();++i){
+    std::cout<<static_cast<int>(mp.grouping()[i])<<' ';
+  }
+  std::cout<<std::endl;
+  std::cout<<" curr_symbol:   "<<mp.curr_symbol()<<std::endl;
+  std::cout<<" positive_sign: "<<mp.positive_sign()<<std::endl;
+  std::cout<<" negative_sign: "<<mp.negative_sign()<<std::endl;
+  std::cout<<" frac_digits:   "<<mp.frac_digits()<<std::endl;
+  std::cout<<" pos_format:    "<<mp.pos_format()<<std::endl;
+  std::cout<<" neg_format:    "<<mp.neg_format()<<std::endl;
+}
+
 
 
 int main(int argc, char* argv[])
@@ -137,7 +183,150 @@ int main(int argc, char* argv[])
   std::cout.imbue(loc);
   std::cout<<std::boolalpha<<true<<std::endl;
 
+  std::cout.clear();
+
   //16.3 细究Locale
+
+  std::vector<std::string> v={"cd","ab"};
+
+  //sort strings according to the German locale
+  std::sort(v.begin(),v.end(),//range
+            std::locale("de_DE"));//sorting criterion
+
+  for(const auto& e:v){
+    std::cout<<e<<' ';
+  }
+  std::cout<<std::endl;
+
+  //16.4 细究Facet
+
+  //std::numpunct_byname("de_DE")
+
+  //16.4.1 数值格式化(Numeric Formatting)
+
+  std::cout.clear();
+
+  try{
+    //print floating-point value with the global classic locale:
+    std::locale locC;
+    std::cout.imbue(locC);
+    std::use_facet<std::num_put<char>>(locC).put(std::cout,std::cout,' ',
+                                                 1234.5678);
+    std::cout<<std::endl;
+
+    //print floating-point value with German locale:
+    #ifdef _MSC_VER
+    std::locale locG("deu_deu.1252");
+    #else
+    std::locale locG("de_DE");
+    #endif
+    std::cout.imbue(locG);
+    std::use_facet<std::num_put<char>>(locG).put(std::cout,std::cout,' ',
+                                                 1234.5678);
+    std::cout<<std::endl;
+  }
+  catch(const std::exception& e){
+    std::cerr<<"Exception: "<<e.what()<<std::endl;
+    return EXIT_FAILURE;
+  }
+
+  // std::locale loc;//locale
+  //InIt beg=...;//beginning of input sequence
+  //InIt end=...;//end of input sequence
+  //std::ios_base& fs=...;//stream that defines input format
+  //std::ios_base::iostate err;//state after call
+  //T val;//value after successful call
+
+  //get numeric input of facet of the loc locale
+  //const std::num_get<charT>& ng=std::use_facet<std::num_get<charT,InIt>>(loc);
+
+  //read value with numeric input facet
+  //ng.get(beg,end,fs,err,val);
+
+  //16.4.2 货币符号格式化(Monetary Formatting)
+
+  try{
+    printMoneyPunct<false>("C");
+    std::cout<<std::endl;
+    printMoneyPunct<false>("german");
+    std::cout<<std::endl;
+    printMoneyPunct<true>("german");
+  }
+  catch(const std::exception& e){
+    std::cerr<<"Exception: "<<e.what()<<std::endl;
+    return EXIT_FAILURE;
+  }
+
+  try{
+    //use German locale:
+    #ifdef _MSC_VER
+    std::locale locG("deu_deu.1252");
+    #else
+    std::locale locG("de_DE@euro");
+    #endif
+    const std::money_put<char>& mpG=std::use_facet<std::money_put<char>>(locG);
+
+    //ensure that the money_put<> facet impacts the output and currency is written:
+    std::cout.imbue(locG);
+    std::cout<<std::showbase;
+
+    //use double as monetary value(use local symbol)
+    mpG.put(std::cout,false,std::cout,' ',12345.678);
+    std::cout<<std::endl;
+
+    //use string as monetary value(use international symbol)
+    mpG.put(std::cout,true,std::cout,' ',"12345.678");
+    std::cout<<std::endl;
+  }
+  catch(const std::exception& e){
+    std::cerr<<"EXCEPTION: "<<e.what()<<std::endl;
+    return EXIT_FAILURE;
+  }
+
+  //get monetary input facet of the loc locale
+  //const std::money_get<charT>& mg=std::use_facet<std::money_get<charT>>(loc);
+
+  //read value with monetary input facet
+  //long double val;
+  //mg.get(beg,end,intl,fs,err,val);
+
+  std::cin.clear();
+
+  try{
+    //use German locale:
+    #ifdef _MSC_VER
+    std::locale locG("deu_deu.1252");
+    #else
+    std::locale locG("de_DE");
+    #endif
+
+    //use German locale and ensure that the currency is written:
+    std::cin.imbue(locG);
+    std::cout.imbue(locG);
+    std::cout<<std::showbase;
+
+    //read monetary value into long double(use international symbol)
+    long double val;
+    std::cout<<"monetary value: ";
+    std::cin>>std::get_money(val,true);
+
+    if(std::cin){
+      //write monetary value(use local symbol)
+      std::cout<<std::put_money(val,false)<<std::endl;
+    }
+    else{
+      std::cerr<<"invalid format"<<std::endl;
+    }
+  }
+  catch(const std::exception& e){
+    std::cerr<<"Exception: "<<e.what()<<std::endl;
+    return EXIT_FAILURE;
+  }
+
+  //16.4.3 时间和日期格式化(Time and Date Formatting)
+
+
+
 
 
   return 0;
