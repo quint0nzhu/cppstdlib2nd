@@ -68,6 +68,28 @@ void printMoneyPunct(const std::string& localeName)
   std::cout<<" neg_format:    "<<mp.neg_format()<<std::endl;
 }
 
+//convert string to wstring
+std::wstring to_wstring(const std::string& str,
+                        const std::locale& loc=std::locale())
+{
+  std::vector<wchar_t> buf(str.size());
+  std::use_facet<std::ctype<wchar_t>>(loc).widen(str.data(),
+                                                 str.data()+str.size(),
+                                                 buf.data());
+  return std::wstring(buf.data(),buf.size());
+}
+
+//convert wstring to string with '?' as default character
+std::string to_string(const std::wstring& str,
+                      const std::locale& loc=std::locale())
+{
+  std::vector<char> buf(str.size());
+  std::use_facet<std::ctype<wchar_t>>(loc).narrow(str.data(),
+                                                  str.data()+str.size(),
+                                                  '?',buf.data());
+  return std::string(buf.data(),buf.size());
+}
+
 
 
 int main(int argc, char* argv[])
@@ -325,8 +347,120 @@ int main(int argc, char* argv[])
 
   //16.4.3 时间和日期格式化(Time and Date Formatting)
 
+  std::cin.clear();
+  std::cout.clear();
 
+  try{
+    //query local time:
+    auto now=std::chrono::system_clock::now();
+    std::time_t t=std::chrono::system_clock::to_time_t(now);
+    tm* nowTM=std::localtime(&t);
 
+    //print local time with the global classic locale:
+    std::locale locC;
+    std::cout.imbue(locC);
+    const std::time_put<char>& tpC=std::use_facet<std::time_put<char>>(locC);
+
+    //use single conversion specifier
+    tpC.put(std::cout,std::cout,' ',nowTM,'x');
+    std::cout<<std::endl;
+
+    //use format string:
+    std::string format="%A %x %I%p\n";//format:weekday date hour
+    tpC.put(std::cout,std::cout,' ',nowTM,
+            format.c_str(),format.c_str()+format.size());
+
+    //print local time with German locale:
+    #ifdef _MSC_VER
+    std::locale locG("deu_deu.1252");
+    #else
+    std::locale locG("de_DE");
+    #endif
+    std::cout.imbue(locG);
+    const std::time_put<char>& tpG=std::use_facet<std::time_put<char>>(locG);
+    tpG.put(std::cout,std::cout,' ',nowTM,'x');
+    std::cout<<std::endl;
+    tpG.put(std::cout,std::cout,' ',nowTM,
+            format.c_str(),format.c_str()+format.size());
+  }
+  catch(const std::exception& e){
+    std::cerr<<"Exception: "<<e.what()<<std::endl;
+    return EXIT_FAILURE;
+  }
+
+  try{
+    //use German locale:
+    #ifdef _MSC_VER
+    std::locale locG("deu_deu.1252");
+    #else
+    std::locale locG("de_DE.ISO-8859-1");
+    #endif
+
+    std::cin.imbue(locG);
+    const std::time_get<char>& tgG=std::use_facet<std::time_get<char>>(locG);
+
+    //print date order of German locale:
+    typedef std::time_base TB;
+    std::time_get<char>::dateorder d=tgG.date_order();
+    std::cout<<"dateorder: "
+             <<(d==TB::no_order||d==TB::mdy?"mdy":
+                d==TB::dmy?"dmy":
+                d==TB::ymd?"ymd":
+                d==TB::ydm?"ydm":"unknown")<<std::endl;
+
+    //read weekday(in German) and time(hh:mm)
+    std::cout<<"<wochentag><hh>:<mm>: ";
+    std::string format="%A %H:%M";
+    struct tm val;
+    std::ios_base::iostate err=std::ios_base::goodbit;
+    tgG.get(std::istreambuf_iterator<char>(std::cin),
+            std::istreambuf_iterator<char>(),
+            std::cin,err,&val,
+            format.c_str(),format.c_str()+format.size());
+    if(err!=std::ios_base::goodbit){
+      std::cerr<<"invalid format"<<std::endl;
+    }
+  }
+  catch(const std::exception& e){
+    std::cerr<<"Exception: "<<e.what()<<std::endl;
+    return EXIT_FAILURE;
+  }
+
+  //16.4.4 字符的分类和转换
+
+  std::locale loc1;
+  std::string s="Fuck YOu!";
+  std::cout.imbue(loc1);
+
+  for(char& c:s){
+    c=std::use_facet<std::ctype<char>>(loc1).toupper(c);
+  }
+
+  std::cout<<s<<std::endl;
+
+  char narrow[]="0123456789";
+  wchar_t wide[10];
+
+  std::use_facet<std::ctype<wchar_t>>(loc1).widen(narrow,narrow+10,wide);
+
+  std::wcout<<sizeof(wide)<<std::endl;
+  for(int i=0;i<10;++i){
+    std::cout<<wide[i]<<' ';
+  }
+  std::cout<<std::endl;
+
+  std::string s1="hello,world\n";
+  std::wstring ws=to_wstring(s1);
+  std::wcout<<ws;
+  std::cout<<to_string(ws);
+
+  //create and initialize the table
+  //std::ctype_base::mask mytable[std::ctype<char>::table_size]={
+  //  ...
+  //};
+
+  //use the table for the ctype<char> facet ct
+  //std::ctype<char> ct(mytable,false);
 
 
   return 0;
