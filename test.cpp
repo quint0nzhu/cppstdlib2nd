@@ -97,6 +97,59 @@ int bestResultInTime()
   }
 }
 
+int doOtherthing(const char& c)//pass character by reference
+{
+  //random-number generator(use c as seed to get different sequences)
+  std::default_random_engine dre(c);
+  std::uniform_int_distribution<int> id(10,1000);
+
+  //loop to print character after a random period of time
+  for(int i=0;i<10;++i){
+    std::this_thread::sleep_for(std::chrono::milliseconds(id(dre)));
+    std::cout.put(c).flush();
+  }
+
+  return c;
+}
+
+class X
+{
+public:
+  void mem(int num){std::cout<<num<<std::endl;}
+};
+
+int queryNumber()
+{
+  //read number
+  std::cout<<"read number: ";
+  int num;
+  std::cin>>num;
+
+  //throw exception if none
+  if(!std::cin){
+    throw std::runtime_error("no number read");
+  }
+
+  return num;
+}
+
+void doAnotherthing(char c,std::shared_future<int> f)
+{
+  try{
+    //wait for number of characters to print
+    int num=f.get();//get result of queryNumber()
+
+    for(int i=0;i<num;++i){
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      std::cout.put(c).flush();
+    }
+  }
+  catch(const std::exception& e){
+    std::cerr<<"EXCEPTION in thread "<<std::this_thread::get_id()
+             <<": "<<e.what()<<std::endl;
+  }
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -184,7 +237,105 @@ int main(int argc, char* argv[])
 
   //18.1.2 实例：等待两个Task
 
-  
+  std::cout<<"starting 2 operations asynchronously"<<std::endl;
+
+  //start two loops in the background printing characters . or +
+  auto f2=std::async([](){doSomething('.');});
+  auto f3=std::async([](){doSomething('+');});
+
+  //if at least one of the background tasks is running
+  if(f2.wait_for(std::chrono::seconds(0))!=std::future_status::deferred||
+     f3.wait_for(std::chrono::seconds(0))!=std::future_status::deferred){
+    //poll until at least one of the loops finished
+    while(f2.wait_for(std::chrono::seconds(0))!=std::future_status::ready&&
+          f3.wait_for(std::chrono::seconds(0))!=std::future_status::ready){
+      //...;//std::cout<<"foo!"<<std::endl;
+      std::this_thread::yield();//hint to reschedule to the next thread
+    }
+  }
+  std::cout.put('\n').flush();
+
+  //wait for all loops to be finished and process any exception
+  try{
+    f2.get();
+    f3.get();
+  }
+  catch(const std::exception& e){
+    std::cout<<"\nEXCEPTION: "<<e.what()<<std::endl;
+  }
+  std::cout<<"\ndone"<<std::endl;
+
+  char c='@';
+  auto f4=std::async([=](){//=:can access objects in scope by value
+      doSomething(c);//pass copy of c to doSomething()
+    });
+  c='*';
+  auto f5=std::async(doSomething,c);//call doSomething(c) asynchronously
+  c='/';
+  auto f6=std::async([&](){doOtherthing(c);});//pass c by reference
+
+  try{
+    f4.get();
+    f5.get();
+    f6.get();//needs lifetime of c until here
+  }
+  catch(const std::exception& e){
+    std::cout<<"\nEXCEPTION: "<<e.what()<<std::endl;
+  }
+  std::cout<<std::endl;
+
+  //char c='@';
+  //auto f=std::async([&](){doSomething(c);});//risky! c may be over!
+  //auto f=std::async(doSomething,std::ref(c));//risky!c may be over!
+
+  c='$';
+  auto f7=std::async([&](){doOtherthing(c);});//pass c by reference
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+  c='_';//switch output of doOtherthing() to underscores, if it still runs
+  try{
+    f7.get();//needs lifetime of c until here
+  }
+  catch(const std::exception& e){
+    std::cout<<"\nEXCEPTION: "<<e.what()<<std::endl;
+  }
+  std::cout<<std::endl;
+
+  X x;
+  auto a=std::async(&X::mem,x,42);//try to call x.mem(42) asynchronously
+  try{
+    a.get();
+  }
+  catch(const std::exception& e){
+    std::cout<<"\nEXCEPTION: "<<e.what()<<std::endl;
+  }
+
+  //18.1.3 Shared Future
+
+  try{
+    //start one thread to query a number
+    std::shared_future<int> f=std::async(queryNumber);
+    //auto f=std::async(queryNumber).share();
+
+    //start three threads each processing this number in a loop
+    auto f1=std::async(std::launch::async,doAnotherthing,'.',f);
+    auto f2=std::async(std::launch::async,doAnotherthing,'+',f);
+    auto f3=std::async(std::launch::async,doAnotherthing,'*',f);
+
+    //wait for all loops to be finished
+    f1.get();
+    f2.get();
+    f3.get();
+  }
+  catch(const std::exception& e){
+    std::cout<<"\nEXCEPTION: "<<e.what()<<std::endl;
+  }
+  std::cout<<"\ndone"<<std::endl;
+
+  //void doSomething(char c,const std::shared_future<int>& f);//risky! not good!
+  //auto f1=std::async(std::launch::async,doSomething,'.',std::ref(f));//risky! not good!
+
+  //18.2 低层接口：Thread和Promise
+  //18.2.1 Class std::thread
 
 
 
