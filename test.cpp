@@ -172,6 +172,34 @@ void doSomeOtherthing(int num,char c)
   }
 }
 
+std::thread::id masterThreadID;
+
+void doAnotherSomething()
+{
+  if(std::this_thread::get_id()==masterThreadID){
+    std::cout<<"This is masterThreadID: "<<masterThreadID<<std::endl;
+  }
+}
+
+void doYetAnotherThing(std::promise<std::string>& p)
+{
+  try{
+    //read character and throw exception if 'x'
+    std::cout<<"read char('x' for exception): ";
+    char c=std::cin.get();
+    if(c=='x'){
+      throw std::runtime_error(std::string("char ")+c+" read");
+    }
+    std::string s=std::string("char ")+c+" processed";
+    p.set_value(std::move(s));//store result
+    //p.set_value_at_thread_exit(std::move(s));//when thread end set value
+  }
+  catch(...){
+    p.set_exception(std::current_exception());//store exception
+    //p.set_exception_at_thread_exit(std::current_exception());//when thread end set exception
+  }
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -387,7 +415,49 @@ int main(int argc, char* argv[])
   std::cout<<"ID of \"no thread\": "<<std::thread::id()
            <<std::endl;
 
-  std
+  std::thread t1(doSomeOtherthing,5,'.');
+  std::thread t2(doSomeOtherthing,5,'+');
+  std::thread t3(doSomeOtherthing,5,'*');
+  std::cout<<"t3 ID:       "<<t3.get_id()<<std::endl;
+  std::cout<<"main ID:     "<<std::this_thread::get_id()<<std::endl;
+  std::cout<<"nothread ID: "<<std::thread::id()<<std::endl;
+
+  t1.join();
+  t2.join();
+  t3.join();
+  std::cout<<std::endl;
+
+  std::thread master(doAnotherSomething);
+  masterThreadID=master.get_id();
+
+  std::thread slave(doAnotherSomething);
+
+  master.join();
+  slave.join();
+
+  //18.2.2 Promise
+
+  try{
+    //start thread using a promise to store the outcome
+    std::promise<std::string> p;//hold string result or exception
+    std::thread t(doYetAnotherThing,std::ref(p));
+    t.detach();
+
+    //create a future to process the outcome
+    std::future<std::string> f(p.get_future());//can before thread started!
+
+    //process the outcome
+    std::cout<<"result: "<<f.get()<<std::endl;
+  }
+  catch(const std::exception& e){
+    std::cerr<<"EXCEPTION: "<<e.what()<<std::endl;
+  }
+  catch(...){
+    std::cerr<<"EXCEPTION "<<std::endl;
+  }
+
+  //18.2.3 Class packaged_task<>
+
 
 
 
