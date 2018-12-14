@@ -200,6 +200,12 @@ void doYetAnotherThing(std::promise<std::string>& p)
   }
 }
 
+double compute(int x,int y)
+{
+  std::cout<<"compute is done!"<<std::endl;
+  return x+y;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -458,6 +464,42 @@ int main(int argc, char* argv[])
 
   //18.2.3 Class packaged_task<>
 
+  std::future<double> f8=std::async(compute,7,5);//try to start a background task
+
+  double res=f8.get();//wait for its end and process result/exception
+
+  std::cout<<res<<std::endl;
+
+  std::packaged_task<double(int,int)> task(compute);//create a task
+  std::future<double> f9=task.get_future();//get its future
+
+  task(8,6);//start the task(typically in a separate thread)
+  double res1=f9.get();//wait for its end and process result/exception
+  std::cout<<res1<<std::endl;
+
+  //18.3.1 细说async()
+
+  //future async(std::launch::aync,F func,args...)
+  //尝试启动func并给予实参args，形成一个异步任务（asynchronous task；一个并行线程）
+  //如果以上办不到，就抛出std::system_error异常，带着差错码std::errc::resource_unavailable_try_again
+  //被启动的线程保证在程序结束前完成，除非程序中途失败(abort)
+  //以下情况会结束线程（完成工作）：
+  //-对返回的future调用get()或wait()
+  //-如果最后一个指向“返回之future所代表的shared state”的object被销毁
+  //这意味着对async()的调用会造成停滞(block)直到func完成——如果async()的返回值未被使用的话
+
+  //future async(std::launch::deferred,F func,args...)
+  //传递func并夹带实参args，形成一个推迟任务(deferred task)。当我们对返回的future调用wait()或get()，那个推迟任务即被同步调用(synchronously called)
+  //如果未曾如上调用wait()和get()，那个推迟任务(deferred task)绝不会启动
+
+  //future async(F func,args...)
+  //相当于调用async()并携带“std::launch::async和std::launch::deferred组合而成”的launch（发射）策略。系统会根据当前形势选择其中一个发射策略。也就是说，如果“立即发射”策略行不通的话，会造成func被推迟调用
+  //也就是说，如果async()可以为func启动一个新线程，就那么做，否则func就会被推迟，直到我们对返回的future调用get()或wait()
+  //这个调用的唯一保证是，一旦我们对返回的future调用get()或wait()，func就一定会被调用并且完成
+  //如果没有对返回的future调用get()或wait()，func有可能永不被调用
+  //注意，如果无法异步调用func，本形式的async()不会抛出system_error异常（但有可能因为其他原因而抛出system error）
+
+  //18.3.2 细说Future
 
 
 
