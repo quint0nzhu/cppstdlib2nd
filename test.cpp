@@ -206,6 +206,26 @@ double compute(int x,int y)
   return x+y;
 }
 
+void foo(int val)
+{
+  std::cout<<val<<std::endl;
+}
+
+std::mutex printMutex;//enable synchronized output with print()
+
+void print(const std::string& s)
+{
+  std::lock_guard<std::mutex> l(printMutex);
+  for(char c:s){
+    std::cout.put(c).flush();
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+  std::cout<<std::endl;
+}
+
+
+
+
 
 int main(int argc, char* argv[])
 {
@@ -533,7 +553,59 @@ int main(int argc, char* argv[])
 
   //18.5 Mutex和Lock
   //18.5.1 使用Mutex和Lock
-  
+
+  int val=1000;
+  std::mutex valMutex;//control exclusive access to val
+
+  valMutex.lock();//request exclusive access to val
+  if(val>=0){
+    foo(val);//val is positive
+  }
+  else{
+    foo(-val);//pass negated negative val
+  }
+  valMutex.unlock();//release exclusive access to val
+
+  //another thread may access to val
+  valMutex.lock();//request exclusive access to val
+  ++val;
+  valMutex.unlock();//release exclusive access to val
+
+  int val1=100;
+  std::mutex valMutex1;//control exclusive access to val1
+
+  std::lock_guard<std::mutex> lg(valMutex1);//lock and automatically unlock
+  if(val1>=0){
+    foo(val1);//val1 is positive
+  }
+  else{
+    foo(-val1);//pass negated negative val1
+  }
+
+  int val2=10;
+  std::mutex valMutex2;//control exclusive access to val2
+
+  {
+    std::lock_guard<std::mutex> lg(valMutex2);//lock and automatically unlock
+    if(val2>=0){
+      foo(val2);//val2 is positive
+    }
+    else{
+      foo(-val2);//pass negated negative val2
+    }
+  }//ensure that lock gets released here
+
+  {
+    std::lock_guard<std::mutex> lg(valMutex2);//lock and automatically unlock
+    ++val2;
+    std::cout<<val2<<std::endl;
+  }//ensure that lock gets released here
+
+  auto f10=std::async(std::launch::async,
+                      print,"Hello from a first thread");
+  auto f11=std::async(std::launch::async,
+                      print,"Hello from a second thread");
+  print("Hello from the main thread");
 
 
 
