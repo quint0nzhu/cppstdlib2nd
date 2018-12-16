@@ -500,6 +500,37 @@ int main(int argc, char* argv[])
   //注意，如果无法异步调用func，本形式的async()不会抛出system_error异常（但有可能因为其他原因而抛出system error）
 
   //18.3.2 细说Future
+  //18.3.3 细说Shared Future
+
+  //try{
+  //  shared_future<void> sp=async(f);
+  //  sp.get();
+  //}
+  //catch(E& e){
+  //  e.modify();//risk of undefined behavior due to a data race
+  //}
+
+  //18.3.4 细说Class std::promise
+  //18.3.5 细说Class std::packaged_task
+  //18.3.6 细说Class std::thread
+
+  //unsigned int std::thread::hardware_concurrency()
+  //返回可能的线程数量
+  //该数量只是个参考值，不保证准确
+  //如果数量不可计算或不明确，返回值是0
+
+  //18.3.7 Namespace this_thread
+
+  //while(!readyFlag){//loop until data is ready
+  //  std::this_thread::yield();
+  //}
+
+  //18.4 线程同步化与Concurrency（并发）问题
+  //18.4.1 当心Concurrency（并发）
+
+
+
+
 
 
 
