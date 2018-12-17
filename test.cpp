@@ -218,12 +218,106 @@ void print(const std::string& s)
   std::lock_guard<std::mutex> l(printMutex);
   for(char c:s){
     std::cout.put(c).flush();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
   std::cout<<std::endl;
 }
 
+class DatabaseAccess
+{
+private:
+  std::mutex dbMutex;
+  //...state of database access
 
+public:
+  void createTable()
+  {
+    std::lock_guard<std::mutex> lg(dbMutex);
+    std::cout<<"call createTable"<<std::endl;
+  }
+  void insertData()
+  {
+    std::lock_guard<std::mutex> lg(dbMutex);
+    std::cout<<"call insertData"<<std::endl;
+  }
+  //...
+
+  void createTableAndInsertData()
+  {
+    std::lock_guard<std::mutex> lg(dbMutex);
+    //...
+    //createTable();//ERROR:deadlock because dbMutex is locked again
+    std::cout<<"call createTableAndInsertData"<<std::endl;
+  }
+};
+
+class DatabaseAccess1
+{
+private:
+  std::recursive_mutex dbMutex;
+  //...state of database access
+
+public:
+  void insertData()
+  {
+    std::lock_guard<std::recursive_mutex> lg(dbMutex);
+    std::cout<<"call insertData"<<std::endl;
+  }
+  void createTable()
+  {
+    std::lock_guard<std::recursive_mutex> lg(dbMutex);
+    std::cout<<"call createTable"<<std::endl;
+  }
+  void createTableAndInsertData()
+  {
+    std::lock_guard<std::recursive_mutex> lg(dbMutex);
+    //...
+    createTable();//OK:no deadlock
+    std::cout<<"call createTableAndInsertData no deadlock"<<std::endl;
+  }
+};
+
+void doSomeOtherStuff()
+{
+  std::cout<<"call doSomeOtherStuff"<<std::endl;
+}
+
+void couldNotGetTheLock()
+{
+  std::cout<<"call couldNotGetTheLock"<<std::endl;
+}
+
+bool readyFlag;
+std::mutex readyFlagMutex;
+
+void thread1()
+{
+  //do something therad2 needs as preparation
+  //...
+  std::cout<<"call thread1"<<std::endl;
+  std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+  std::lock_guard<std::mutex> lg(readyFlagMutex);
+  readyFlag=true;
+  std::cout<<"thread1 is done!"<<std::endl;
+}
+
+void thread2()
+{
+  //wait until readyFlag is true(thread1 is done)
+  {
+    std::unique_lock<std::mutex> ul(readyFlagMutex);
+    while(!readyFlag){
+      ul.unlock();
+      std::this_thread::yield();//hint to reschedule to the next thread
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      std::cout<<"thread2 is waiting"<<std::endl;
+      ul.lock();
+    }
+  }//release lock
+
+  //do whatever shall happen after thread1 has prepared things
+  std::cout<<"call thread2"<<std::endl;
+}
 
 
 
@@ -607,7 +701,104 @@ int main(int argc, char* argv[])
                       print,"Hello from a second thread");
   print("Hello from the main thread");
 
+  DatabaseAccess dba;
+  dba.createTableAndInsertData();
 
+  DatabaseAccess1 dba1;
+  dba1.createTableAndInsertData();
+
+  std::mutex m;
+
+  //try to acquire a lock and do other stuff while this isn't possible
+  while(m.try_lock()==false){
+    doSomeOtherStuff();
+  }
+  std::lock_guard<std::mutex> lg1(m,std::adopt_lock);
+
+  std::timed_mutex tm;
+
+  //try for one second to acquire a lock
+  if(tm.try_lock_for(std::chrono::seconds(1))){
+    std::lock_guard<std::timed_mutex> lg(tm,std::adopt_lock);
+    std::cout<<"have get the lock"<<std::endl;
+  }
+  else{
+    couldNotGetTheLock();
+  }
+
+  std::mutex m1;
+  std::mutex m2;
+  //...
+  {
+    std::lock(m1,m2);//lock both mutexes(or none if not possible)
+    std::lock_guard<std::mutex> lockM1(m1,std::adopt_lock);
+    std::lock_guard<std::mutex> lockM2(m2,std::adopt_lock);
+    //...
+    std::cout<<"m1 m2 are both locked"<<std::endl;
+  }//automatically unlock all mutexes
+
+  std::mutex m3;
+  std::mutex m4;
+
+  int idx=std::try_lock(m1,m2);//try to lock both mutexes
+  if(idx<0){//both locks succeeded
+    std::lock_guard<std::mutex> lockM3(m3,std::adopt_lock);
+    std::lock_guard<std::mutex> lockM4(m4,std::adopt_lock);
+    //...
+  }//automatically unlock all mutexes
+  else{
+    //idx has zero-based index of first failed lock
+    std::cerr<<"could not lock mutex m"<<idx+1<<std::endl;
+  }
+
+  std::mutex m5;
+  std::mutex m6;
+  //...
+  {
+    std::lock(m5,m6);//lock both mutexes(or none if not possible)
+    //no lock adopted
+    //...
+  }
+  //... OOPS:mutexes are still locked!!!
+
+  std::mutex m7;
+  std::unique_lock<std::mutex> lock(m7,std::try_to_lock);
+  //...
+  if(lock){//if lock was successful
+    std::cout<<"lock successful"<<std::endl;
+  }
+
+  std::timed_mutex m8;
+  std::unique_lock<std::timed_mutex> lock1(m8,std::chrono::seconds(1));
+  //...
+  if(lock1){//if lock was successful
+    std::cout<<"lock1 successful"<<std::endl;
+  }
+
+  std::mutex m9;
+  std::unique_lock<std::mutex> lock2(m9,std::defer_lock);
+  //...
+  lock2.lock();//or(timed)try_lock();
+  //...
+  if(lock2){//if lock was successful
+    std::cout<<"lock2 successful"<<std::endl;
+  }
+
+  std::mutex m10;
+  std::mutex m11;
+
+  std::unique_lock<std::mutex> lockM5(m10,std::defer_lock);
+  std::unique_lock<std::mutex> lockM6(m11,std::defer_lock);
+  //...
+  std::lock(m10,m11);//lock both mutexes(or none if not possible)
+
+  auto f12=std::async(thread1);
+  auto f13=std::async(thread2);
+
+  f12.get();
+  f13.get();
+
+  //18.5.2 细说Mutex和Lock
 
 
 
