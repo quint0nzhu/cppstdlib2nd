@@ -319,6 +319,83 @@ void thread2()
   std::cout<<"call thread2"<<std::endl;
 }
 
+void initialize()
+{
+  std::cout<<"call initialize"<<std::endl;
+}
+
+static std::vector<std::string> staticData;
+
+std::vector<std::string> initializeStaticData()
+{
+  std::vector<std::string> vs{"hello","world","!"};
+  std::cout<<"initializing..."<<std::endl;
+  return vs;
+}
+
+void bar()
+{
+  if(staticData.empty()){
+    staticData=initializeStaticData();
+  }
+  std::cout<<"call bar"<<std::endl;
+}
+
+void foo1()
+{
+  static std::once_flag oc1;
+  std::call_once(oc1,[](){
+      staticData=initializeStaticData();
+    });
+  std::cout<<"call foo1"<<std::endl;
+}
+
+class Y{
+private:
+  mutable std::once_flag initDataFlag;
+  void initData()const
+  {
+    std::cout<<"call Y::initData"<<std::endl;
+  }
+public:
+  std::vector<std::string> getData()const
+  {
+    std::call_once(initDataFlag,&Y::initData,this);
+    std::vector<std::string> vs{"haha","world","!"};
+    return vs;
+  }
+};
+
+bool readyFlagVar;
+std::mutex readyMutexVar;
+std::condition_variable readyCondVar;
+
+void threadA()
+{
+  //do something threadB needs as preparation
+  std::cout<<"<return>"<<std::endl;
+  std::cin.get();
+
+  //signal that threadA has prepared a condition
+  {
+    std::lock_guard<std::mutex> lg(readyMutexVar);
+    readyFlagVar=true;
+  }//release lock
+  readyCondVar.notify_one();
+}
+
+void threadB()
+{
+  //wait until threadA is ready(readyFlagVar is true)
+  {
+    std::unique_lock<std::mutex> ul(readyMutexVar);
+    readyCondVar.wait(ul,[](){return readyFlagVar;});
+  }//release lock
+
+  //do whatever shall happen after threadA has prepared things
+  std::cout<<"done"<<std::endl;
+}
+
 
 
 int main(int argc, char* argv[])
@@ -799,6 +876,43 @@ int main(int argc, char* argv[])
   f13.get();
 
   //18.5.2 细说Mutex和Lock
+
+  //Class std::mutex，同一时间只可被一个线程锁定。如果它被锁住，任何其他lock()都会阻塞(block)，直到这个mutex再次可用，且try_lock()会失败
+  //Class std::recursive_mutex，充许在同一时间多次被同一线程获得其lock。其典型应用是：函数捕获一个lock并调用另一函数而后者再次捕获相同的lock
+  //Class std::timed_mutex，额外充许你传递一个时间段或时间点，用来定义多长时间内它可以尝试捕捉一个lock。为此它提供了try_lock_for()和try_lock_until()
+  //Class std::recursive_timed_mutex 允许同一线程多次取得其lock，可指定期限
+
+  //18.5.3 只调用一次
+
+  bool initialized=false;//global flag
+  //...
+  if(!initialized){//initialize if not initialized yet
+    initialize();
+    initialized=true;
+  }
+
+  bar();
+
+  std::once_flag oc;//global flag
+  //...
+  std::call_once(oc,initialize);//initialize if not initialized yet
+
+  foo1();
+
+  Y y;
+  y.getData();
+
+  //18.6 Condition Variable（条件变量）
+  //18.6.1 Condition Variable（条件变量）的意图
+  //18.6.2 Condition Variable（条件变理）的第一个完整例子
+
+  auto f14=std::async(std::launch::async,threadA);
+  auto f15=std::async(std::launch::async,threadB);
+
+
+
+
+
 
 
 
