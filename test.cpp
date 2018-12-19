@@ -424,18 +424,21 @@ void provider(int val)
   }
 }
 
+int count=0;
+
 void consumer(int num)
 {
   //pop values if available(num identifies the consumer)
-  while(true){
+  while(count!=18&&count!=17){
     int val;
     {
       std::unique_lock<std::mutex> ul(queueMutex);
       queueCondVar.wait(ul,[](){return !queue.empty();});
       val=queue.front();
-      quque.pop();
+      queue.pop();
+      count++;
     }//release lock
-    std::cout<<"consumer "<<num<<": "<<val<<std::endl;
+    std::cout<<count<<": "<<"consumer "<<num<<": "<<val<<std::endl;
   }
 }
 
@@ -951,6 +954,8 @@ int main(int argc, char* argv[])
   auto f14=std::async(std::launch::async,threadA);
   auto f15=std::async(std::launch::async,threadB);
 
+  f14.get();
+  f15.get();
   //18.6.3 使用Condition Variable（条件变量）实现多线程Queue
 
   //start three providers for values 100+, 300+, and 500+
@@ -961,6 +966,14 @@ int main(int argc, char* argv[])
   //start two consumers printing the values
   auto c1=std::async(std::launch::async,consumer,1);
   auto c2=std::async(std::launch::async,consumer,2);
+
+  p1.get();
+  p2.get();
+  p3.get();
+  c1.get();
+  c2.get();
+
+  //18.6.4 细说Condition Variable（条件变量）
 
 
 
