@@ -12,6 +12,9 @@
 #include <iostream>
 #include <exception>
 #include <list>
+#include <queue>
+
+
 
 
 int doSomething(char c)
@@ -389,13 +392,52 @@ void threadB()
   //wait until threadA is ready(readyFlagVar is true)
   {
     std::unique_lock<std::mutex> ul(readyMutexVar);
-    readyCondVar.wait(ul,[](){return readyFlagVar;});
+    readyCondVar.wait(ul,[](){return readyFlagVar;});//may lock unlock, so use unique_lock not lock_guard
   }//release lock
+
+  //{
+  //  std::unique_lock<std::mutex> ul(readyMutex);
+  //  while(!readyFlag){
+  //    readyCondVar.wait(ul);
+  //  }
+  //}//release lock
 
   //do whatever shall happen after threadA has prepared things
   std::cout<<"done"<<std::endl;
 }
 
+std::queue<int> queue;
+std::mutex queueMutex;
+std::condition_variable queueCondVar;
+
+void provider(int val)
+{
+  //push different values(val til val+5 with timeouts of val milliseconds) into the queue
+  for(int i=0;i<6;++i){
+    {
+      std::lock_guard<std::mutex> lg(queueMutex);
+      queue.push(val+i);
+    }//release lock
+    queueCondVar.notify_one();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(val));
+  }
+}
+
+void consumer(int num)
+{
+  //pop values if available(num identifies the consumer)
+  while(true){
+    int val;
+    {
+      std::unique_lock<std::mutex> ul(queueMutex);
+      queueCondVar.wait(ul,[](){return !queue.empty();});
+      val=queue.front();
+      quque.pop();
+    }//release lock
+    std::cout<<"consumer "<<num<<": "<<val<<std::endl;
+  }
+}
 
 
 int main(int argc, char* argv[])
@@ -908,6 +950,17 @@ int main(int argc, char* argv[])
 
   auto f14=std::async(std::launch::async,threadA);
   auto f15=std::async(std::launch::async,threadB);
+
+  //18.6.3 使用Condition Variable（条件变量）实现多线程Queue
+
+  //start three providers for values 100+, 300+, and 500+
+  auto p1=std::async(std::launch::async,provider,100);
+  auto p2=std::async(std::launch::async,provider,300);
+  auto p3=std::async(std::launch::async,provider,500);
+
+  //start two consumers printing the values
+  auto c1=std::async(std::launch::async,consumer,1);
+  auto c2=std::async(std::launch::async,consumer,2);
 
 
 
